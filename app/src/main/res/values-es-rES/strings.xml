@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">FilmFollower (Development)</string>
+    <string name="language">es-ES</string>
+    <string name="title_home">Inicio</string>
+    <string name="title_dashboard">Panel de Control</string>
+    <string name="title_notifications">Notificaciones</string>
+    <string name="title_shows">Series</string>
+    <string name="title_films">Películas</string>
+    <string name="title_search">Explorar</string>
+    <string name="title_profile">Perfil</string>
+    <string name="watch_list">Lista Pendiente</string>
+    <string name="upcoming">Próximamente</string>
+    <string name="following">Siguiendo</string>
+    <string name="search_bar">Busca películas y series</string>
+</resources>
