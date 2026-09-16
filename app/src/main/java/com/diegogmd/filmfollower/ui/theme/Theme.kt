@@ -54,8 +54,8 @@ private val OldFilmColorScheme = darkColorScheme(
     background = OliveWood,
     onBackground = LightCaramel,
 
-    surface = DarkCoffee,
-    onSurface = LightCaramel,
+    surface = LightCaramel,
+    onSurface = DarkCoffee,
     surfaceVariant = OliveWood,
     onSurfaceVariant = LightCaramel,
 

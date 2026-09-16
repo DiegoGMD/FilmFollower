@@ -32,6 +32,7 @@ import androidx.compose.ui.Alignment
 import org.threeten.bp.LocalDate
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -39,8 +40,11 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import com.diegogmd.filmfollower.R
+import com.diegogmd.filmfollower.model.Episode
 import com.diegogmd.filmfollower.model.MultiSearchResult
 import com.diegogmd.filmfollower.model.Film
+import com.diegogmd.filmfollower.model.getFilm
+import com.diegogmd.filmfollower.model.getTvShow
 import com.diegogmd.filmfollower.ui.theme.DarkCoffee
 import com.diegogmd.filmfollower.ui.theme.LightCaramel
 
@@ -48,11 +52,9 @@ import com.diegogmd.filmfollower.ui.theme.LightCaramel
 fun ContentCard(
     content: MultiSearchResult,
     orientation: Boolean = false, // false = horizontal row, true = vertical poster
-    wishlisted: Boolean = false,
 ) {
-    var pressed by remember { mutableStateOf(false) }
+    val context = LocalContext.current
     val navController = rememberNavController()
-
     val title = if (content.title != null) content.title else "Unknown"
     val posterUrl = content.poster_path?.let { "https://image.tmdb.org/t/p/w92$it" }
     val date = when (content.media_type) {
@@ -61,6 +63,7 @@ fun ContentCard(
         else -> null // "person" and anything unexpected
     }
     val rating = Math.round(content.vote_average * 10) / 10.0
+    val wishlisted = if (getFilm(context, content.id) == null) false else true
 
     Card(
         modifier = Modifier
@@ -76,10 +79,10 @@ fun ContentCard(
 
         if (orientation) {
             // Vertical layout: image on top, text below
-            VerticalContentCard(posterUrl, title, date, rating, wishlisted, pressed)
+            VerticalContentCard(posterUrl, title, date, rating, wishlisted, true)
         } else {
             // Horizontal layout: image left, text right
-            HorizontalContentCard(posterUrl, title, date, rating, wishlisted, pressed)
+            HorizontalContentCard(posterUrl, title, date, rating, wishlisted, true)
         }
     }
 }
@@ -88,12 +91,9 @@ fun ContentCard(
 fun ContentCard(
     content: Film,
     orientation: Boolean = false, // false = horizontal row, true = vertical poster
-    wishlisted: Boolean = false,
 ) {
-    var pressed by remember { mutableStateOf(false) }
     val navController = rememberNavController()
-
-    val title = if (content.title != null) content.title else "Unknown"
+    val title = content.title
     val posterUrl = content.posterPath?.let { "https://image.tmdb.org/t/p/w92$it" }
     val date = content.releaseDate
     val rating = content.rating
@@ -112,10 +112,10 @@ fun ContentCard(
 
         if (orientation) {
             // Vertical layout: image on top, text below
-            VerticalContentCard(posterUrl, title, date, rating, wishlisted, pressed)
+            VerticalContentCard(posterUrl, title, date, rating)
         } else {
             // Horizontal layout: image left, text right
-            HorizontalContentCard(posterUrl, title, date, rating, wishlisted, pressed)
+            HorizontalContentCard(posterUrl, title, date, rating)
         }
     }
 }
@@ -126,10 +126,9 @@ private fun VerticalContentCard(
     title: String,
     date: LocalDate?,
     rating: Double,
-    wishlisted: Boolean,
-    pressed: Boolean
+    wishlisted: Boolean = false,
+    button: Boolean = false
 ) {
-    var pressed1 = pressed
     Column(modifier = Modifier.padding(0.dp)) {
         AsyncImage(
             model = posterUrl,
@@ -148,74 +147,10 @@ private fun VerticalContentCard(
         ) {
             ContentCardText(title, date, rating)
         }
-        if (wishlisted) {
+        if (button) {
             Button(
                 onClick = {
-                    pressed1 = !pressed1
-                    if (pressed1) {
-                        // Add to wishlist and change the button icon
-                    } else {
-                        // Erase from wishlist and change the button icon
-                    }
-                },
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = DarkCoffee
-                ),
-                shape = RoundedCornerShape(8.dp)
-            ) {
-                if (!pressed1) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Add",
-                        tint = LightCaramel
-                    )
-                } else {
-                    Icon(
-                        imageVector = Icons.Default.Check,
-                        contentDescription = "Add",
-                        tint = LightCaramel
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun HorizontalContentCard(
-    posterUrl: String?,
-    title: String,
-    date: LocalDate?,
-    rating: Double,
-    wishlisted: Boolean,
-    pressed: Boolean
-) {
-    var pressed1 = pressed
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(100.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        AsyncImage(
-            model = posterUrl,
-            contentDescription = title,
-            contentScale = ContentScale.Crop,
-            placeholder = painterResource(R.drawable.placeholder_poster),
-            error = painterResource(R.drawable.placeholder_poster),
-            modifier = Modifier.size(100.dp)
-        )
-        Surface(
-            onClick = { /* When pressed i'll see ContentPage of the film/show */ },
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(8.dp)
-        ) { ContentCardText(title, date, rating, Modifier.weight(1f)) }
-        if (wishlisted) {
-            Button(
-                onClick = {
-                    pressed1 = !pressed1
-                    if (pressed1) {
+                    if (!wishlisted) {
                         // Add wishlist and change the button icon
                     } else {
                         // Erase from wishlist and change the button icon
@@ -233,16 +168,83 @@ private fun HorizontalContentCard(
                     topEnd = 12.dp, bottomEnd = 12.dp
                 )
             ) {
-                if (!pressed1) {
+                if (!wishlisted) {
                     Icon(
                         imageVector = Icons.Default.Add,
-                        contentDescription = "Add",
+                        contentDescription = "Not wishlisted",
                         tint = LightCaramel
                     )
                 } else {
                     Icon(
                         imageVector = Icons.Default.Check,
-                        contentDescription = "Add",
+                        contentDescription = "Wishlisted",
+                        tint = LightCaramel
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun HorizontalContentCard(
+    posterUrl: String?,
+    title: String,
+    date: LocalDate?,
+    rating: Double,
+    wishlisted: Boolean = false,
+    button: Boolean = false
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(100.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        AsyncImage(
+            model = posterUrl,
+            contentDescription = title,
+            contentScale = ContentScale.Crop,
+            placeholder = painterResource(R.drawable.placeholder_poster),
+            error = painterResource(R.drawable.placeholder_poster),
+            modifier = Modifier.size(100.dp)
+        )
+        Surface(
+            onClick = { /* When pressed i'll see ContentPage of the film/show */ },
+            modifier = Modifier.weight(1f),
+            shape = RoundedCornerShape(8.dp)
+        ) { ContentCardText(title, date, rating) }
+        if (button) {
+            Button(
+                onClick = {
+                    if (!wishlisted) {
+                        // Add wishlist and change the button icon
+                    } else {
+                        // Erase from wishlist and change the button icon
+                    }
+                },
+                modifier = Modifier
+                    .width(56.dp)
+                    .fillMaxHeight(),
+                contentPadding = PaddingValues(0.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = DarkCoffee
+                ),
+                shape = RoundedCornerShape(
+                    topStart = 0.dp, bottomStart = 0.dp,
+                    topEnd = 12.dp, bottomEnd = 12.dp
+                )
+            ) {
+                if (!wishlisted) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Not wishlisted",
+                        tint = LightCaramel
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.Check,
+                        contentDescription = "Whishlisted",
                         tint = LightCaramel
                     )
                 }
@@ -262,26 +264,29 @@ private fun ContentCardText(
         Text(
             text = title,
             fontSize = 14.sp,
-            fontWeight = FontWeight.Bold,
-            color = DarkCoffee
+            fontWeight = FontWeight.Bold
         )
         Text(
             text = (if (date != null) "${date} · " else "") + "$rating ★",
-            fontSize = 14.sp,
-            color = DarkCoffee
+            fontSize = 14.sp
         )
     }
 }
 
 @Composable
 fun EpisodeContentCard(
-    showName: String,
-    seasonNumber: Int,
-    episodeNumber: Int,
-    episodeTitle: String,
-    posterUrl: String?,
+    episode: Episode,
     orientation: Boolean = false // false = horizontal row, true = vertical poster
 ) {
+    var showName = "Unknown"
+    var posterUrl: String? = null
+    val context = LocalContext.current
+    val tvShow = getTvShow(context, episode.showId)
+    if (tvShow != null) {
+        showName = tvShow.title
+        posterUrl = tvShow.poster_path
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -304,7 +309,7 @@ fun EpisodeContentCard(
                         .height(160.dp)
                 )
                 Spacer(Modifier.height(8.dp))
-                EpisodeContentCardText(showName, seasonNumber, episodeNumber,  episodeTitle)
+                EpisodeContentCardText(showName, episode.seasonNumber, episode.episodeNumber,  episode.title)
             }
         } else {
             // Horizontal layout: image left, text right
@@ -320,15 +325,21 @@ fun EpisodeContentCard(
                     error = painterResource(R.drawable.placeholder_poster),
                     modifier = Modifier.size(100.dp)
                 )
-                EpisodeContentCardText(showName, seasonNumber, episodeNumber,  episodeTitle)
+                EpisodeContentCardText(showName, episode.seasonNumber, episode.episodeNumber,  episode.title)
             }
         }
     }
 }
 
 @Composable
-private fun EpisodeContentCardText(showName: String, seasonNumber: Int, episodeNumber: Int, episodeTitle: String) {
-    Column {
+fun EpisodeContentCardText(
+    showName: String,
+    seasonNumber: Int,
+    episodeNumber: Int,
+    episodeTitle: String,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier.padding(10.dp)) {
         Text(
             text = "$showName | S${seasonNumber}E${episodeNumber}",
             fontSize = 14.sp,
@@ -341,7 +352,7 @@ private fun EpisodeContentCardText(showName: String, seasonNumber: Int, episodeN
     }
 }
 
-private fun String?.toLocalDateOrNull(): LocalDate? {
+fun String?.toLocalDateOrNull(): LocalDate? {
     if (this.isNullOrBlank()) return null
     return runCatching { LocalDate.parse(this) }.getOrNull()
 }

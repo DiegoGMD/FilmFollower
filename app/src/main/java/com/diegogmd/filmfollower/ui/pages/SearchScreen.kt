@@ -108,7 +108,7 @@ fun SearchScreen(
                 .verticalScroll(rememberScrollState())
         ) {
             listToShow.forEach { item ->
-                ContentCard(item, false, true)
+                ContentCard(item, false)
             }
         }
     }

@@ -57,19 +57,10 @@ fun ShowsScreen(modifier: Modifier, navController: NavHostController){
 @Composable
 private fun EpisodeList(modifier: Modifier, episodes: List<Episode>) {
     LazyColumn(
-        modifier = modifier.fillMaxSize(),
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(12.dp)
+        modifier = modifier.fillMaxWidth()
     ) {
         items(episodes, key = { it.showId }) { episode ->
-            val context = LocalContext.current
-            val tvShow = getTvShow(context, episode.showId)
-            if (tvShow != null) {
-                val tvShowName = tvShow.title
-                val tvShowPoster = tvShow.poster_path
-
-                EpisodeContentCard(tvShowName, episode.seasonNumber, episode.episodeNumber,
-                    episode.title, tvShowPoster)
-            }
+            EpisodeContentCard(episode)
         }
     }
 }

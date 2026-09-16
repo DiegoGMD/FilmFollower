@@ -40,6 +40,8 @@ import com.diegogmd.filmfollower.getPlaceholderFilm
 import com.diegogmd.filmfollower.ui.theme.DarkCoffee
 import com.diegogmd.filmfollower.ui.theme.OliveWood
 
+// Remember, this page is for displaying the info from a film/show in full screen
+
 @Composable
 fun ContentPageFilm(
     modifier: Modifier,
