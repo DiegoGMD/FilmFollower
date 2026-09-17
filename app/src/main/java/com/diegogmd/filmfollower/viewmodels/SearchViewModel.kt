@@ -1,9 +1,12 @@
 package com.diegogmd.filmfollower.viewmodels
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.diegogmd.filmfollower.data.local.remote.tmdbApi
 import com.diegogmd.filmfollower.model.MultiSearchResult
 import com.diegogmd.filmfollower.data.repository.SearchRepository
+import com.diegogmd.filmfollower.model.Film
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,6 +19,8 @@ class SearchViewModel(private val repository: SearchRepository) : ViewModel() {
 
     private val _trending = MutableStateFlow<List<MultiSearchResult>>(emptyList())
     val trending: StateFlow<List<MultiSearchResult>> = _trending
+
+    var newFilm: Film? =  null
 
     private var searchJob: Job? = null
 
@@ -35,5 +40,12 @@ class SearchViewModel(private val repository: SearchRepository) : ViewModel() {
             delay(400) // debounce so you're not hitting the API on every keystroke
             _results.value = repository.search(query)
         }
+    }
+}
+
+class SearchViewModelFactory : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        @Suppress("UNCHECKED_CAST")
+        return SearchViewModel(SearchRepository(tmdbApi)) as T
     }
 }

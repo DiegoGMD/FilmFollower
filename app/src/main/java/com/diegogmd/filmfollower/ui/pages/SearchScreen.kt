@@ -26,18 +26,15 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.diegogmd.filmfollower.R
-import com.diegogmd.filmfollower.data.repository.SearchRepository
 import com.diegogmd.filmfollower.viewmodels.SearchViewModel
-import com.diegogmd.filmfollower.data.local.remote.tmdbApi
 import com.diegogmd.filmfollower.ui.components.ContentCard
 import com.diegogmd.filmfollower.ui.theme.DarkCoffee
 import com.diegogmd.filmfollower.ui.theme.FadedCopper
 import com.diegogmd.filmfollower.ui.theme.LightCaramel
+import com.diegogmd.filmfollower.viewmodels.SearchViewModelFactory
 
 @Composable
 fun SearchScreen(
@@ -111,12 +108,5 @@ fun SearchScreen(
                 ContentCard(item, false)
             }
         }
-    }
-}
-
-class SearchViewModelFactory : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        @Suppress("UNCHECKED_CAST")
-        return SearchViewModel(SearchRepository(tmdbApi)) as T
     }
 }

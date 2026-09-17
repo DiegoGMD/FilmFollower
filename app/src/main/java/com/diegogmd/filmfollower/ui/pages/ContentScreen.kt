@@ -27,18 +27,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.diegogmd.filmfollower.R
-import com.diegogmd.filmfollower.data.repository.SearchRepository
-import com.diegogmd.filmfollower.data.local.remote.tmdbApi
 import com.diegogmd.filmfollower.viewmodels.FilmViewModel
 import com.diegogmd.filmfollower.model.Film
 import com.diegogmd.filmfollower.getPlaceholderFilm
 import com.diegogmd.filmfollower.ui.theme.DarkCoffee
 import com.diegogmd.filmfollower.ui.theme.OliveWood
+import com.diegogmd.filmfollower.viewmodels.FilmViewModelFactory
 
 // Remember, this page is for displaying the info from a film/show in full screen
 
@@ -194,11 +191,4 @@ fun FilmDetailScreenPreview() {
 @Composable
 fun ContentPageShowLayout() {
     TODO("Not yet implemented")
-}
-
-class FilmViewModelFactory : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        @Suppress("UNCHECKED_CAST")
-        return FilmViewModel(SearchRepository(tmdbApi)) as T
-    }
 }

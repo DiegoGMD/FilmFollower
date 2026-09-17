@@ -24,10 +24,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import org.threeten.bp.LocalDate
 import androidx.compose.ui.Modifier
@@ -37,6 +33,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import com.diegogmd.filmfollower.R
@@ -45,8 +42,11 @@ import com.diegogmd.filmfollower.model.MultiSearchResult
 import com.diegogmd.filmfollower.model.Film
 import com.diegogmd.filmfollower.model.getFilm
 import com.diegogmd.filmfollower.model.getTvShow
+import com.diegogmd.filmfollower.model.eraseFilm
 import com.diegogmd.filmfollower.ui.theme.DarkCoffee
 import com.diegogmd.filmfollower.ui.theme.LightCaramel
+import com.diegogmd.filmfollower.viewmodels.FilmViewModel
+import com.diegogmd.filmfollower.viewmodels.FilmViewModelFactory
 
 @Composable
 fun ContentCard(
@@ -79,10 +79,10 @@ fun ContentCard(
 
         if (orientation) {
             // Vertical layout: image on top, text below
-            VerticalContentCard(posterUrl, title, date, rating, wishlisted, true)
+            VerticalContentCard(content.id, posterUrl, title, date, rating, wishlisted, true)
         } else {
             // Horizontal layout: image left, text right
-            HorizontalContentCard(posterUrl, title, date, rating, wishlisted, true)
+            HorizontalContentCard(content.id, posterUrl, title, date, rating, wishlisted, true)
         }
     }
 }
@@ -93,10 +93,7 @@ fun ContentCard(
     orientation: Boolean = false, // false = horizontal row, true = vertical poster
 ) {
     val navController = rememberNavController()
-    val title = content.title
     val posterUrl = content.posterPath?.let { "https://image.tmdb.org/t/p/w92$it" }
-    val date = content.releaseDate
-    val rating = content.rating
 
     Card(
         modifier = Modifier
@@ -112,16 +109,17 @@ fun ContentCard(
 
         if (orientation) {
             // Vertical layout: image on top, text below
-            VerticalContentCard(posterUrl, title, date, rating)
+            VerticalContentCard(content.filmId, posterUrl, content.title, content.releaseDate, content.rating)
         } else {
             // Horizontal layout: image left, text right
-            HorizontalContentCard(posterUrl, title, date, rating)
+            HorizontalContentCard(content.filmId, posterUrl, content.title, content.releaseDate, content.rating)
         }
     }
 }
 
 @Composable
 private fun VerticalContentCard(
+    filmId: Int,
     posterUrl: String?,
     title: String,
     date: LocalDate?,
@@ -188,12 +186,14 @@ private fun VerticalContentCard(
 
 @Composable
 private fun HorizontalContentCard(
+    filmId: Int,
     posterUrl: String?,
     title: String,
     date: LocalDate?,
     rating: Double,
     wishlisted: Boolean = false,
-    button: Boolean = false
+    button: Boolean = false,
+    viewModel: FilmViewModel = viewModel(factory = FilmViewModelFactory())
 ) {
     Row(
         modifier = Modifier
@@ -215,12 +215,14 @@ private fun HorizontalContentCard(
             shape = RoundedCornerShape(8.dp)
         ) { ContentCardText(title, date, rating) }
         if (button) {
+            val context = LocalContext.current
+
             Button(
                 onClick = {
                     if (!wishlisted) {
-                        // Add wishlist and change the button icon
+                        viewModel.addFilmToWishlist(context, filmId)
                     } else {
-                        // Erase from wishlist and change the button icon
+                        eraseFilm(context, filmId)
                     }
                 },
                 modifier = Modifier

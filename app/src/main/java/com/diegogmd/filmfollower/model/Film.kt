@@ -40,17 +40,41 @@ class Film(
                 put("tmdb_last_synced", tmdbLastSynced.toString())
                 put("rating", rating)
                 put("watch_status", watchStatus)
-                put("watched_date", watchedDate.toString())
+                put("watched_date", watchedDate?.toString())
                 put("times_watched", timesWatched)
                 put("added_at", addedAt.toString())
             }
-            db.insert("film", null, contentValues)
+            db.insert("Film", null, contentValues)
 
         } catch (e: Exception) {
             Log.e("Database", "Error inserting new film", e)
         } finally {
             db.close()
         }
+    }
+
+    fun eraseFilm(context: Context): Int {
+        val dbHelper = FilmFillowerDatabase(context)
+        val db = dbHelper.writableDatabase
+        var rowsAffected = 0
+
+        try {
+            val whereClause = "film_id = ?"
+            val whereArgs = arrayOf(filmId.toString())
+
+            rowsAffected = db.delete("Film", whereClause, whereArgs)
+
+            if (rowsAffected > 0) {
+                Log.d("Database", "Irrigation deleted successfully. Rows affected: $rowsAffected")
+            } else {
+                Log.e("Database", "Failed to delete irrigation with ID: $filmId")
+            }
+        } catch (e: Exception) {
+            Log.e("Database", "Error deleting irrigation", e)
+        } finally {
+            db.close()
+        }
+        return rowsAffected
     }
 }
 
@@ -103,4 +127,16 @@ fun getFilm(context: Context, filmId: Int): Film? {
     }
 
     return theFilm
+}
+
+fun eraseFilm(
+    context: Context,
+    filmId: Int,
+) {
+    val wishlistedFilm: Film? = getFilm(context, filmId)
+    if (wishlistedFilm == null) {
+        Log.e("Database", "Error getting film")
+    } else {
+        wishlistedFilm.eraseFilm(context)
+    }
 }

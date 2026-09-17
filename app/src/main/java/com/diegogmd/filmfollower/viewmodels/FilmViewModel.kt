@@ -1,7 +1,10 @@
 package com.diegogmd.filmfollower.viewmodels
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.diegogmd.filmfollower.data.local.remote.tmdbApi
 import com.diegogmd.filmfollower.data.repository.SearchRepository
 import com.diegogmd.filmfollower.model.Film
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,5 +25,19 @@ class FilmViewModel(private val repository: SearchRepository) : ViewModel() {
             _film.value = repository.getFilm(id)
             _isLoading.value = false
         }
+    }
+
+    fun addFilmToWishlist(context: Context, id: Int) {
+        viewModelScope.launch {
+            val film = repository.getFilm(id)
+            film.insertNewFilm(context)
+        }
+    }
+}
+
+class FilmViewModelFactory : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        @Suppress("UNCHECKED_CAST")
+        return FilmViewModel(SearchRepository(tmdbApi)) as T
     }
 }
