@@ -1,15 +1,23 @@
 package com.diegogmd.filmfollower.data.local.remote
 
+import com.diegogmd.filmfollower.App
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
+import okio.IOException
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 val authInterceptor = Interceptor { chain ->
+    val token = ApiConfig.getTmdbToken(App.appContext)
+        ?: throw IOException(
+            "No TMDB API key saved yet — add one in Settings before making requests."
+        )
+
     val request = chain.request().newBuilder()
-        .addHeader("Authorization", "Bearer ${ApiConfig.TMDB_ACCESS_TOKEN}")
+        .addHeader("Authorization", "Bearer $token")
         .addHeader("accept", "application/json")
         .build()
+
     chain.proceed(request)
 }
 

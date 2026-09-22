@@ -65,12 +65,12 @@ class Film(
             rowsAffected = db.delete("Film", whereClause, whereArgs)
 
             if (rowsAffected > 0) {
-                Log.d("Database", "Irrigation deleted successfully. Rows affected: $rowsAffected")
+                Log.d("Database", "Film deleted successfully. Rows affected: $rowsAffected")
             } else {
-                Log.e("Database", "Failed to delete irrigation with ID: $filmId")
+                Log.e("Database", "Failed to delete film with ID: $filmId")
             }
         } catch (e: Exception) {
-            Log.e("Database", "Error deleting irrigation", e)
+            Log.e("Database", "Error deleting film", e)
         } finally {
             db.close()
         }

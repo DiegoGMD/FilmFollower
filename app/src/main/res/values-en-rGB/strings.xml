@@ -13,4 +13,6 @@
     <string name="upcoming">Upcoming</string>
     <string name="following">Following</string>
     <string name="search_bar">Search films &amp; TV shows</string>
+    <string name="welcome_text">Welcome to FilmFollower!\nTo use this app, you will need\na TMDB (The Movie Database) API key.</string>
+    <string name="save">SAVE</string>
 </resources>

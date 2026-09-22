@@ -20,16 +20,20 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.navigation.NavController
 import com.diegogmd.filmfollower.R
+import com.diegogmd.filmfollower.SecureStorage
 import kotlinx.coroutines.delay
 
 @Composable
 fun SplashScreen(navController: NavController) {
+    val context = LocalContext.current
     LaunchedEffect(Unit) {
         delay(500)
-        navController.navigate("Main") {
+        val destination = if (SecureStorage.hasCredentials(context)) "Main" else "Start"
+        navController.navigate(destination) {
             popUpTo("SplashScreen") { inclusive = true }
         }
     }
@@ -51,7 +55,7 @@ fun SplashScreen(navController: NavController) {
         if (maxScroll > 0) {
             offsetY.animateTo(
                 targetValue = maxScroll,
-                animationSpec = tween(durationMillis = 1800, easing = LinearEasing)
+                animationSpec = tween(durationMillis = 2000, easing = LinearEasing)
             )
         }
     }

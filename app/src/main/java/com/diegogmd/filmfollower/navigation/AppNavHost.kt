@@ -39,15 +39,15 @@ fun AppNavHost(
         }
         composable("ProfileScreen") {
             Box(Modifier) {
-                Text("Profile - coming soon")
+                Text("Coming soon")
             }
         }
-        composable(
-            route = "film/{filmId}",
-            arguments = listOf(navArgument("filmId") { type = NavType.IntType })
-        ) { backStackEntry ->
-            val filmId = backStackEntry.arguments?.getInt("filmId") ?: return@composable
-            ContentPageFilm(modifier = Modifier, filmId)
-        }
+//        composable(
+//            route = "film/{filmId}",
+//            arguments = listOf(navArgument("filmId") { type = NavType.IntType })
+//        ) { backStackEntry ->
+//            val filmId = backStackEntry.arguments?.getInt("filmId") ?: return@composable
+//            ContentPageFilm(modifier = Modifier, filmId)
+//        }
     }
 }
