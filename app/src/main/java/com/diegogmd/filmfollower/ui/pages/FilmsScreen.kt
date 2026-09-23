@@ -14,11 +14,13 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavHostController
 import com.diegogmd.filmfollower.R
 import com.diegogmd.filmfollower.model.Film
-import com.diegogmd.filmfollower.samplePlaceholderFilms
+import com.diegogmd.filmfollower.model.getWishlistedReleasedFilms
+import com.diegogmd.filmfollower.model.getWishlistedUpcomingFilms
 import com.diegogmd.filmfollower.ui.components.ContentCard
 import com.diegogmd.filmfollower.ui.theme.DarkCoffee
 import com.diegogmd.filmfollower.ui.theme.LightCaramel
@@ -27,6 +29,7 @@ import com.diegogmd.filmfollower.ui.theme.LightCaramel
 fun FilmsScreen(modifier: Modifier, navController: NavHostController) {
     val tabs = listOf(R.string.watch_list, R.string.upcoming)
     var selectedTab by remember { mutableIntStateOf(0) }
+    var context = LocalContext.current
 
     Column(modifier = modifier.fillMaxSize()) {
         TabRow(
@@ -45,8 +48,8 @@ fun FilmsScreen(modifier: Modifier, navController: NavHostController) {
         }
 
         when (selectedTab) {
-            0 -> FilmList(Modifier.weight(1f), films = samplePlaceholderFilms())
-            1 -> FilmList(Modifier.weight(1f), films = samplePlaceholderFilms())
+            0 -> FilmList(Modifier.weight(1f), films = getWishlistedReleasedFilms(context))
+            1 -> FilmList(Modifier.weight(1f), films = getWishlistedUpcomingFilms(context))
         }
     }
 }

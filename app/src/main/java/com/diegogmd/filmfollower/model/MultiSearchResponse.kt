@@ -17,26 +17,38 @@ data class MultiSearchResult(
     val poster_path: String? = null,
     val release_date: String? = null, // movies
     val first_air_date: String? = null, // tv
-    val vote_average: Double = 0.0 // TMDB's average rating out of 10
+    val vote_average: Double? // TMDB's average rating out of 10
 ) {
     val displayTitle: String get() = title ?: name ?: "Unknown"
     val displayMediaType: String get() = media_type ?: "Unknown"
 }
 
 data class FilmDetailsResponse(
-    val filmId: Int,
+    val id: Int,
     val title:String,
     val original_title:String,
     val overview:String,
     val release_date: String? = null,
     val runtime: Int = 0,
-    val rating: Double,
+    val vote_average: Double,
     val poster_path: String? = null,
-    val tmdb_status:String,
+    val status:String,
 ) {
     fun toFilm(): Film {
+        println(
+            "Film ID:\t\t$id\n" +
+                    "Title:\t\t$title\n" +
+                    "Original Title:\t$original_title\n" +
+                    "Overview:\t\t$overview\n" +
+                    "Release Date:\t${release_date ?: "N/A"}\n" +
+                    "Runtime:\t\t${runtime} min\n" +
+                    "Rating:\t\t$vote_average/10\n" +
+                    "Poster Path:\t${poster_path ?: "N/A"}\n" +
+                    "Status:\t\t$status"
+        )
+
         return Film(
-            filmId = filmId,
+            filmId = id,
             title = title,
             originalTitle = original_title,
             overview = overview,
@@ -47,10 +59,10 @@ data class FilmDetailsResponse(
             },
             runtime = runtime ?: 0,
             posterPath = poster_path ?: "",
-            tmdbStatus = tmdb_status,
+            tmdbStatus = status,
             tmdbLastSynced = LocalDate.now(),
-            rating = rating,
-            watchStatus = "NOT_WATCHED",// default value
+            rating = vote_average,
+            watchStatus = "wishlist",// default value
             watchedDate = null,
             timesWatched = 0,
             addedAt = LocalDate.now()

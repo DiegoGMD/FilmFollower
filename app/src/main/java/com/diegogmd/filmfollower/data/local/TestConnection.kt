@@ -12,7 +12,7 @@ fun main() = runBlocking {
     println("Testing TMDB connection...")
 
     try {
-        val response = tmdbApi.searchMulti(query = "Matrix")
+        val response = tmdbApi.searchMulti(query = "Resident Evil")
 
         println("Success! Got ${response.results.size} results (page ${response.page} of ${response.totalPages})")
 

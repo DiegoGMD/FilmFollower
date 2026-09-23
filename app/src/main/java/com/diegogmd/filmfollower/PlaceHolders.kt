@@ -137,7 +137,7 @@ fun samplePlaceholderFilms(): List<Film> = listOf(
                 "captain Han Solo team together with the loveable robot duo R2-D2 and C-3PO to " +
                 "rescue the beautiful princess and restore peace and justice in the Empire.",
         LocalDate.of(1997, 5, 25), 121,
-        "sLAoSvh6U1z2JuKHFBtUzikWiHm.jpg","Released",
+        "/sLAoSvh6U1z2JuKHFBtUzikWiHm.jpg","Released",
         LocalDate.of(2026, 7, 31), 8.2, "Watchlist",
         LocalDate.of(2009, 1, 1), 10,
         LocalDate.of(2026, 7, 31)

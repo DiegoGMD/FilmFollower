@@ -14,7 +14,7 @@ class TvShow (
     val first_air_date: LocalDate, // YYYY-MM-DD
     val number_of_seasons: Int,
     val number_of_episodes: Int,
-    var rating: Double = 0.0, // from 0 to 10, default is 0
+    var rating: Double?, // from 0 to 10, default is 0
     var poster_path: String? = "",
     var tmdb_status: String = "",
     var tmdb_last_synced: LocalDate,
@@ -34,7 +34,11 @@ class TvShow (
                 put("first_air_date", first_air_date.toString())
                 put("number_of_seasons", number_of_seasons)
                 put("number_of_episodes", number_of_episodes)
-                put("rating", rating)
+                if (rating != null) {
+                    put("rating", rating.toString())
+                } else {
+                    putNull("rating")
+                }
                 put("poster_path", poster_path)
                 put("tmdb_status", tmdb_status)
                 put("tmdb_last_synced", tmdb_last_synced.toString())

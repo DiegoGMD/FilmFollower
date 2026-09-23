@@ -2,6 +2,7 @@ package com.diegogmd.filmfollower.model
 
 import android.content.ContentValues
 import android.content.Context
+import android.database.Cursor
 import android.util.Log
 import com.diegogmd.filmfollower.data.local.FilmFillowerDatabase
 import org.threeten.bp.LocalDate
@@ -17,7 +18,7 @@ class Film(
     val posterPath:String,
     val tmdbStatus:String,
     val tmdbLastSynced:LocalDate,
-    val rating: Double,
+    val rating: Double?,
     val watchStatus:String,
     val watchedDate: LocalDate?,
     val timesWatched: Int = 0,
@@ -38,9 +39,17 @@ class Film(
                 put("poster_path", posterPath)
                 put("tmdb_status", tmdbStatus)
                 put("tmdb_last_synced", tmdbLastSynced.toString())
-                put("rating", rating)
+                if (rating != null) {
+                    put("rating", rating.toString())
+                } else {
+                    putNull("rating")
+                }
                 put("watch_status", watchStatus)
-                put("watched_date", watchedDate?.toString())
+                if (watchedDate != null) {
+                    put("watched_date", watchedDate.toString())
+                } else {
+                    putNull("watched_date")
+                }
                 put("times_watched", timesWatched)
                 put("added_at", addedAt.toString())
             }
@@ -114,7 +123,7 @@ fun getFilm(context: Context, filmId: Int): Film? {
                 tmdbLastSynced = LocalDate.parse(dateStr2),
                 rating = cursor.getDouble(cursor.getColumnIndexOrThrow("rating")),
                 watchStatus = cursor.getString(cursor.getColumnIndexOrThrow("watch_status")),
-                watchedDate = LocalDate.parse(dateStr3),
+                watchedDate = dateStr3?.let { LocalDate.parse(it) },
                 timesWatched = cursor.getInt(cursor.getColumnIndexOrThrow("times_watched")),
                 addedAt = LocalDate.parse(dateStr4)
             )
@@ -140,3 +149,68 @@ fun eraseFilm(
         wishlistedFilm.eraseFilm(context)
     }
 }
+
+private fun cursorToFilm(cursor: Cursor): Film {
+    return Film(
+        filmId = cursor.getInt(cursor.getColumnIndexOrThrow("film_id")),
+        title = cursor.getString(cursor.getColumnIndexOrThrow("title")),
+        originalTitle = cursor.getString(cursor.getColumnIndexOrThrow("original_title")),
+        overview = cursor.getString(cursor.getColumnIndexOrThrow("overview")),
+        releaseDate = LocalDate.parse(cursor.getString(cursor.getColumnIndexOrThrow("release_date"))),
+        runtime = cursor.getInt(cursor.getColumnIndexOrThrow("runtime")),
+        posterPath = cursor.getString(cursor.getColumnIndexOrThrow("poster_path")),
+        tmdbStatus = cursor.getString(cursor.getColumnIndexOrThrow("tmdb_status")),
+        tmdbLastSynced = LocalDate.parse(cursor.getString(cursor.getColumnIndexOrThrow("tmdb_last_synced"))),
+        rating = if (cursor.isNull(cursor.getColumnIndexOrThrow("rating"))) null
+                 else cursor.getDouble(cursor.getColumnIndexOrThrow("rating")),
+        watchStatus = cursor.getString(cursor.getColumnIndexOrThrow("watch_status")),
+        watchedDate = cursor.getString(cursor.getColumnIndexOrThrow("watched_date"))?.let { LocalDate.parse(it) },
+        timesWatched = cursor.getInt(cursor.getColumnIndexOrThrow("times_watched")),
+        addedAt = LocalDate.parse(cursor.getString(cursor.getColumnIndexOrThrow("added_at")))
+    )
+}
+
+private fun queryFilms(context: Context, whereClause: String? = null, whereArgs: Array<String>? = null): List<Film> {
+    val dbHelper = FilmFillowerDatabase(context)
+    val db = dbHelper.readableDatabase
+    val films = mutableListOf<Film>()
+
+    try {
+        val cursor = db.query(
+            "Film",
+            null,
+            whereClause,
+            whereArgs,
+            null,
+            null,
+            "release_date DESC"
+        )
+        cursor.use {
+            while (it.moveToNext()) {
+                films.add(cursorToFilm(it))
+            }
+        }
+    } catch (e: Exception) {
+        Log.e("Database", "Error querying films", e)
+    } finally {
+        db.close()
+    }
+    return films
+}
+
+fun getWishlistedFilms(context: Context): List<Film> =
+    queryFilms(context, "watch_status = ?", arrayOf("wishlist"))
+
+fun getWishlistedReleasedFilms(context: Context): List<Film> =
+    queryFilms(
+        context,
+        "release_date <= ? AND watch_status = ?",
+        arrayOf(LocalDate.now().toString(), "wishlist")
+    )
+
+fun getWishlistedUpcomingFilms(context: Context): List<Film> =
+    queryFilms(
+        context,
+        "release_date > ? AND watch_status = ?",
+        arrayOf(LocalDate.now().toString(), "wishlist")
+    )

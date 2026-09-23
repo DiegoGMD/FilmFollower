@@ -35,7 +35,7 @@ class FilmFillowerDatabase(context: Context) : SQLiteOpenHelper(context, DATABAS
                 poster_path TEXT,
                 tmdb_status TEXT,
                 tmdb_last_synced TIMESTAMP,
-                rating INTEGER CHECK (rating BETWEEN 1 AND 10),
+                rating REAL CHECK (rating BETWEEN 0 AND 10),
                 watch_status TEXT NOT NULL DEFAULT 'wishlist' CHECK (watch_status IN ('wishlist','watching','seen')),
                 watched_date TEXT,
                 times_watched INTEGER NOT NULL DEFAULT 0,
@@ -73,7 +73,7 @@ class FilmFillowerDatabase(context: Context) : SQLiteOpenHelper(context, DATABAS
                 tmdb_status TEXT,
                 tmdb_last_synced TIMESTAMP,
                 watch_status TEXT NOT NULL DEFAULT 'wishlist' CHECK (watch_status IN ('wishlist','watching','completed','dropped')),
-                rating INTEGER CHECK (rating BETWEEN 1 AND 10),
+                rating REAL CHECK (rating BETWEEN 0 AND 10),
                 added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         """.trimIndent()

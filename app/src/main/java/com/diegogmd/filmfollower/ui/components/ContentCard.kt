@@ -62,7 +62,7 @@ fun ContentCard(
         "tv" -> content.first_air_date.toLocalDateOrNull()
         else -> null // "person" and anything unexpected
     }
-    val rating = Math.round(content.vote_average * 10) / 10.0
+    val rating = if (content.vote_average != null) Math.round(content.vote_average * 10) / 10.0 else null
     val wishlisted = if (getFilm(context, content.id) == null) false else true
 
     Card(
@@ -93,7 +93,7 @@ fun ContentCard(
     orientation: Boolean = false, // false = horizontal row, true = vertical poster
 ) {
     val navController = rememberNavController()
-    val posterUrl = content.posterPath?.let { "https://image.tmdb.org/t/p/w92$it" }
+    val posterUrl = content.posterPath?.let { "https://image.tmdb.org/t/p/w342$it" }
 
     Card(
         modifier = Modifier
@@ -123,10 +123,13 @@ private fun VerticalContentCard(
     posterUrl: String?,
     title: String,
     date: LocalDate?,
-    rating: Double,
+    rating: Double?,
     wishlisted: Boolean = false,
-    button: Boolean = false
+    button: Boolean = false,
+    viewModel: FilmViewModel = viewModel(factory = FilmViewModelFactory())
 ) {
+    var wishlisted = wishlisted
+
     Column(modifier = Modifier.padding(0.dp)) {
         AsyncImage(
             model = posterUrl,
@@ -146,13 +149,16 @@ private fun VerticalContentCard(
             ContentCardText(title, date, rating)
         }
         if (button) {
+            val context = LocalContext.current
+
             Button(
                 onClick = {
                     if (!wishlisted) {
-                        // Add wishlist and change the button icon
+                        viewModel.addFilmToWishlist(context, filmId)
                     } else {
-                        // Erase from wishlist and change the button icon
+                        eraseFilm(context, filmId)
                     }
+                    wishlisted = !wishlisted
                 },
                 modifier = Modifier
                     .width(56.dp)
@@ -190,11 +196,13 @@ private fun HorizontalContentCard(
     posterUrl: String?,
     title: String,
     date: LocalDate?,
-    rating: Double,
+    rating: Double?,
     wishlisted: Boolean = false,
     button: Boolean = false,
     viewModel: FilmViewModel = viewModel(factory = FilmViewModelFactory())
 ) {
+    var wishlisted = wishlisted
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -224,6 +232,7 @@ private fun HorizontalContentCard(
                     } else {
                         eraseFilm(context, filmId)
                     }
+                    wishlisted = !wishlisted
                 },
                 modifier = Modifier
                     .width(56.dp)
@@ -259,7 +268,7 @@ private fun HorizontalContentCard(
 private fun ContentCardText(
     title: String,
     date: LocalDate?,
-    rating: Double,
+    rating: Double?,
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier.padding(10.dp)) {
@@ -269,7 +278,7 @@ private fun ContentCardText(
             fontWeight = FontWeight.Bold
         )
         Text(
-            text = (if (date != null) "${date} · " else "") + "$rating ★",
+            text = (if (date != null) "${date} · " else "") + (if (rating != null) "${rating} ★" else "? ★"),
             fontSize = 14.sp
         )
     }
