@@ -41,7 +41,7 @@ import com.diegogmd.filmfollower.viewmodels.FilmViewModelFactory
 
 @Composable
 fun ContentPageFilm(
-    modifier: Modifier,
+    modifier: Modifier = Modifier,
     filmId: Int,
     viewModel: FilmViewModel = viewModel(factory = FilmViewModelFactory())
 ) {

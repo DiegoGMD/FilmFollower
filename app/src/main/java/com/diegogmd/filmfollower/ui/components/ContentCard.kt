@@ -43,6 +43,7 @@ import com.diegogmd.filmfollower.model.Film
 import com.diegogmd.filmfollower.model.getFilm
 import com.diegogmd.filmfollower.model.getTvShow
 import com.diegogmd.filmfollower.model.eraseFilm
+import com.diegogmd.filmfollower.ui.pages.ContentPageFilm
 import com.diegogmd.filmfollower.ui.theme.DarkCoffee
 import com.diegogmd.filmfollower.ui.theme.LightCaramel
 import com.diegogmd.filmfollower.viewmodels.FilmViewModel
@@ -128,6 +129,7 @@ private fun VerticalContentCard(
     button: Boolean = false,
     viewModel: FilmViewModel = viewModel(factory = FilmViewModelFactory())
 ) {
+    // val navController = rememberNavController()
     var wishlisted = wishlisted
 
     Column(modifier = Modifier.padding(0.dp)) {
@@ -142,7 +144,7 @@ private fun VerticalContentCard(
                 .height(160.dp)
         )
         Surface(
-            onClick = { /* When pressed i'll see ContentPage of the film/show */ },
+            onClick = { /* navController.navigate("FrontPage") */ },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(8.dp)
         ) {
@@ -218,7 +220,7 @@ private fun HorizontalContentCard(
             modifier = Modifier.size(100.dp)
         )
         Surface(
-            onClick = { /* When pressed i'll see ContentPage of the film/show */ },
+            onClick = { /* When pressed i'll see ContentPage of the film/ */ },
             modifier = Modifier.weight(1f),
             shape = RoundedCornerShape(8.dp)
         ) { ContentCardText(title, date, rating) }

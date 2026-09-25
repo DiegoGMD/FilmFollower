@@ -21,6 +21,7 @@ import com.diegogmd.filmfollower.R
 import com.diegogmd.filmfollower.model.Film
 import com.diegogmd.filmfollower.model.getWishlistedReleasedFilms
 import com.diegogmd.filmfollower.model.getWishlistedUpcomingFilms
+import com.diegogmd.filmfollower.samplePlaceholderFilms
 import com.diegogmd.filmfollower.ui.components.ContentCard
 import com.diegogmd.filmfollower.ui.theme.DarkCoffee
 import com.diegogmd.filmfollower.ui.theme.LightCaramel
@@ -47,9 +48,14 @@ fun FilmsScreen(modifier: Modifier, navController: NavHostController) {
             }
         }
 
+//        when (selectedTab) {
+//            0 -> FilmList(Modifier.weight(1f), films = getWishlistedReleasedFilms(context))
+//            1 -> FilmList(Modifier.weight(1f), films = getWishlistedUpcomingFilms(context))
+//        }
+
         when (selectedTab) {
-            0 -> FilmList(Modifier.weight(1f), films = getWishlistedReleasedFilms(context))
-            1 -> FilmList(Modifier.weight(1f), films = getWishlistedUpcomingFilms(context))
+            0 -> FilmList(Modifier.weight(1f), films = samplePlaceholderFilms())
+            1 -> FilmList(Modifier.weight(1f), films = samplePlaceholderFilms())
         }
     }
 }

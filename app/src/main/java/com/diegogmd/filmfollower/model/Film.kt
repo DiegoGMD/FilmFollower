@@ -89,10 +89,10 @@ class Film(
 
 fun getFilm(context: Context, filmId: Int): Film? {
     val dbHelper = FilmFillowerDatabase(context)
-    val db = dbHelper.writableDatabase
+    val db = dbHelper.readableDatabase
     var theFilm: Film? = null
 
-    if(filmId == 0){
+    if (filmId == 0){
         Log.e("Database", "Error getting film info: filmId is null or 0")
         return null
     }
@@ -129,6 +129,8 @@ fun getFilm(context: Context, filmId: Int): Film? {
             )
 
         }
+        cursor.close()
+        Log.d("Database", "Successful Mission: Getting film info")
     } catch (e: Exception) {
         Log.e("Database", "Error getting film", e)
     } finally {
@@ -190,6 +192,8 @@ private fun queryFilms(context: Context, whereClause: String? = null, whereArgs:
                 films.add(cursorToFilm(it))
             }
         }
+        cursor.close()
+        Log.d("Database", "Successful Mission: Getting film info")
     } catch (e: Exception) {
         Log.e("Database", "Error querying films", e)
     } finally {
