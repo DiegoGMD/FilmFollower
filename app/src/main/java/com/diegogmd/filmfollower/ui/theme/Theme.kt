@@ -89,7 +89,7 @@ fun FilmFollowerTheme(
 
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = Typography,
+        typography = FilmTypography,
         content = content
     )
 }

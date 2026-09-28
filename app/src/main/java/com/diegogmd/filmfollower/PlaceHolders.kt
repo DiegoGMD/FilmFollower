@@ -147,7 +147,8 @@ fun samplePlaceholderFilms(): List<Film> = listOf(
         "When the sinister Sith unveil a thousand-year-old plot to rule the galaxy, " +
                 "the Republic crumbles and from its ashes rises the evil Galactic Empire. " +
                 "Jedi hero Anakin Skywalker must choose a side.",
-        LocalDate.of(2015, 5, 19), 140, "","Released",
+        LocalDate.of(2015, 5, 19), 140,
+        "/5dj0ERxM8NxoiWBdlY6TT9PJmKi.jpg","Released",
         LocalDate.of(2026, 7, 31), 7.5, "Watchlist",
         LocalDate.of(2009, 1, 1), 15,
         LocalDate.of(2026, 7, 31)
@@ -159,7 +160,8 @@ fun samplePlaceholderFilms(): List<Film> = listOf(
                 "the key to the planet's future, and races back to space to report to the humans. " +
                 "Meanwhile, WALL•E chases EVE across the galaxy and sets into motion one of the " +
                 "most imaginative adventures ever brought to the big screen.",
-        LocalDate.of(2008, 6, 21), 98, "","Released",
+        LocalDate.of(2008, 6, 21), 98,
+        "/5CXpoYB2YAZRPBcv9pjkgR6tZ0X.jpg","Released",
         LocalDate.of(2026, 7, 31), 8.1, "Watchlist",
         LocalDate.of(2009, 7, 29), 20,
         LocalDate.of(2026, 7, 31)
@@ -171,36 +173,74 @@ fun samplePlaceholderFilms(): List<Film> = listOf(
                 "its evil creator. Along the way, a fellowship is formed to protect the ringbearer " +
                 "and make sure that the ring arrives at its final destination: Mt. Doom, the only " +
                 "place where it can be destroyed.",
-        LocalDate.of(2001, 12, 10), 208, "","Released",
+        LocalDate.of(2001, 12, 10), 208,
+        "/9xtH1RmAzQ0rrMBNUMXstb2s3er.jpg","Released",
         LocalDate.of(2026, 7, 31), 8.4, "Watchlist",
         LocalDate.of(2025, 4, 14), 2,
-        LocalDate.of(2026, 7, 31)
-    ),
-    Film(1003596, "Avengers: Doomsday", "Avengers: Doomsday",
-        "Beloved heroes from three distinct universes are set on a deadly collision course " +
-                "and face an existential threat unlike anything they've ever encountered.",
-        LocalDate.of(2026, 12, 18), 208, "","Post Production",
-        LocalDate.of(2026, 7, 31), 8.4, "Watchlist",
-        null, 0,
         LocalDate.of(2026, 7, 31)
     ),
     Film(78, "Blade Runner", "Blade Runner",
         "In the smog-choked dystopian Los Angeles of 2019, blade runner Rick Deckard is " +
                 "called out of retirement to terminate a quartet of replicants who have escaped to " +
                 "Earth seeking their creator for a way to extend their short life spans.",
-        LocalDate.of(1982, 6, 25), 117, "","Released",
+        LocalDate.of(1982, 6, 25), 117,
+        "/pBA2J6iQMiP5Zd4ewMKdOWfq1HV.jpg","Released",
         LocalDate.of(2026, 7, 31), 7.9, "Watchlist",
-        LocalDate.of(2016, 8, 22), 1,
+        LocalDate.of(2016, 8, 22), 3,
+        LocalDate.of(2026, 7, 31)
+    ),
+    Film(652837, "Josee, the Tiger and the Fish", "ジョゼと虎と魚たち",
+        "With dreams of diving abroad, Tsuneo gets a job assisting Josee, an artist whose" +
+                " imagination takes her far beyond her wheelchair. But when the tide turns against" +
+                " them, they push each other to places they never thought possible, and inspire a" +
+                " love fit for a storybook.",
+        LocalDate.of(2020, 12, 25), 99,
+        "/z1D8xi9x4uEhyFruo7uEHXUMD4K.jpg","Released",
+        LocalDate.of(2026, 7, 31), 8.3, "Watchlist",
+        LocalDate.of(2022, 7, 27), 4,
+        LocalDate.of(2026, 7, 31)
+    ),
+    Film(105, "Back to the Future", "Back to the Future",
+        "Eighties teenager Marty McFly is accidentally sent back in time to 1955, " +
+                "inadvertently disrupting his parents' first meeting and attracting his mother's " +
+                "romantic interest. Marty must repair the damage to history by rekindling his " +
+                "parents' romance and - with the help of his eccentric inventor friend Doc Brown - " +
+                "return to 1985.",
+        LocalDate.of(2020, 12, 25), 99,
+        "/vN5B5WgYscRGcQpVhHl6p9DDTP0.jpg","Released",
+        LocalDate.of(1985, 12, 4), 8.3, "Watchlist",
+        LocalDate.of(2010, 5, 12), 5,
+        LocalDate.of(2026, 7, 31)
+    )
+)
+
+fun samplePlaceholderUpcomingFilms(): List<Film> = listOf(
+    Film(1003596, "Avengers: Doomsday", "Avengers: Doomsday",
+        "Beloved heroes from three distinct universes are set on a deadly collision course " +
+                "and face an existential threat unlike anything they've ever encountered.",
+        LocalDate.of(2026, 12, 18), 208,
+        "/jzPwsojjFStf5lR5Nm07w2hH56G.jpg","Post Production",
+        LocalDate.of(2026, 7, 31), 8.4, "Watchlist",
+        null, 0,
         LocalDate.of(2026, 7, 31)
     ),
     Film(1170608, "Dune: Part Three", "Dune: Part Three",
         "Emperor Paul Atreides faces the fallout from his ascent to power as political " +
                 "plots and a galaxy-wide holy war endanger the future only he can see.",
-        LocalDate.of(2026, 12, 18), 208, "","Post Production",
+        LocalDate.of(2026, 12, 18), 208,
+        "/uj4EuGmFNAc4CHBVEtRZ04MXzka.jpg","Post Production",
         LocalDate.of(2026, 7, 31), 8.4, "Watchlist",
         null, 0,
         LocalDate.of(2026, 7, 31)
     ),
+    Film(1311034, "Demon Slayer: Kimetsu no Yaiba - Infinity Castle 2", "劇場版「鬼滅の刃」無限城編 2",
+        "Plot TBA. The second installment in the Infinity Castle story arc.",
+        LocalDate.of(2099, 12, 31), 0,
+        "","In Production",
+        LocalDate.of(2026, 7, 31), null, "Watchlist",
+        null, 0,
+        LocalDate.of(2026, 7, 31)
+    )
 )
 
 fun getPlaceholderFilm(filmId: Int): Film? {

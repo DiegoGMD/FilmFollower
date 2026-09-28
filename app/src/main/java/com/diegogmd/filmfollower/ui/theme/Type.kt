@@ -24,6 +24,18 @@ val CourierPrime_BoldItalic = FontFamily(
     Font(R.font.courierprime_bolditalic, FontWeight.Normal)
 )
 
+val PlayfairDisplay_Bold = FontFamily(
+    Font(R.font.playfairdisplay_bold, FontWeight.Normal)
+)
+
+val PlayfairDisplay_Medium = FontFamily(
+    Font(R.font.playfairdisplay_medium, FontWeight.Normal)
+)
+
+val PlayfairDisplay_Italic = FontFamily(
+    Font(R.font.playfairdisplay_italic, FontWeight.Normal)
+)
+
 // Set of Material typography styles to start with
 val Typography = Typography(
     bodyLarge = TextStyle(
@@ -52,10 +64,29 @@ val Typography = Typography(
 )
 
 val FilmTypography = Typography(
+    titleMedium = TextStyle(
+        fontFamily = PlayfairDisplay_Bold,
+        fontWeight = FontWeight.Bold,
+        fontSize = 45.sp,
+        letterSpacing = 1.sp
+    ),
+    titleSmall = TextStyle(
+        fontFamily = PlayfairDisplay_Italic,
+        fontWeight = FontWeight.Bold,
+        fontSize = 14.sp,
+        letterSpacing = 0.5.sp
+    ),
     bodyLarge = TextStyle(
-        fontFamily = CourierPrime_BoldItalic,
+        fontFamily = PlayfairDisplay_Medium,
         fontWeight = FontWeight.Normal,
-        fontSize = 16.sp,
+        fontSize = 14.sp,
+        lineHeight = 24.sp,
+        letterSpacing = 0.5.sp
+    ),
+    labelMedium = TextStyle(
+        fontFamily = CourierPrime_Bold,
+        fontWeight = FontWeight.Normal,
+        fontSize = 14.sp,
         lineHeight = 24.sp,
         letterSpacing = 0.5.sp
     )

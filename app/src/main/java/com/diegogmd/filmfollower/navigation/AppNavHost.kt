@@ -10,10 +10,11 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.diegogmd.filmfollower.ui.pages.ContentPageFilm
+import com.diegogmd.filmfollower.ui.pages.ContentScreenFilm
 import com.diegogmd.filmfollower.ui.pages.FilmsScreen
 import com.diegogmd.filmfollower.ui.pages.SearchScreen
 import com.diegogmd.filmfollower.ui.pages.ShowsScreen
+import com.diegogmd.filmfollower.ui.pages.StartScreen
 
 @Composable
 fun AppNavHost(
@@ -37,17 +38,20 @@ fun AppNavHost(
                 modifier = Modifier.fillMaxSize(),
                 navController = navController)
         }
-        composable("ProfileScreen") {
-            Box(Modifier) {
-                Text("Coming soon")
-            }
-        }
-//        composable(
-//            route = "film/{filmId}",
-//            arguments = listOf(navArgument("filmId") { type = NavType.IntType })
-//        ) { backStackEntry ->
-//            val filmId = backStackEntry.arguments?.getInt("filmId") ?: return@composable
-//            ContentPageFilm(modifier = Modifier, filmId)
+//        composable("ProfileScreen") {
+//            Box(Modifier) {
+//                Text("Coming soon")
+//            }
 //        }
+        composable("ProfileScreen") {
+            ContentScreenFilm(filmId = 11)
+        }
+        composable(
+            route = "film/{filmId}",
+            arguments = listOf(navArgument("filmId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val filmId = backStackEntry.arguments?.getInt("filmId") ?: return@composable
+            ContentScreenFilm(modifier = Modifier, filmId)
+        }
     }
 }

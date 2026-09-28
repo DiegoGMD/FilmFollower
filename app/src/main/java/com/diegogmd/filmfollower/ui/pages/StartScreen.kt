@@ -16,11 +16,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -38,7 +36,6 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
@@ -66,7 +63,7 @@ fun StartScreen(modifier: Modifier, navController: NavHostController) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(DarkCoffee.copy(alpha = 0.3f))
+            //.background(DarkCoffee.copy(alpha = 0.3f))
     )
 
     Column(
@@ -79,10 +76,8 @@ fun StartScreen(modifier: Modifier, navController: NavHostController) {
         Text(
             text = "FilmFollower",
             color = DarkCoffee,
-            fontSize = 45.sp,
             textAlign = TextAlign.Center,
-            letterSpacing = 1.sp,
-            fontFamily = CourierPrimeFont
+            style = FilmTypography.titleMedium
         )
         Spacer(modifier = Modifier.size(20.dp))
         Text(
@@ -104,7 +99,7 @@ fun StartScreen(modifier: Modifier, navController: NavHostController) {
             label = { Text("Username") },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 10.dp),
+                .padding(horizontal = 30.dp),
             singleLine = true,
             keyboardOptions = KeyboardOptions(
                 imeAction = ImeAction.Next
@@ -120,7 +115,7 @@ fun StartScreen(modifier: Modifier, navController: NavHostController) {
             ),
             textStyle = TextStyle(color = DarkCoffee)
         )
-        Spacer(modifier = Modifier.size(20.dp))
+        Spacer(modifier = Modifier.size(10.dp))
         OutlinedTextField(
             value = apiKey,
             onValueChange = {
@@ -131,7 +126,7 @@ fun StartScreen(modifier: Modifier, navController: NavHostController) {
             label = { Text("API Key") },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 10.dp),
+                .padding(horizontal = 30.dp),
             singleLine = true,
             keyboardOptions = KeyboardOptions(
                 imeAction = ImeAction.Done

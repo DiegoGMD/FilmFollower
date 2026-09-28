@@ -21,10 +21,7 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.rememberNavController
 import com.diegogmd.filmfollower.R
 import com.diegogmd.filmfollower.ui.AppNavHost
-
-import androidx.compose.foundation.background
 import androidx.compose.material3.NavigationBarItemColors
-import androidx.compose.ui.graphics.Color
 import com.diegogmd.filmfollower.ui.theme.DarkCoffee
 import com.diegogmd.filmfollower.ui.theme.FadedCopper
 import com.diegogmd.filmfollower.ui.theme.LightCaramel

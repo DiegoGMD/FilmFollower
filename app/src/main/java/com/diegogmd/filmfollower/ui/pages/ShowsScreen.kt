@@ -24,6 +24,7 @@ import com.diegogmd.filmfollower.model.getTvShow
 import com.diegogmd.filmfollower.samplePlaceholderEpisodes
 import com.diegogmd.filmfollower.ui.components.EpisodeContentCard
 import com.diegogmd.filmfollower.ui.theme.DarkCoffee
+import com.diegogmd.filmfollower.ui.theme.FilmTypography
 import com.diegogmd.filmfollower.ui.theme.LightCaramel
 
 @Composable
@@ -42,7 +43,12 @@ fun ShowsScreen(modifier: Modifier, navController: NavHostController){
                 Tab(
                     selected = selectedTab == index,
                     onClick = {selectedTab = index},
-                    text = { Text(stringResource(id = title)) }
+                    text = {
+                        Text(
+                            text = stringResource(id = title),
+                            style = FilmTypography.labelMedium
+                        )
+                    }
                 )
             }
         }

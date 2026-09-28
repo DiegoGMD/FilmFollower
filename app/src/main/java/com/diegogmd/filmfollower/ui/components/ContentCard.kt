@@ -1,5 +1,6 @@
 package com.diegogmd.filmfollower.ui.components
 
+import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -43,7 +44,6 @@ import com.diegogmd.filmfollower.model.Film
 import com.diegogmd.filmfollower.model.getFilm
 import com.diegogmd.filmfollower.model.getTvShow
 import com.diegogmd.filmfollower.model.eraseFilm
-import com.diegogmd.filmfollower.ui.pages.ContentPageFilm
 import com.diegogmd.filmfollower.ui.theme.DarkCoffee
 import com.diegogmd.filmfollower.ui.theme.LightCaramel
 import com.diegogmd.filmfollower.viewmodels.FilmViewModel
@@ -57,7 +57,7 @@ fun ContentCard(
     val context = LocalContext.current
     val navController = rememberNavController()
     val title = if (content.title != null) content.title else "Unknown"
-    val posterUrl = content.poster_path?.let { "https://image.tmdb.org/t/p/w92$it" }
+    val posterUrl = content.poster_path?.let { "https://image.tmdb.org/t/p/w342$it" }
     val date = when (content.media_type) {
         "movie" -> content.release_date.toLocalDateOrNull()
         "tv" -> content.first_air_date.toLocalDateOrNull()
@@ -129,7 +129,7 @@ private fun VerticalContentCard(
     button: Boolean = false,
     viewModel: FilmViewModel = viewModel(factory = FilmViewModelFactory())
 ) {
-    // val navController = rememberNavController()
+    val navController = rememberNavController()
     var wishlisted = wishlisted
 
     Column(modifier = Modifier.padding(0.dp)) {
@@ -144,7 +144,10 @@ private fun VerticalContentCard(
                 .height(160.dp)
         )
         Surface(
-            onClick = { /* navController.navigate("FrontPage") */ },
+            onClick = {
+                navController.navigate("film/{$filmId}")
+                Log.i("Button", "Film info button has been pressed")
+            },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(8.dp)
         ) {
