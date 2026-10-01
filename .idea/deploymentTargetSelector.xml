@@ -4,10 +4,10 @@
     <selectionStates>
       <SelectionState runConfigName="app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2026-09-28T16:44:32.013960400Z">
+        <DropdownSelection timestamp="2026-10-01T08:44:28.122961500Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="PhysicalDevice" identifier="serial=R5CW13KKPTK" />
+              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\gmd02\.android\avd\Medium_Phone_API_34.avd" />
             </handle>
           </Target>
         </DropdownSelection>
@@ -15,6 +15,14 @@
       </SelectionState>
       <SelectionState runConfigName="FilmDetailScreenPreview">
         <option name="selectionMode" value="DROPDOWN" />
+        <DropdownSelection timestamp="2026-10-01T10:24:00.495329800Z">
+          <Target type="DEFAULT_BOOT">
+            <handle>
+              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\gmd02\.android\avd\Medium_Phone_API_34.avd" />
+            </handle>
+          </Target>
+        </DropdownSelection>
+        <DialogSelection />
       </SelectionState>
     </selectionStates>
   </component>
