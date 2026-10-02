@@ -35,18 +35,6 @@ data class FilmDetailsResponse(
     val status:String,
 ) {
     fun toFilm(): Film {
-        println(
-            "Film ID:\t\t$id\n" +
-                    "Title:\t\t$title\n" +
-                    "Original Title:\t$original_title\n" +
-                    "Overview:\t\t$overview\n" +
-                    "Release Date:\t${release_date ?: "N/A"}\n" +
-                    "Runtime:\t\t${runtime} min\n" +
-                    "Rating:\t\t$vote_average/10\n" +
-                    "Poster Path:\t${poster_path ?: "N/A"}\n" +
-                    "Status:\t\t$status"
-        )
-
         return Film(
             filmId = id,
             title = title,
@@ -61,7 +49,7 @@ data class FilmDetailsResponse(
             posterPath = poster_path ?: "",
             tmdbStatus = status,
             tmdbLastSynced = LocalDate.now(),
-            rating = vote_average,
+            rating = Math.round(vote_average * 10) / 10.0,
             watchStatus = "wishlist",// default value
             watchedDate = null,
             timesWatched = 0,
@@ -70,18 +58,18 @@ data class FilmDetailsResponse(
     }
 }
 
-//data class TVShowDetailsResponse(
-//    val showId: Int = 0,
-//    val title: String = "",
-//    val originalTitle: String? = "",
-//    val overview: String? = "",
-//    val firstAirDate: String? = null,
-//    val numberOfSeasons: Int,
-//    val numberOfEpisodes: Int,
-//    var rating: Double = 0.0, // from 0 to 10, default is 0
-//    var posterPath:  String? = null,
-//    var tmdbStatus: String = "",
-//)
+data class TvShowDetailsResponse(
+    val showId: Int = 0,
+    val title: String = "",
+    val originalTitle: String? = "",
+    val overview: String? = "",
+    val firstAirDate: String? = null,
+    val numberOfSeasons: Int,
+    val numberOfEpisodes: Int,
+    var rating: Double = 0.0, // from 0 to 10, default is 0
+    var posterPath:  String? = null,
+    var tmdbStatus: String = "",
+)
 
 //data class SeasonDetailsResponse(
 //    val showId: Int = 0,

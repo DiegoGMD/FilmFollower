@@ -7,10 +7,13 @@ import androidx.lifecycle.viewModelScope
 import com.diegogmd.filmfollower.data.local.remote.tmdbApi
 import com.diegogmd.filmfollower.data.repository.SearchRepository
 import com.diegogmd.filmfollower.model.Film
+import com.diegogmd.filmfollower.model.getFilm
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class FilmViewModel(private val repository: SearchRepository) : ViewModel() {
     private val _film = MutableStateFlow<Film?>(null)
@@ -19,11 +22,18 @@ class FilmViewModel(private val repository: SearchRepository) : ViewModel() {
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
-    fun loadFilm(id: Int) {
+    fun loadFilm(context: Context, id: Int) {
         viewModelScope.launch {
             _isLoading.value = true
-            _film.value = repository.getFilm(id)
-            _isLoading.value = false
+            try {
+                _film.value = withContext(Dispatchers.IO) {
+                    getFilm(context, id) // local DB lookup (returns Film?)
+                } ?: repository.getFilm(id) // fallback: TMDB
+            } catch (e: Exception) {
+                _film.value = null // or error state
+            } finally {
+                _isLoading.value = false
+            }
         }
     }
 

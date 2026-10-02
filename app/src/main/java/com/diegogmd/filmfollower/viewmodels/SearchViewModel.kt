@@ -20,8 +20,6 @@ class SearchViewModel(private val repository: SearchRepository) : ViewModel() {
     private val _trending = MutableStateFlow<List<MultiSearchResult>>(emptyList())
     val trending: StateFlow<List<MultiSearchResult>> = _trending
 
-    var newFilm: Film? =  null
-
     private var searchJob: Job? = null
 
     init {

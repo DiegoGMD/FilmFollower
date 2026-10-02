@@ -54,7 +54,7 @@ fun SearchScreen(
             .fillMaxWidth()
             .semantics { traversalIndex = 0f }
     ) {
-        Box (
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(DarkCoffee)
@@ -105,7 +105,18 @@ fun SearchScreen(
                 .verticalScroll(rememberScrollState())
         ) {
             listToShow.forEach { item ->
-                ContentCard(item, false)
+                ContentCard(
+                    content = item,
+                    orientation = false,
+                    onClick = { id ->
+                        if (item.media_type == "movie") {
+                            navController.navigate("film/$id")
+                        }
+                        if (item.media_type == "tv") {
+                            navController.navigate("show/$id")
+                        }
+                    }
+                )
             }
         }
     }

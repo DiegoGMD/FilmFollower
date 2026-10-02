@@ -1,5 +1,6 @@
 package com.diegogmd.filmfollower.model
 
+import android.annotation.SuppressLint
 import android.content.ContentValues
 import android.content.Context
 import android.database.Cursor
@@ -40,7 +41,7 @@ class Film(
                 put("tmdb_status", tmdbStatus)
                 put("tmdb_last_synced", tmdbLastSynced.toString())
                 if (rating != null) {
-                    put("rating", rating.toString())
+                    put("rating", String.format("%.1f", rating))
                 } else {
                     putNull("rating")
                 }

@@ -35,7 +35,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import com.diegogmd.filmfollower.R
 import com.diegogmd.filmfollower.model.Episode
@@ -53,17 +52,18 @@ import com.diegogmd.filmfollower.viewmodels.FilmViewModelFactory
 fun ContentCard(
     content: MultiSearchResult,
     orientation: Boolean = false, // false = horizontal row, true = vertical poster
+    onClick: (Int) -> Unit = {},
 ) {
     val context = LocalContext.current
-    val navController = rememberNavController()
-    val title = if (content.title != null) content.title else "Unknown"
+    val title = content.displayTitle
     val posterUrl = content.poster_path?.let { "https://image.tmdb.org/t/p/w342$it" }
     val date = when (content.media_type) {
         "movie" -> content.release_date.toLocalDateOrNull()
         "tv" -> content.first_air_date.toLocalDateOrNull()
         else -> null // "person" and anything unexpected
     }
-    val rating = if (content.vote_average != null) Math.round(content.vote_average * 10) / 10.0 else null
+    val rating =
+        if (content.vote_average != null) Math.round(content.vote_average * 10) / 10.0 else null
     val wishlisted = if (getFilm(context, content.id) == null) false else true
 
     Card(
@@ -80,10 +80,28 @@ fun ContentCard(
 
         if (orientation) {
             // Vertical layout: image on top, text below
-            VerticalContentCard(content.id, posterUrl, title, date, rating, wishlisted, true)
+            VerticalContentCard(
+                content.id,
+                posterUrl,
+                title,
+                date,
+                rating,
+                wishlisted,
+                true,
+                onClick
+            )
         } else {
             // Horizontal layout: image left, text right
-            HorizontalContentCard(content.id, posterUrl, title, date, rating, wishlisted, true)
+            HorizontalContentCard(
+                content.id,
+                posterUrl,
+                title,
+                date,
+                rating,
+                wishlisted,
+                true,
+                onClick
+            )
         }
     }
 }
@@ -92,8 +110,8 @@ fun ContentCard(
 fun ContentCard(
     content: Film,
     orientation: Boolean = false, // false = horizontal row, true = vertical poster
+    onClick: (Int) -> Unit = {},
 ) {
-    val navController = rememberNavController()
     val posterUrl = content.posterPath?.let { "https://image.tmdb.org/t/p/w342$it" }
 
     Card(
@@ -110,10 +128,28 @@ fun ContentCard(
 
         if (orientation) {
             // Vertical layout: image on top, text below
-            VerticalContentCard(content.filmId, posterUrl, content.title, content.releaseDate, content.rating)
+            VerticalContentCard(
+                content.filmId,
+                posterUrl,
+                content.title,
+                content.releaseDate,
+                content.rating,
+                false,
+                false,
+                onClick
+            )
         } else {
             // Horizontal layout: image left, text right
-            HorizontalContentCard(content.filmId, posterUrl, content.title, content.releaseDate, content.rating)
+            HorizontalContentCard(
+                content.filmId,
+                posterUrl,
+                content.title,
+                content.releaseDate,
+                content.rating,
+                false,
+                false,
+                onClick
+            )
         }
     }
 }
@@ -127,9 +163,9 @@ private fun VerticalContentCard(
     rating: Double?,
     wishlisted: Boolean = false,
     button: Boolean = false,
+    onClick: (Int) -> Unit = {},
     viewModel: FilmViewModel = viewModel(factory = FilmViewModelFactory())
 ) {
-    val navController = rememberNavController()
     var wishlisted = wishlisted
 
     Column(modifier = Modifier.padding(0.dp)) {
@@ -144,10 +180,7 @@ private fun VerticalContentCard(
                 .height(160.dp)
         )
         Surface(
-            onClick = {
-                navController.navigate("film/{$filmId}")
-                Log.i("Button", "Film info button has been pressed")
-            },
+            onClick = { onClick(filmId) },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(8.dp)
         ) {
@@ -204,6 +237,7 @@ private fun HorizontalContentCard(
     rating: Double?,
     wishlisted: Boolean = false,
     button: Boolean = false,
+    onClick: (Int) -> Unit = {},
     viewModel: FilmViewModel = viewModel(factory = FilmViewModelFactory())
 ) {
     var wishlisted = wishlisted
@@ -223,7 +257,7 @@ private fun HorizontalContentCard(
             modifier = Modifier.size(100.dp)
         )
         Surface(
-            onClick = { /* When pressed i'll see ContentPage of the film/ */ },
+            onClick = { onClick(filmId) },
             modifier = Modifier.weight(1f),
             shape = RoundedCornerShape(8.dp)
         ) { ContentCardText(title, date, rating) }
@@ -294,13 +328,15 @@ fun EpisodeContentCard(
     episode: Episode,
     orientation: Boolean = false // false = horizontal row, true = vertical poster
 ) {
-    var showName = "Unknown"
+    var showName: String
     var posterUrl: String? = null
     val context = LocalContext.current
     val tvShow = getTvShow(context, episode.showId)
     if (tvShow != null) {
         showName = tvShow.title
         posterUrl = tvShow.poster_path
+    } else {
+        showName = "Unknown"
     }
 
     Card(
@@ -325,7 +361,12 @@ fun EpisodeContentCard(
                         .height(160.dp)
                 )
                 Spacer(Modifier.height(8.dp))
-                EpisodeContentCardText(showName, episode.seasonNumber, episode.episodeNumber,  episode.title)
+                EpisodeContentCardText(
+                    showName,
+                    episode.seasonNumber,
+                    episode.episodeNumber,
+                    episode.title
+                )
             }
         } else {
             // Horizontal layout: image left, text right
@@ -341,7 +382,12 @@ fun EpisodeContentCard(
                     error = painterResource(R.drawable.placeholder_poster),
                     modifier = Modifier.size(100.dp)
                 )
-                EpisodeContentCardText(showName, episode.seasonNumber, episode.episodeNumber,  episode.title)
+                EpisodeContentCardText(
+                    showName,
+                    episode.seasonNumber,
+                    episode.episodeNumber,
+                    episode.title
+                )
             }
         }
     }

@@ -1,5 +1,6 @@
 package com.diegogmd.filmfollower.ui.pages
 
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -19,17 +20,20 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -47,8 +51,10 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.diegogmd.filmfollower.R
+import com.diegogmd.filmfollower.data.repository.SearchRepository
 import com.diegogmd.filmfollower.viewmodels.FilmViewModel
 import com.diegogmd.filmfollower.model.Film
+import com.diegogmd.filmfollower.model.getFilm
 import com.diegogmd.filmfollower.model.getFilmGenre
 import com.diegogmd.filmfollower.ui.theme.DarkCoffee
 import com.diegogmd.filmfollower.ui.theme.FilmTypography
@@ -60,10 +66,29 @@ import org.threeten.bp.LocalDate
 
 @Composable
 fun ContentScreenFilm(
-    modifier: Modifier = Modifier,
-    film: Film,
+    filmId: Int,
     onBackClick: () -> Unit = {},
     viewModel: FilmViewModel = viewModel(factory = FilmViewModelFactory())
+) {
+    val context = LocalContext.current
+    val film by viewModel.film.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+
+    LaunchedEffect(filmId) {
+        viewModel.loadFilm(context, filmId)
+    }
+
+    when {
+        isLoading -> CircularProgressIndicator()
+        film != null -> FilmContentUI(onBackClick, viewModel, film!!)
+    }
+}
+
+@Composable
+private fun FilmContentUI(
+    onBackClick: () -> Unit,
+    viewModel: FilmViewModel,
+    film: Film
 ) {
     Column(
         modifier = Modifier
@@ -72,23 +97,16 @@ fun ContentScreenFilm(
     ) {
         ContentHeader(
             onBackClick = onBackClick,
-            onReloadClick = { viewModel.loadFilm(film.filmId) }, // Online content
-            film.title, film.originalTitle, film.releaseDate, film.runtime, film.rating, film.posterPath
+            //onReloadClick = { viewModel.loadFilm(film.filmId) }, // Online content
+            film.title,
+            film.originalTitle,
+            film.releaseDate,
+            film.runtime,
+            film.rating,
+            film.posterPath
         )
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally),
-            verticalAlignment = Alignment.CenterVertically
-        ) { // Button row
-            ActionIconButton(Icons.Filled.PlayArrow, "Trailer")
-            ActionIconButton(Icons.Filled.Home, "Seen")
-            ActionIconButton(Icons.Filled.Favorite, "Favourite")
-            ActionIconButton(Icons.Filled.Email, "Archived")
-            ActionIconButton(Icons.Filled.Menu, "Watchlist")
-        }
+        ButtonArea()
 
         Card(
             modifier = Modifier
@@ -163,9 +181,27 @@ fun ContentScreenFilm(
 }
 
 @Composable
+private fun ButtonArea() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 8.dp)
+            .padding(horizontal = 8.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) { // Button row
+        ActionIconButton(R.drawable.ic_play_arrow_24px, "Trailer")
+        ActionIconButton(R.drawable.ic_visibility_24px, "Seen")
+        ActionIconButton(R.drawable.ic_favorite_24px, "Favourite")
+        ActionIconButton(R.drawable.ic_archive_24px, "Archived")
+        ActionIconButton(R.drawable.ic_bookmark_24dp, "Watchlist")
+    }
+}
+
+@Composable
 private fun ContentHeader(
     onBackClick: () -> Unit,
-    onReloadClick: () -> Unit,
+    //onReloadClick: () -> Unit,
     title: String,
     originalTitle: String? = null,
     releaseDate: LocalDate,
@@ -215,8 +251,6 @@ private fun ContentHeader(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                // the are afrom the top to the divider i would like to have in the back the film poster
-                // and keep the black degradation before it so the title is still visible
         ) {
             Box(
                 modifier = Modifier
@@ -237,8 +271,8 @@ private fun ContentHeader(
                     modifier = Modifier
                         .align(Alignment.CenterEnd)
                         .size(52.dp)
-                        .clip(CircleShape)
-                        .clickable(onClick = onReloadClick),
+                        .clip(CircleShape),
+                        //.clickable(onClick = onReloadClick),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -330,24 +364,9 @@ private fun ContentHeader(
     }
 }
 
-//        AsyncImage(
-//            model = "https://image.tmdb.org/t/p/original${film.posterPath}",
-//            contentDescription = film.title + " (Image)",
-//            contentScale = ContentScale.Crop,
-//            placeholder = painterResource(R.drawable.placeholder_poster),
-//            error = painterResource(R.drawable.placeholder_poster),
-//            modifier = Modifier
-//                .weight(1f)
-//                .padding(horizontal = 4.dp)
-//                .aspectRatio(2f / 3f)
-//                .offset(y = (-60).dp)
-//                .clip(RoundedCornerShape(6.dp))
-//                .border(2.dp, OliveWood, RoundedCornerShape(6.dp))
-//        )
-
 @Composable
 private fun ActionIconButton(
-    icon: ImageVector,
+    @DrawableRes icon: Int, // R.drawable.ic_play_arrow_24px
     description: String,
     onClick: () -> Unit = {}
 ) {
@@ -360,7 +379,7 @@ private fun ActionIconButton(
         contentAlignment = Alignment.Center
     ) {
         Icon(
-            imageVector = icon,
+            painter = painterResource(id = icon),
             contentDescription = description,
             tint = DarkCoffee,
             modifier = Modifier.size(25.dp)
@@ -368,25 +387,48 @@ private fun ActionIconButton(
     }
 }
 
+fun ContentScreenTvShow(
+    showId: Int,
+    onBackClick: () -> Unit = {},
+    //viewModel: FilmViewModel = viewModel(factory = FilmViewModelFactory())
+) {
+//    val context = LocalContext.current
+//    val film by viewModel.film.collectAsState()
+//    val isLoading by viewModel.isLoading.collectAsState()
+//
+//    LaunchedEffect(filmId) {
+//        viewModel.loadFilm(context, filmId)
+//    }
+//
+//    when {
+//        isLoading -> CircularProgressIndicator()
+//        film != null -> FilmContentUI(onBackClick, viewModel, film!!)
+//        else -> Text("Film not found")
+//    }
+}
+
+fun ContentScreenEpisode(
+    showId: Int,
+    onBackClick: () -> Unit = {},
+    //viewModel: FilmViewModel = viewModel(factory = FilmViewModelFactory())
+) {
+//    val context = LocalContext.current
+//    val film by viewModel.film.collectAsState()
+//    val isLoading by viewModel.isLoading.collectAsState()
+//
+//    LaunchedEffect(filmId) {
+//        viewModel.loadFilm(context, filmId)
+//    }
+//
+//    when {
+//        isLoading -> CircularProgressIndicator()
+//        film != null -> FilmContentUI(onBackClick, viewModel, film!!)
+//        else -> Text("Film not found")
+//    }
+}
+
 @Preview(showBackground = true)
 @Composable
 fun FilmDetailScreenPreview() {
-    //FilmDetailScreen()
-    //ContentScreenFilm(filmId = 11)
-
-    var film = Film(120, "The Lord of the Rings: The Fellowship of the Ring",
-        "The Lord of the Rings: The Fellowship of the Ring",
-        "Young hobbit Frodo Baggins, after inheriting a mysterious ring from his uncle " +
-                "Bilbo, must leave his home in order to keep it from falling into the hands of " +
-                "its evil creator. Along the way, a fellowship is formed to protect the ringbearer " +
-                "and make sure that the ring arrives at its final destination: Mt. Doom, the only " +
-                "place where it can be destroyed.",
-        LocalDate.of(2001, 12, 10), 208,
-        "/9xtH1RmAzQ0rrMBNUMXstb2s3er.jpg","Released",
-        LocalDate.of(2026, 7, 31), 8.4, "Watchlist",
-        LocalDate.of(2025, 4, 14), 2,
-        LocalDate.of(2026, 7, 31)
-    )
-
-    ContentScreenFilm(film = film)
+    ContentScreenFilm(filmId = 11)
 }

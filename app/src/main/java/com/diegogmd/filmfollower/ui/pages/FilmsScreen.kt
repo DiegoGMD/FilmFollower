@@ -61,19 +61,19 @@ fun FilmsScreen(modifier: Modifier, navController: NavHostController) {
 //        }
 
         when (selectedTab) {
-            0 -> FilmList(Modifier.weight(1f), films = samplePlaceholderFilms())
-            1 -> FilmList(Modifier.weight(1f), films = samplePlaceholderUpcomingFilms())
+            0 -> FilmList(Modifier.weight(1f), films = samplePlaceholderFilms(), navController)
+            1 -> FilmList(Modifier.weight(1f), films = samplePlaceholderUpcomingFilms(), navController)
         }
     }
 }
 
 @Composable
-private fun FilmList(modifier: Modifier, films: List<Film>) {
+private fun FilmList(modifier: Modifier, films: List<Film>, navController: NavHostController) {
     LazyColumn(
         modifier = modifier.fillMaxWidth()
     ) {
         items(films, key = { it.filmId }) { film ->
-            ContentCard(film)
+            ContentCard(film, onClick = { id -> navController.navigate("film/$id")})
         }
     }
 }
