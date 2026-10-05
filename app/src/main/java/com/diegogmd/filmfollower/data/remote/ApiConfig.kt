@@ -11,5 +11,5 @@ object ApiConfig {
      * saved yet, e.g. before the user enters a key in Settings.
      */
     fun getTmdbToken(context: Context): String? =
-        SecureStorage.getApiKey(context)
+        SecureStorage.getApiReadAccessToken(context)
 }

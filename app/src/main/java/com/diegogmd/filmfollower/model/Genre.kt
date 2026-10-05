@@ -170,40 +170,36 @@ class FilmGenre(
     }
 }
 
-fun getFilmGenre(context: Context, filmId: Int): String {
-    val dbHelper =FilmFillowerDatabase(context)
-    val db = dbHelper.readableDatabase
-    val genreNames = mutableListOf<String>()
+fun getFilmGenreNames(context: Context, filmId: Int): List<String> {
+    if (filmId == 0) return emptyList()
 
-    if (filmId == 0){
-        Log.e("Database", "Error getting film info: filmId is null or 0")
-        return "Unknown"
-    }
+    val db = FilmFillowerDatabase(context).readableDatabase
+    val names = mutableListOf<String>()
 
     val query = """
         SELECT g.name
         FROM FilmGenre fg
         INNER JOIN Genre g ON fg.genre_id = g.genre_id
         WHERE fg.film_id = ?
+        ORDER BY g.name
     """.trimIndent()
-    val selectionArgs = arrayOf(filmId.toString())
 
     try {
-        val cursor = db.rawQuery(query, selectionArgs)
-        if (cursor.moveToFirst()) {
-            val name = cursor.getString(cursor.getColumnIndexOrThrow("name"))
-            genreNames.add(name)
+        db.rawQuery(query, arrayOf(filmId.toString())).use { cursor ->
+            while (cursor.moveToNext()) {
+                names.add(cursor.getString(0))
+            }
         }
-        cursor.close()
-        Log.d("Database", "Successful Mission: Getting genre info")
     } catch (e: Exception) {
-        Log.e("Database", "Error getting filmGenre", e)
+        Log.e("Database", "Error getting film genre names", e)
     } finally {
         db.close()
     }
-
-    return if (genreNames.isEmpty()) "Unknown" else genreNames.joinToString(", ")
+    return names
 }
+
+fun getFilmGenre(context: Context, filmId: Int): String =
+    getFilmGenreNames(context, filmId).ifEmpty { listOf("Unknown") }.joinToString(", ")
 
 class TvShowGenre(
     val showId: Int,

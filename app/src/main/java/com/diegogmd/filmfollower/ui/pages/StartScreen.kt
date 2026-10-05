@@ -1,7 +1,6 @@
 package com.diegogmd.filmfollower.ui.pages
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -51,8 +50,8 @@ fun StartScreen(modifier: Modifier, navController: NavHostController) {
     val context = LocalContext.current
     var username by remember { mutableStateOf("") }
     val (usernameError, setUsernameError) = remember { mutableStateOf(false) }
-    var apiKey by remember { mutableStateOf("") }
-    val (apiKeyError, setApiKeyError) = remember { mutableStateOf(false) }
+    var apiReadAccessToken by remember { mutableStateOf("") }
+    val (apiReadAccessTokenError, setApiReadAccessTokenError) = remember { mutableStateOf(false) }
 
     val CourierPrimeFont = FontFamily(
         Font(R.font.courierprime_bold)
@@ -117,13 +116,13 @@ fun StartScreen(modifier: Modifier, navController: NavHostController) {
         )
         Spacer(modifier = Modifier.size(10.dp))
         OutlinedTextField(
-            value = apiKey,
+            value = apiReadAccessToken,
             onValueChange = {
-                apiKey = it
-                setApiKeyError(it.isEmpty())
+                apiReadAccessToken = it
+                setApiReadAccessTokenError(it.isEmpty())
             },
-            isError = apiKeyError,
-            label = { Text("API Key") },
+            isError = apiReadAccessTokenError,
+            label = { Text("API Read Access Token") },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 30.dp),
@@ -146,12 +145,12 @@ fun StartScreen(modifier: Modifier, navController: NavHostController) {
         Button(
             onClick = {
                 val validUser = username.isNotBlank()
-                val validKey = apiKey.isNotBlank()
+                val validKey = apiReadAccessToken.isNotBlank()
                 setUsernameError(!validUser)
-                setApiKeyError(!validKey)
+                setApiReadAccessTokenError(!validKey)
 
                 if (validUser && validKey) {
-                    SecureStorage.saveCredentials(context, username.trim(), apiKey.trim())
+                    SecureStorage.saveCredentials(context, username.trim(), apiReadAccessToken.trim())
                     navController.navigate("Main")
                 }
             },

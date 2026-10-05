@@ -8,7 +8,7 @@ import androidx.security.crypto.MasterKey
 object SecureStorage {
     private const val PREFS_FILE = "filmfollower_secure"
     private const val KEY_USERNAME = "username"
-    private const val KEY_API_KEY = "tmdb_api_key"
+    private const val KEY_API_READ_ACCESS_TOKEN = "tmdb_api_read_access_token"
 
     private fun getPrefs(context: Context): SharedPreferences {
         return try {
@@ -35,15 +35,15 @@ object SecureStorage {
         )
     }
 
-    fun saveCredentials(context: Context, username: String, apiKey: String) {
+    fun saveCredentials(context: Context, username: String, apiReadAccessToken: String) {
         getPrefs(context).edit()
                 .putString(KEY_USERNAME, username)
-                .putString(KEY_API_KEY, apiKey)
+                .putString(KEY_API_READ_ACCESS_TOKEN, apiReadAccessToken)
                 .apply()
     }
 
     fun hasCredentials(context: Context): Boolean =
-        !getApiKey(context).isNullOrBlank()
+        !getApiReadAccessToken(context).isNullOrBlank()
 
     fun clearCredentials(context: Context) {
         getPrefs(context).edit().clear().apply()
@@ -52,6 +52,6 @@ object SecureStorage {
     fun getUsername(context: Context): String? =
     getPrefs(context).getString(KEY_USERNAME, null)
 
-    fun getApiKey(context: Context): String? =
-    getPrefs(context).getString(KEY_API_KEY, null)
+    fun getApiReadAccessToken(context: Context): String? =
+    getPrefs(context).getString(KEY_API_READ_ACCESS_TOKEN, null)
 }

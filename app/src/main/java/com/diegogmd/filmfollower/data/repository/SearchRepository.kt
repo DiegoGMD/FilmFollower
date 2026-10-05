@@ -3,13 +3,24 @@ package com.diegogmd.filmfollower.data.repository
 import com.diegogmd.filmfollower.model.MultiSearchResult
 import com.diegogmd.filmfollower.model.Film
 import com.diegogmd.filmfollower.data.local.remote.TmdbApiService
+import com.diegogmd.filmfollower.model.TvShow
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 
 class SearchRepository(private val api: TmdbApiService) {
-    suspend fun search(query: String): List<MultiSearchResult> {
-        if (query.isBlank()) return emptyList()
-        return api.searchMulti(query)
-            .results
+    suspend fun search(query: String): List<MultiSearchResult> = coroutineScope {
+        val q = query.trim()
+        if (q.isEmpty()) return@coroutineScope emptyList()
+
+        // "wall-e" / "wall e" -> "wall·e" (TMDB titles like WALL·E, BURN·E use a middle dot)
+        val dotted = q.replace(Regex("(?<=\\p{L})[-.\\s](?=\\p{L}{1,2}$)"), "·")
+
+        val original = async { api.searchMulti(q).results }
+        val variant = if (dotted != q) async { api.searchMulti(dotted).results } else null
+
+        (variant?.await().orEmpty() + original.await())
             .filter { it.media_type == "movie" || it.media_type == "tv" }
+            .distinctBy { it.media_type to it.id }
     }
 
     /**
@@ -30,7 +41,7 @@ class SearchRepository(private val api: TmdbApiService) {
         return api.getFilm(filmId = id).toFilm()
     }
 
-//    suspend fun getTVShow(id: Int): List<MultiSearchResult> {
-//        return api.getFilm(filmId = id).toFilm()
-//    }
+    suspend fun getTvShow(id: Int): TvShow {
+        return api.getTvShow(showId = id).toTvShow()
+    }
 }

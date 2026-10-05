@@ -3,10 +3,13 @@ package com.diegogmd.filmfollower.ui.pages
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -17,6 +20,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -31,9 +35,11 @@ import androidx.navigation.NavHostController
 import com.diegogmd.filmfollower.R
 import com.diegogmd.filmfollower.viewmodels.SearchViewModel
 import com.diegogmd.filmfollower.ui.components.ContentCard
+import com.diegogmd.filmfollower.ui.components.NoInternetCard
 import com.diegogmd.filmfollower.ui.theme.DarkCoffee
 import com.diegogmd.filmfollower.ui.theme.FadedCopper
 import com.diegogmd.filmfollower.ui.theme.LightCaramel
+import com.diegogmd.filmfollower.util.rememberIsOnline
 import com.diegogmd.filmfollower.viewmodels.SearchViewModelFactory
 
 @Composable
@@ -42,9 +48,14 @@ fun SearchScreen(
     navController: NavHostController,
     viewModel: SearchViewModel = viewModel(factory = SearchViewModelFactory())
 ) {
+    val isOnline by rememberIsOnline()
     val textFieldState = remember { TextFieldState() }
     val results by viewModel.results.collectAsState()
     val trending by viewModel.trending.collectAsState()
+
+    LaunchedEffect(isOnline) {
+        if (isOnline && trending.isEmpty()) viewModel.loadTrending()
+    }
 
     val query = textFieldState.text.toString()
     val listToShow = if (query.isBlank()) trending else results
@@ -54,6 +65,7 @@ fun SearchScreen(
             .fillMaxWidth()
             .semantics { traversalIndex = 0f }
     ) {
+        // Search Bar
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -100,22 +112,28 @@ fun SearchScreen(
         }
 
         Column(
-            modifier = Modifier
-                .weight(1f)
-                .verticalScroll(rememberScrollState())
+            modifier = modifier
+                .fillMaxSize()
+                .semantics { traversalIndex = 0f }
         ) {
-            listToShow.forEach { item ->
-                ContentCard(
-                    content = item,
-                    orientation = false,
-                    onClick = { id ->
-                        if (item.media_type == "movie") {
-                            navController.navigate("film/$id")
-                        }
-                        if (item.media_type == "tv") {
-                            navController.navigate("show/$id")
-                        }
+            if (isOnline) {
+                LazyColumn(modifier = Modifier.weight(1f)) {
+                    items(listToShow) { item ->
+                        ContentCard(
+                            content = item,
+                            orientation = false,
+                            onClick = { id ->
+                                if (item.media_type == "movie") navController.navigate("film/$id")
+                                if (item.media_type == "tv") navController.navigate("show/$id")
+                            }
+                        )
                     }
+                }
+            } else {
+                NoInternetCard(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
                 )
             }
         }

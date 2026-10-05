@@ -18,10 +18,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -39,7 +35,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -51,15 +46,16 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.diegogmd.filmfollower.R
-import com.diegogmd.filmfollower.data.repository.SearchRepository
 import com.diegogmd.filmfollower.viewmodels.FilmViewModel
 import com.diegogmd.filmfollower.model.Film
-import com.diegogmd.filmfollower.model.getFilm
+import com.diegogmd.filmfollower.model.TvShow
 import com.diegogmd.filmfollower.model.getFilmGenre
 import com.diegogmd.filmfollower.ui.theme.DarkCoffee
 import com.diegogmd.filmfollower.ui.theme.FilmTypography
 import com.diegogmd.filmfollower.ui.theme.LightCaramel
 import com.diegogmd.filmfollower.viewmodels.FilmViewModelFactory
+import com.diegogmd.filmfollower.viewmodels.TvShowViewModel
+import com.diegogmd.filmfollower.viewmodels.TvShowViewModelFactory
 import org.threeten.bp.LocalDate
 
 // Remember, this page is for displaying the info from a film/show in full screen
@@ -85,11 +81,33 @@ fun ContentScreenFilm(
 }
 
 @Composable
+fun ContentScreenTvShow(
+    showId: Int,
+    onBackClick: () -> Unit = {},
+    viewModel: TvShowViewModel = viewModel(factory = TvShowViewModelFactory())
+) {
+    val context = LocalContext.current
+    val tvShow by viewModel.tvShow.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+
+    LaunchedEffect(showId) {
+        viewModel.loadFilm(context, showId)
+    }
+
+    when {
+        isLoading -> CircularProgressIndicator()
+        tvShow != null -> TvShowContentUI(onBackClick, viewModel, tvShow!!)
+    }
+}
+
+@Composable
 private fun FilmContentUI(
     onBackClick: () -> Unit,
     viewModel: FilmViewModel,
     film: Film
 ) {
+    val genres by viewModel.genres.collectAsState()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -116,6 +134,104 @@ private fun FilmContentUI(
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             border = BorderStroke(1.dp, DarkCoffee)
         ) {
+            if (genres.isNotEmpty()) {
+                Text(
+                    text = "Genres",
+                    fontSize = 20.sp,
+                    textAlign = TextAlign.Center,
+                    color = DarkCoffee,
+                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                    style = FilmTypography.titleMedium
+                )
+                Text(
+                    text = genres,
+                    color = DarkCoffee,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(vertical = 10.dp, horizontal = 20.dp)
+                )
+            }
+        }
+
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            border = BorderStroke(1.dp, DarkCoffee)
+        ) {
+            Text(
+                text = "Overview",
+                fontSize = 20.sp,
+                textAlign = TextAlign.Center,
+                color = DarkCoffee,
+                modifier = Modifier.align(Alignment.CenterHorizontally),
+                style = FilmTypography.titleMedium
+            )
+            Text(
+                text = film.overview,
+                color = DarkCoffee,
+                modifier = Modifier.padding(vertical = 10.dp, horizontal = 20.dp)
+            )
+        }
+
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            border = BorderStroke(1.dp, DarkCoffee)
+        ) {
+            Text(
+                text = "Similar",
+                fontSize = 20.sp,
+                textAlign = TextAlign.Center,
+                color = DarkCoffee,
+                modifier = Modifier.align(Alignment.CenterHorizontally),
+                style = FilmTypography.titleMedium
+            )
+            Text(
+                text = "HorizontalFilmCards Carousel, that slides horizontally with 5 options that re-appear in cycle",
+                color = DarkCoffee,
+                modifier = Modifier.padding(vertical = 10.dp, horizontal = 20.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun TvShowContentUI(
+    onBackClick: () -> Unit,
+    viewModel: TvShowViewModel,
+    tvShow: TvShow
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(DarkCoffee)
+    ) {
+        ContentHeader(
+            onBackClick = onBackClick,
+            //onReloadClick = { viewModel.loadFilm(film.filmId) }, // Online content
+            tvShow.title,
+            tvShow.originalTitle,
+            tvShow.firstAirDate,
+            0,
+            tvShow.rating,
+            tvShow.posterPath
+        )
+
+        ButtonArea()
+
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            border = BorderStroke(1.dp, DarkCoffee)
+        ) {
             Text(
                 text = "Genres",
                 fontSize = 20.sp,
@@ -125,7 +241,7 @@ private fun FilmContentUI(
                 style = FilmTypography.titleMedium
             )
             Text(
-                text = getFilmGenre(LocalContext.current, film.filmId),
+                text = getFilmGenre(LocalContext.current, tvShow.showId),
                 color = DarkCoffee,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(vertical = 10.dp, horizontal = 20.dp)
@@ -149,7 +265,7 @@ private fun FilmContentUI(
                 style = FilmTypography.titleMedium
             )
             Text(
-                text = film.overview,
+                text = tvShow.overview,
                 color = DarkCoffee,
                 modifier = Modifier.padding(vertical = 10.dp, horizontal = 20.dp)
             )
@@ -385,26 +501,6 @@ private fun ActionIconButton(
             modifier = Modifier.size(25.dp)
         )
     }
-}
-
-fun ContentScreenTvShow(
-    showId: Int,
-    onBackClick: () -> Unit = {},
-    //viewModel: FilmViewModel = viewModel(factory = FilmViewModelFactory())
-) {
-//    val context = LocalContext.current
-//    val film by viewModel.film.collectAsState()
-//    val isLoading by viewModel.isLoading.collectAsState()
-//
-//    LaunchedEffect(filmId) {
-//        viewModel.loadFilm(context, filmId)
-//    }
-//
-//    when {
-//        isLoading -> CircularProgressIndicator()
-//        film != null -> FilmContentUI(onBackClick, viewModel, film!!)
-//        else -> Text("Film not found")
-//    }
 }
 
 fun ContentScreenEpisode(

@@ -19,11 +19,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavHostController
 import com.diegogmd.filmfollower.R
 import com.diegogmd.filmfollower.model.Film
+import com.diegogmd.filmfollower.model.anyWishlistedReleasedFilm
+import com.diegogmd.filmfollower.model.anyWishlistedUpcomingFilm
 import com.diegogmd.filmfollower.model.getWishlistedReleasedFilms
 import com.diegogmd.filmfollower.model.getWishlistedUpcomingFilms
 import com.diegogmd.filmfollower.samplePlaceholderFilms
 import com.diegogmd.filmfollower.samplePlaceholderUpcomingFilms
 import com.diegogmd.filmfollower.ui.components.ContentCard
+import com.diegogmd.filmfollower.ui.components.EmptyContentCard
 import com.diegogmd.filmfollower.ui.theme.DarkCoffee
 import com.diegogmd.filmfollower.ui.theme.FilmTypography
 import com.diegogmd.filmfollower.ui.theme.LightCaramel
@@ -55,15 +58,32 @@ fun FilmsScreen(modifier: Modifier, navController: NavHostController) {
             }
         }
 
-//        when (selectedTab) {
-//            0 -> FilmList(Modifier.weight(1f), films = getWishlistedReleasedFilms(context))
-//            1 -> FilmList(Modifier.weight(1f), films = getWishlistedUpcomingFilms(context))
-//        }
-
         when (selectedTab) {
-            0 -> FilmList(Modifier.weight(1f), films = samplePlaceholderFilms(), navController)
-            1 -> FilmList(Modifier.weight(1f), films = samplePlaceholderUpcomingFilms(), navController)
+            0 -> if (anyWishlistedReleasedFilm(context)) {
+                FilmList(
+                    Modifier.weight(1f),
+                    films = getWishlistedReleasedFilms(context),
+                    navController
+                )
+            } else {
+                EmptyContentCard(modifier, true)
+            }
+
+            1 -> if (anyWishlistedUpcomingFilm(context)) {
+                FilmList(
+                    Modifier.weight(1f),
+                    films = getWishlistedUpcomingFilms(context),
+                    navController
+                )
+            } else {
+                EmptyContentCard(modifier, true)
+            }
         }
+
+//        when (selectedTab) {
+//            0 -> FilmList(Modifier.weight(1f), films = samplePlaceholderFilms(), navController)
+//            1 -> FilmList(Modifier.weight(1f), films = samplePlaceholderUpcomingFilms(), navController)
+//        }
     }
 }
 
@@ -73,7 +93,7 @@ private fun FilmList(modifier: Modifier, films: List<Film>, navController: NavHo
         modifier = modifier.fillMaxWidth()
     ) {
         items(films, key = { it.filmId }) { film ->
-            ContentCard(film, onClick = { id -> navController.navigate("film/$id")})
+            ContentCard(film, onClick = { id -> navController.navigate("film/$id") })
         }
     }
 }

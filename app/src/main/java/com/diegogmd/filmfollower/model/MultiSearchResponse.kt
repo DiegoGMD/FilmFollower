@@ -25,14 +25,15 @@ data class MultiSearchResult(
 
 data class FilmDetailsResponse(
     val id: Int,
-    val title:String,
-    val original_title:String,
-    val overview:String,
+    val title: String,
+    val original_title: String,
+    val overview: String,
     val release_date: String? = null,
     val runtime: Int = 0,
     val vote_average: Double,
     val poster_path: String? = null,
-    val status:String,
+    val status: String,
+    val genres: List<GenreDetailsResponse>? = null
 ) {
     fun toFilm(): Film {
         return Film(
@@ -53,23 +54,58 @@ data class FilmDetailsResponse(
             watchStatus = "wishlist",// default value
             watchedDate = null,
             timesWatched = 0,
-            addedAt = LocalDate.now()
+            addedAt = LocalDate.now(),
+            genreIds = genres.orEmpty().map { it.id }
         )
     }
 }
 
 data class TvShowDetailsResponse(
-    val showId: Int = 0,
+    val show_id: Int = 0,
     val title: String = "",
-    val originalTitle: String? = "",
-    val overview: String? = "",
-    val firstAirDate: String? = null,
-    val numberOfSeasons: Int,
-    val numberOfEpisodes: Int,
+    val original_title: String? = "",
+    val overview: String = "",
+    val first_air_date: String? = null,
+    val number_of_seasons: Int,
+    val number_of_episodes: Int,
     var rating: Double = 0.0, // from 0 to 10, default is 0
-    var posterPath:  String? = null,
-    var tmdbStatus: String = "",
-)
+    var poster_path:  String? = null,
+    var status: String = ""
+) {
+    fun toTvShow(): TvShow {
+        return TvShow(
+            showId = show_id,
+            title = title,
+            originalTitle = original_title,
+            overview = overview,
+            firstAirDate = if (first_air_date != null) {
+                LocalDate.parse(first_air_date)
+            } else {
+                LocalDate.of(9999, 12, 31)
+            },
+            numberOfSeasons = number_of_seasons ?: 0,
+            numberOfEpisodes = number_of_episodes ?: 0,
+            rating = Math.round(rating * 10) / 10.0, // from 0 to 10, default is 0
+            posterPath = poster_path ?: "",
+            tmdbStatus = status,
+            tmdbLastSynced = LocalDate.now(),
+            watchStatus = "wishlist",// default value
+            addedAt = LocalDate.now()
+        )
+    }
+}
+
+data class GenreDetailsResponse(
+    val id: Int,
+    val name: String
+) {
+    fun toGenre(): Genre {
+        return Genre(
+            genreId = id,
+            name = name
+        )
+    }
+}
 
 //data class SeasonDetailsResponse(
 //    val showId: Int = 0,

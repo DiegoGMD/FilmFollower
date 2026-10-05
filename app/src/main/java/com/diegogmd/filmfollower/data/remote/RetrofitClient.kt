@@ -1,6 +1,7 @@
 package com.diegogmd.filmfollower.data.local.remote
 
 import com.diegogmd.filmfollower.App
+import com.diegogmd.filmfollower.data.remote.LanguageInterceptor
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okio.IOException
@@ -23,6 +24,7 @@ val authInterceptor = Interceptor { chain ->
 
 val okHttpClient = OkHttpClient.Builder()
     .addInterceptor(authInterceptor)
+    .addInterceptor(LanguageInterceptor())
     .build()
 
 val retrofit = Retrofit.Builder()

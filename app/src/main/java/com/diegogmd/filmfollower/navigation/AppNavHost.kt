@@ -69,7 +69,7 @@ fun AppNavHost(
             arguments = listOf(navArgument("showId") { type = NavType.IntType })
         ) { backStackEntry ->
             val showId = backStackEntry.arguments?.getInt("showId") ?: return@composable
-            ContentScreenEpisode(
+            ContentScreenTvShow(
                 showId = showId,
                 onBackClick = { navController.popBackStack() }
             )

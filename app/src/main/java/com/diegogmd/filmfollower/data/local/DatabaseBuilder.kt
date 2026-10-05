@@ -1,10 +1,12 @@
 package com.diegogmd.filmfollower.data.local
 
+import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 
-class FilmFillowerDatabase(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
+class FilmFillowerDatabase(context: Context) :
+    SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
 
     companion object {
         const val DATABASE_NAME = "FilmFollower.sqlite"
@@ -20,6 +22,11 @@ class FilmFillowerDatabase(context: Context) : SQLiteOpenHelper(context, DATABAS
                 instance
             }
         }
+    }
+
+    override fun onConfigure(db: SQLiteDatabase) {
+        super.onConfigure(db)
+        db.setForeignKeyConstraintsEnabled(true)
     }
 
     override fun onCreate(db: SQLiteDatabase?) {
@@ -55,8 +62,8 @@ class FilmFillowerDatabase(context: Context) : SQLiteOpenHelper(context, DATABAS
                 film_id INTEGER NOT NULL,
                 genre_id INTEGER NOT NULL,
                 PRIMARY KEY (film_id, genre_id),
-                FOREIGN KEY (film_id)  REFERENCES film(film_id) ON DELETE CASCADE,
-                FOREIGN KEY (genre_id) REFERENCES genre(genre_id) ON DELETE CASCADE
+                FOREIGN KEY (film_id)  REFERENCES Film(film_id) ON DELETE CASCADE,
+                FOREIGN KEY (genre_id) REFERENCES Genre(genre_id) ON DELETE CASCADE
             );
         """.trimIndent()
 
@@ -83,8 +90,8 @@ class FilmFillowerDatabase(context: Context) : SQLiteOpenHelper(context, DATABAS
                 show_id INTEGER NOT NULL,
                 genre_id INTEGER NOT NULL,
                 PRIMARY KEY (show_id, genre_id),
-                FOREIGN KEY (show_id)  REFERENCES tv_show(show_id) ON DELETE CASCADE,
-                FOREIGN KEY (genre_id) REFERENCES genre(genre_id) ON DELETE CASCADE
+                FOREIGN KEY (show_id)  REFERENCES TvShow(show_id) ON DELETE CASCADE,
+                FOREIGN KEY (genre_id) REFERENCES Genre(genre_id) ON DELETE CASCADE
             );
         """.trimIndent()
 
@@ -99,7 +106,7 @@ class FilmFillowerDatabase(context: Context) : SQLiteOpenHelper(context, DATABAS
                 episode_count INTEGER,
                 poster_path TEXT,
                 PRIMARY KEY (show_id, season_number),
-                FOREIGN KEY (show_id) REFERENCES tv_show(show_id) ON DELETE CASCADE
+                FOREIGN KEY (show_id) REFERENCES TvShow(show_id) ON DELETE CASCADE
             );
         """.trimIndent()
 
@@ -115,7 +122,7 @@ class FilmFillowerDatabase(context: Context) : SQLiteOpenHelper(context, DATABAS
                 runtime INTEGER,
                 watched_date TEXT, -- If i watched the ep this won't be null
                 PRIMARY KEY (show_id, season_number, episode_number),
-                FOREIGN KEY (show_id, season_number) REFERENCES season(show_id, season_number) ON DELETE CASCADE
+                FOREIGN KEY (show_id, season_number) REFERENCES Season(show_id, season_number) ON DELETE CASCADE
             );
         """.trimIndent()
 
@@ -127,6 +134,47 @@ class FilmFillowerDatabase(context: Context) : SQLiteOpenHelper(context, DATABAS
             execSQL(createTvShowGenreTable)
             execSQL(createSeasonTable)
             execSQL(createEpisodeTable)
+        }
+
+        db?.let { seedGenres(it) }
+    }
+
+    private fun seedGenres(db: SQLiteDatabase) {
+        val genres = mapOf(
+            12 to "Adventure",
+            14 to "Fantasy",
+            16 to "Animation",
+            18 to "Drama",
+            27 to "Horror",
+            28 to "Action",
+            35 to "Comedy",
+            36 to "History",
+            37 to "Western",
+            53 to "Thriller",
+            80 to "Crime",
+            99 to "Documentary",
+            878 to "Science Fiction",
+            9648 to "Mystery",
+            10402 to "Music",
+            10749 to "Romance",
+            10751 to "Family",
+            10752 to "War",
+            10759 to "Action & Adventure",
+            10762 to "Kids",
+            10763 to "News",
+            10764 to "Reality",
+            10765 to "Sci-Fi & Fantasy",
+            10766 to "Soap",
+            10767 to "Talk",
+            10768 to "War & Politics",
+            10770 to "TV Movie"
+        )
+        genres.forEach { (id, name) ->
+            val values = ContentValues().apply {
+                put("genre_id", id)
+                put("name", name)
+            }
+            db.insertWithOnConflict("Genre", null, values, SQLiteDatabase.CONFLICT_IGNORE)
         }
     }
 

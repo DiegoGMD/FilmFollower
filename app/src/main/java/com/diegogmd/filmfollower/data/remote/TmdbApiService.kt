@@ -20,18 +20,15 @@ interface TmdbApiService {
     @GET("trending/all/{time_window}")
     suspend fun getTrendingAll(
         @Path("time_window") timeWindow: String = "day",
-        @Query("language") language: String = "en-US"
     ): MultiSearchResponse
 
     @GET("movie/{film_id}")
     suspend fun getFilm(
         @Path("film_id") filmId: Int,
-        @Query("language") language: String = "en-US"
     ): FilmDetailsResponse
 
     @GET("tv/{tvshow_id}")
     suspend fun getTvShow(
         @Path("tvshow_id") showId: Int,
-        @Query("language") language: String = "en-US"
     ): TvShowDetailsResponse
 }

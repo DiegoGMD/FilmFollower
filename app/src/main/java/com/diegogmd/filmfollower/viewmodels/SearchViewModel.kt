@@ -1,5 +1,6 @@
 package com.diegogmd.filmfollower.viewmodels
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -12,6 +13,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlin.coroutines.cancellation.CancellationException
 
 class SearchViewModel(private val repository: SearchRepository) : ViewModel() {
     private val _results = MutableStateFlow<List<MultiSearchResult>>(emptyList())
@@ -26,9 +28,15 @@ class SearchViewModel(private val repository: SearchRepository) : ViewModel() {
         loadTrending()
     }
 
-    private fun loadTrending() {
+    fun loadTrending() {
         viewModelScope.launch {
-            _trending.value = repository.getTopTrending(limit = 10)
+            try {
+                _trending.value = repository.getTopTrending(limit = 10)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.d("SearchViewModel","offline or request failed: keep the current list")
+            }
         }
     }
 
@@ -36,7 +44,13 @@ class SearchViewModel(private val repository: SearchRepository) : ViewModel() {
         searchJob?.cancel()
         searchJob = viewModelScope.launch {
             delay(400) // debounce so you're not hitting the API on every keystroke
-            _results.value = repository.search(query)
+            try {
+                _results.value = repository.search(query)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _results.value = emptyList()
+            }
         }
     }
 }
