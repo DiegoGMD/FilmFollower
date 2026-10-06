@@ -25,7 +25,7 @@ class Film(
     val watchedDate: LocalDate?,
     val timesWatched: Int = 0,
     val addedAt: LocalDate,
-    val genreIds: List<Int> = emptyList()
+    val genres: List<Genre> = emptyList()
 ) {
     @SuppressLint("DefaultLocale")
     fun insertNewFilm(context: Context) {
@@ -60,10 +60,10 @@ class Film(
             db.beginTransaction()
             try {
                 db.insert("Film", null, contentValues)
-                genreIds.forEach { gid ->
+                genres.forEach { g ->
                     val fg = ContentValues().apply {
                         put("film_id", filmId)
-                        put("genre_id", gid)
+                        put("genre_id", g.genreId)
                     }
                     db.insertWithOnConflict("FilmGenre", null, fg, SQLiteDatabase.CONFLICT_IGNORE)
                 }

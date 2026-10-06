@@ -126,15 +126,15 @@ private fun FilmContentUI(
 
         ButtonArea()
 
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            border = BorderStroke(1.dp, DarkCoffee)
-        ) {
-            if (genres.isNotEmpty()) {
+        if (genres.isNotEmpty()) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                border = BorderStroke(1.dp, DarkCoffee)
+            ) {
                 Text(
                     text = "Genres",
                     fontSize = 20.sp,
@@ -144,7 +144,7 @@ private fun FilmContentUI(
                     style = FilmTypography.titleMedium
                 )
                 Text(
-                    text = genres,
+                    text = genres.joinToString(", "),
                     color = DarkCoffee,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.padding(vertical = 10.dp, horizontal = 20.dp)
@@ -427,7 +427,9 @@ private fun ContentHeader(
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                     style = FilmTypography.titleSmall,
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp)
                 )
             }
 
@@ -448,7 +450,9 @@ private fun ContentHeader(
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                     style = FilmTypography.titleSmall,
-                    modifier = Modifier.padding(horizontal = 4.dp).weight(1f)
+                    modifier = Modifier
+                        .padding(horizontal = 4.dp)
+                        .weight(1f)
                 )
                 Text(
                     text = releaseDate.toString(),
@@ -458,7 +462,9 @@ private fun ContentHeader(
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                     style = FilmTypography.titleSmall,
-                    modifier = Modifier.padding(horizontal = 4.dp).weight(1f)
+                    modifier = Modifier
+                        .padding(horizontal = 4.dp)
+                        .weight(1f)
                 )
                 Text(
                     text = "${rating} ★",
@@ -468,7 +474,9 @@ private fun ContentHeader(
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                     style = FilmTypography.titleSmall,
-                    modifier = Modifier.padding(horizontal = 4.dp).weight(1f)
+                    modifier = Modifier
+                        .padding(horizontal = 4.dp)
+                        .weight(1f)
                 )
             }
 

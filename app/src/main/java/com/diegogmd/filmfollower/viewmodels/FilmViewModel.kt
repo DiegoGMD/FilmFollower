@@ -36,7 +36,9 @@ class FilmViewModel(private val repository: SearchRepository) : ViewModel() {
             try {
                 _film.value = if (isOnline(appContext)) {
                     try { // online: TMDB API
-                        repository.getFilm(id).also { _genres.value = it.genreNames }
+                        repository.getFilm(id).also { f ->
+                            _genres.value = f.genres.map { it.name }
+                        }
                     } catch (e: Exception){ // network failed: use DB
                         _genres.value = getLocalGenres(appContext, id)
                         getLocalFilm(appContext, id)
@@ -60,7 +62,7 @@ class FilmViewModel(private val repository: SearchRepository) : ViewModel() {
         }
 
     private suspend fun getLocalGenres(context: Context, id: Int): List<String> =
-        withContext(Dispatchers.IO) { getFilmGenre(context, id) }
+        withContext(Dispatchers.IO) { getFilmGenreNames(context, id) }
 
     fun addFilmToWishlist(context: Context, id: Int) {
         viewModelScope.launch {

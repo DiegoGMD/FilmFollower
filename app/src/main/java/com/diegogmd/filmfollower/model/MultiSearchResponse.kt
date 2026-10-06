@@ -55,7 +55,7 @@ data class FilmDetailsResponse(
             watchedDate = null,
             timesWatched = 0,
             addedAt = LocalDate.now(),
-            genreIds = genres.orEmpty().map { it.id }
+            genres = genres.orEmpty().map { it.toGenre() }
         )
     }
 }
