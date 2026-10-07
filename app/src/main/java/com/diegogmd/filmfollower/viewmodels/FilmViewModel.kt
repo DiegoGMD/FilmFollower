@@ -64,7 +64,7 @@ class FilmViewModel(private val repository: SearchRepository) : ViewModel() {
     private suspend fun getLocalGenres(context: Context, id: Int): List<String> =
         withContext(Dispatchers.IO) { getFilmGenreNames(context, id) }
 
-    fun addFilmToWishlist(context: Context, id: Int) {
+    fun addFilmToWatchlist(context: Context, id: Int) {
         viewModelScope.launch {
             val film = repository.getFilm(id)
             withContext(Dispatchers.IO) { film.insertNewFilm(context.applicationContext) }

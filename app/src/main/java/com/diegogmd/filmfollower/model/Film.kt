@@ -161,11 +161,11 @@ fun eraseFilm(
     context: Context,
     filmId: Int,
 ) {
-    val wishlistedFilm: Film? = getFilm(context, filmId)
-    if (wishlistedFilm == null) {
+    val watchlistedFilm: Film? = getFilm(context, filmId)
+    if (watchlistedFilm == null) {
         Log.e("Database", "Error getting film")
     } else {
-        wishlistedFilm.eraseFilm(context)
+        watchlistedFilm.eraseFilm(context)
     }
 }
 
@@ -236,32 +236,64 @@ private fun existsFilm(
     }
 }
 
-fun anyWishlistedFilm(context: Context): Boolean =
-    existsFilm(context, "watch_status = ?", arrayOf("wishlist"))
+fun isWatchlisted(context: Context, filmId: Int): Boolean {
+    val dbHelper = FilmFillowerDatabase(context)
+    val db = dbHelper.readableDatabase
+    var exists = false
 
-fun anyWishlistedReleasedFilm(context: Context): Boolean = existsFilm(
+    if (filmId == 0) {
+        Log.e("Database", "Error checking film: filmId is 0")
+        return false
+    }
+
+    val query = """
+            SELECT EXISTS(
+                SELECT 1 FROM Film
+                WHERE film_id = ?
+            )
+        """.trimIndent()
+
+    try {
+        db.rawQuery(query, arrayOf(filmId.toString())).use { cursor ->
+            if (cursor.moveToFirst()) {
+                exists = cursor.getInt(0) == 1
+            }
+        }
+    } catch (e: Exception) {
+        Log.e("Database", "Error checking film existence", e)
+    } finally {
+        db.close()
+    }
+
+    return exists
+}
+
+fun anyWatchlistedFilm(context: Context): Boolean =
+    existsFilm(context, "watch_status = ?", arrayOf("watchlist"))
+
+fun anyWatchlistedReleasedFilm(context: Context): Boolean = existsFilm(
     context,
     "release_date <= ? AND watch_status = ?",
-    arrayOf(LocalDate.now().toString(), "wishlist")
+    arrayOf(LocalDate.now().toString(), "watchlist")
 )
 
-fun anyWishlistedUpcomingFilm(context: Context): Boolean = existsFilm(
+fun anyWatchlistedUpcomingFilm(context: Context): Boolean = existsFilm(
     context,
     "release_date > ? AND watch_status = ?",
-    arrayOf(LocalDate.now().toString(), "wishlist")
+    arrayOf(LocalDate.now().toString(), "watchlist")
 )
 
-fun getWishlistedFilms(context: Context): List<Film> =
-    queryFilms(context, "watch_status = ?", arrayOf("wishlist"))
+fun getWatchlistedFilms(context: Context): List<Film> =
+    queryFilms(context, "watch_status = ?", arrayOf("watchlist"))
 
-fun getWishlistedReleasedFilms(context: Context): List<Film> = queryFilms(
+fun getWatchlistedReleasedFilms(context: Context): List<Film> = queryFilms(
     context,
     "release_date <= ? AND watch_status = ?",
-    arrayOf(LocalDate.now().toString(), "wishlist")
+    arrayOf(LocalDate.now().toString(), "watchlist")
 )
 
-fun getWishlistedUpcomingFilms(context: Context): List<Film> = queryFilms(
+fun getWatchlistedUpcomingFilms(context: Context): List<Film> = queryFilms(
     context,
     "release_date > ? AND watch_status = ?",
-    arrayOf(LocalDate.now().toString(), "wishlist")
+    arrayOf(LocalDate.now().toString(), "watchlist")
 )

@@ -54,4 +54,12 @@ object SecureStorage {
 
     fun getApiReadAccessToken(context: Context): String? =
     getPrefs(context).getString(KEY_API_READ_ACCESS_TOKEN, null)
+
+    fun changeUsername(context: Context, trim: String) {
+
+    }
+
+    fun changeApiReadAccessToken(context: Context, trim: String) {
+
+    }
 }

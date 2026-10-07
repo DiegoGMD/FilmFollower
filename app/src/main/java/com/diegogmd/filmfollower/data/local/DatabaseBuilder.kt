@@ -43,7 +43,7 @@ class FilmFillowerDatabase(context: Context) :
                 tmdb_status TEXT,
                 tmdb_last_synced TIMESTAMP,
                 rating REAL CHECK (rating BETWEEN 0 AND 10),
-                watch_status TEXT NOT NULL DEFAULT 'wishlist' CHECK (watch_status IN ('wishlist','watching','seen')),
+                watch_status TEXT NOT NULL DEFAULT 'watchlist' CHECK (watch_status IN ('watchlist','watching','seen')),
                 watched_date TEXT,
                 times_watched INTEGER NOT NULL DEFAULT 0,
                 added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -79,7 +79,7 @@ class FilmFillowerDatabase(context: Context) :
                 poster_path TEXT,
                 tmdb_status TEXT,
                 tmdb_last_synced TIMESTAMP,
-                watch_status TEXT NOT NULL DEFAULT 'wishlist' CHECK (watch_status IN ('wishlist','watching','completed','dropped')),
+                watch_status TEXT NOT NULL DEFAULT 'watchlist' CHECK (watch_status IN ('watchlist','watching','completed','dropped')),
                 rating REAL CHECK (rating BETWEEN 0 AND 10),
                 added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );

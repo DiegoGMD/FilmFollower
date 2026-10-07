@@ -19,12 +19,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavHostController
 import com.diegogmd.filmfollower.R
 import com.diegogmd.filmfollower.model.Film
-import com.diegogmd.filmfollower.model.anyWishlistedReleasedFilm
-import com.diegogmd.filmfollower.model.anyWishlistedUpcomingFilm
-import com.diegogmd.filmfollower.model.getWishlistedReleasedFilms
-import com.diegogmd.filmfollower.model.getWishlistedUpcomingFilms
-import com.diegogmd.filmfollower.samplePlaceholderFilms
-import com.diegogmd.filmfollower.samplePlaceholderUpcomingFilms
+import com.diegogmd.filmfollower.model.anyWatchlistedReleasedFilm
+import com.diegogmd.filmfollower.model.anyWatchlistedUpcomingFilm
+import com.diegogmd.filmfollower.model.getWatchlistedReleasedFilms
+import com.diegogmd.filmfollower.model.getWatchlistedUpcomingFilms
 import com.diegogmd.filmfollower.ui.components.ContentCard
 import com.diegogmd.filmfollower.ui.components.EmptyContentCard
 import com.diegogmd.filmfollower.ui.theme.DarkCoffee
@@ -59,20 +57,20 @@ fun FilmsScreen(modifier: Modifier, navController: NavHostController) {
         }
 
         when (selectedTab) {
-            0 -> if (anyWishlistedReleasedFilm(context)) {
+            0 -> if (anyWatchlistedReleasedFilm(context)) {
                 FilmList(
                     Modifier.weight(1f),
-                    films = getWishlistedReleasedFilms(context),
+                    films = getWatchlistedReleasedFilms(context),
                     navController
                 )
             } else {
                 EmptyContentCard(modifier, true)
             }
 
-            1 -> if (anyWishlistedUpcomingFilm(context)) {
+            1 -> if (anyWatchlistedUpcomingFilm(context)) {
                 FilmList(
                     Modifier.weight(1f),
-                    films = getWishlistedUpcomingFilms(context),
+                    films = getWatchlistedUpcomingFilms(context),
                     navController
                 )
             } else {

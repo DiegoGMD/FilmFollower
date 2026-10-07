@@ -51,7 +51,7 @@ data class FilmDetailsResponse(
             tmdbStatus = status,
             tmdbLastSynced = LocalDate.now(),
             rating = Math.round(vote_average * 10) / 10.0,
-            watchStatus = "wishlist",// default value
+            watchStatus = "watchlist",// default value
             watchedDate = null,
             timesWatched = 0,
             addedAt = LocalDate.now(),
@@ -89,7 +89,7 @@ data class TvShowDetailsResponse(
             posterPath = poster_path ?: "",
             tmdbStatus = status,
             tmdbLastSynced = LocalDate.now(),
-            watchStatus = "wishlist",// default value
+            watchStatus = "watchlist",// default value
             addedAt = LocalDate.now()
         )
     }

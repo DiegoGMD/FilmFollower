@@ -37,7 +37,7 @@ class TvShowViewModel(private val repository: SearchRepository) : ViewModel() {
         }
     }
 
-    fun addTvShowToWishlist(context: Context, id: Int) {
+    fun addTvShowToWatchlist(context: Context, id: Int) {
         viewModelScope.launch {
             val film = repository.getFilm(id)
             film.insertNewFilm(context)

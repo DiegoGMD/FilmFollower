@@ -4,10 +4,10 @@
     <selectionStates>
       <SelectionState runConfigName="app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2026-10-05T12:05:56.730474200Z">
+        <DropdownSelection timestamp="2026-10-07T08:19:57.060231100Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="PhysicalDevice" identifier="serial=R5CW13KKPTK" />
+              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\gmd02\.android\avd\Medium_Phone_API_34.avd" />
             </handle>
           </Target>
         </DropdownSelection>
@@ -23,6 +23,9 @@
           </Target>
         </DropdownSelection>
         <DialogSelection />
+      </SelectionState>
+      <SelectionState runConfigName="SettingsScreenPreview">
+        <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
     </selectionStates>
   </component>

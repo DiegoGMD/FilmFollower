@@ -297,7 +297,12 @@ private fun TvShowContentUI(
 }
 
 @Composable
-private fun ButtonArea() {
+private fun ButtonArea(
+    beenSeen: Boolean = false,
+    addedFavourite: Boolean = false,
+    addedArchive: Boolean = false,
+    addedWatchlist: Boolean = false
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -307,10 +312,30 @@ private fun ButtonArea() {
         verticalAlignment = Alignment.CenterVertically
     ) { // Button row
         ActionIconButton(R.drawable.ic_play_arrow_24px, "Trailer")
-        ActionIconButton(R.drawable.ic_visibility_24px, "Seen")
-        ActionIconButton(R.drawable.ic_favorite_24px, "Favourite")
-        ActionIconButton(R.drawable.ic_archive_24px, "Archived")
-        ActionIconButton(R.drawable.ic_bookmark_24dp, "Watchlist")
+
+        if (beenSeen) {
+            ActionIconButton(R.drawable.ic_visibility_24px, "Seen")
+        } else {
+            ActionIconButton(R.drawable.ic_visibility_off_24px, "Not Seen")
+        }
+
+        if (addedFavourite) {
+            ActionIconButton(R.drawable.ic_favorite_24px, "Favourite") // Search filled heart
+        } else {
+            ActionIconButton(R.drawable.ic_favorite_24px, "Regular")
+        }
+
+        if (addedArchive) {
+            ActionIconButton(R.drawable.ic_archive_24px, "Archived")
+        } else {
+            ActionIconButton(R.drawable.ic_unarchive_24px, "Unarchived")
+        }
+
+        if (addedWatchlist) {
+            ActionIconButton(R.drawable.ic_bookmark_check_24px, "Watchlisted")
+        } else {
+            ActionIconButton(R.drawable.ic_bookmark_24dp, "Not watchlisted")
+        }
     }
 }
 

@@ -71,7 +71,7 @@ fun ContentCard(
     }
     val rating =
         if (content.vote_average != null) Math.round(content.vote_average * 10) / 10.0 else null
-    val wishlisted = if (getFilm(context, content.id) == null) false else true
+    val watchlisted = if (getFilm(context, content.id) == null) false else true
 
     Card(
         modifier = Modifier
@@ -93,7 +93,7 @@ fun ContentCard(
                 title,
                 date,
                 rating,
-                wishlisted,
+                watchlisted,
                 true,
                 onClick
             )
@@ -105,7 +105,7 @@ fun ContentCard(
                 title,
                 date,
                 rating,
-                wishlisted,
+                watchlisted,
                 true,
                 onClick
             )
@@ -168,12 +168,12 @@ private fun VerticalContentCard(
     title: String,
     date: LocalDate?,
     rating: Double?,
-    wishlisted: Boolean = false,
+    watchlisted: Boolean = false,
     button: Boolean = false,
     onClick: (Int) -> Unit = {},
     viewModel: FilmViewModel = viewModel(factory = FilmViewModelFactory())
 ) {
-    var wishlisted by remember(wishlisted) { mutableStateOf(wishlisted) }
+    var watchlisted by remember(watchlisted) { mutableStateOf(watchlisted) }
 
     Column(modifier = Modifier.padding(0.dp)) {
         AsyncImage(
@@ -198,12 +198,12 @@ private fun VerticalContentCard(
 
             Button(
                 onClick = {
-                    if (!wishlisted) {
-                        viewModel.addFilmToWishlist(context, filmId)
+                    if (!watchlisted) {
+                        viewModel.addFilmToWatchlist(context, filmId)
                     } else {
                         eraseFilm(context, filmId)
                     }
-                    wishlisted = !wishlisted
+                    watchlisted = !watchlisted
                 },
                 modifier = Modifier
                     .width(56.dp)
@@ -217,16 +217,16 @@ private fun VerticalContentCard(
                     topEnd = 12.dp, bottomEnd = 12.dp
                 )
             ) {
-                if (!wishlisted) {
+                if (!watchlisted) {
                     Icon(
                         imageVector = Icons.Default.Add,
-                        contentDescription = "Not wishlisted",
+                        contentDescription = "Not watchlisted",
                         tint = LightCaramel
                     )
                 } else {
                     Icon(
                         imageVector = Icons.Default.Check,
-                        contentDescription = "Wishlisted",
+                        contentDescription = "Watchlisted",
                         tint = LightCaramel
                     )
                 }
@@ -242,12 +242,12 @@ private fun HorizontalContentCard(
     title: String,
     date: LocalDate?,
     rating: Double?,
-    wishlisted: Boolean = false,
+    watchlisted: Boolean = false,
     button: Boolean = false,
     onClick: (Int) -> Unit = {},
     viewModel: FilmViewModel = viewModel(factory = FilmViewModelFactory())
 ) {
-    var wishlisted by remember(wishlisted) { mutableStateOf(wishlisted) }
+    var watchlisted by remember(watchlisted) { mutableStateOf(watchlisted) }
 
     Row(
         modifier = Modifier
@@ -273,12 +273,12 @@ private fun HorizontalContentCard(
 
             Button(
                 onClick = {
-                    if (!wishlisted) {
-                        viewModel.addFilmToWishlist(context, filmId)
+                    if (!watchlisted) {
+                        viewModel.addFilmToWatchlist(context, filmId)
                     } else {
                         eraseFilm(context, filmId)
                     }
-                    wishlisted = !wishlisted
+                    watchlisted = !watchlisted
                 },
                 modifier = Modifier
                     .width(56.dp)
@@ -292,10 +292,10 @@ private fun HorizontalContentCard(
                     topEnd = 12.dp, bottomEnd = 12.dp
                 )
             ) {
-                if (!wishlisted) {
+                if (!watchlisted) {
                     Icon(
                         imageVector = Icons.Default.Add,
-                        contentDescription = "Not wishlisted",
+                        contentDescription = "Not watchlisted",
                         tint = LightCaramel
                     )
                 } else {
