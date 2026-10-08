@@ -4,6 +4,7 @@ import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.material3.NavigationBarItem
@@ -21,13 +22,8 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.rememberNavController
 import com.diegogmd.filmfollower.R
 import com.diegogmd.filmfollower.ui.AppNavHost
-import androidx.compose.material3.NavigationBarItemColors
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.navigation.compose.currentBackStackEntryAsState
-import com.diegogmd.filmfollower.ui.theme.DarkCoffee
-import com.diegogmd.filmfollower.ui.theme.FadedCopper
-import com.diegogmd.filmfollower.ui.theme.LightCaramel
-import com.diegogmd.filmfollower.ui.theme.OliveWood
-
 
 data class NavItem(
     val route: String,
@@ -57,7 +53,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
                 NavigationBar(
                     windowInsets = NavigationBarDefaults.windowInsets,
                     modifier = Modifier,
-                    containerColor = DarkCoffee
+                    //// containerColor = DarkCoffee
                 ) {
                     navItems.forEachIndexed { index, item ->
                         NavigationBarItem(
@@ -78,14 +74,12 @@ fun MainScreen(modifier: Modifier = Modifier) {
                                 )
                             },
                             label = { Text(stringResource(id = item.label)) },
-                            colors = NavigationBarItemColors(
-                                selectedIndicatorColor = OliveWood,
-                                selectedIconColor = LightCaramel,
-                                selectedTextColor = LightCaramel,
-                                unselectedIconColor = FadedCopper,
-                                unselectedTextColor = FadedCopper,
-                                disabledIconColor = FadedCopper,
-                                disabledTextColor = FadedCopper
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = MaterialTheme.colorScheme.primary,
+                                selectedTextColor = MaterialTheme.colorScheme.primary,
+                                indicatorColor = MaterialTheme.colorScheme.secondaryContainer,
+                                unselectedIconColor = MaterialTheme.colorScheme.secondary,
+                                unselectedTextColor = MaterialTheme.colorScheme.secondary,
                             )
                         )
                     }

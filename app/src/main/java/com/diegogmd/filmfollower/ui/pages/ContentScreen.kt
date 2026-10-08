@@ -111,7 +111,7 @@ private fun FilmContentUI(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(DarkCoffee)
+            .background(MaterialTheme.colorScheme.onSurface)
     ) {
         ContentHeader(
             onBackClick = onBackClick,
@@ -133,19 +133,17 @@ private fun FilmContentUI(
                     .padding(8.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                border = BorderStroke(1.dp, DarkCoffee)
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface)
             ) {
                 Text(
                     text = "Genres",
                     fontSize = 20.sp,
                     textAlign = TextAlign.Center,
-                    color = DarkCoffee,
                     modifier = Modifier.align(Alignment.CenterHorizontally),
                     style = FilmTypography.titleMedium
                 )
                 Text(
                     text = genres.joinToString(", "),
-                    color = DarkCoffee,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.padding(vertical = 10.dp, horizontal = 20.dp)
                 )
@@ -158,19 +156,17 @@ private fun FilmContentUI(
                 .padding(8.dp),
             shape = RoundedCornerShape(12.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            border = BorderStroke(1.dp, DarkCoffee)
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface)
         ) {
             Text(
                 text = "Overview",
                 fontSize = 20.sp,
                 textAlign = TextAlign.Center,
-                color = DarkCoffee,
                 modifier = Modifier.align(Alignment.CenterHorizontally),
                 style = FilmTypography.titleMedium
             )
             Text(
                 text = film.overview,
-                color = DarkCoffee,
                 modifier = Modifier.padding(vertical = 10.dp, horizontal = 20.dp)
             )
         }
@@ -181,19 +177,17 @@ private fun FilmContentUI(
                 .padding(8.dp),
             shape = RoundedCornerShape(12.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            border = BorderStroke(1.dp, DarkCoffee)
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface)
         ) {
             Text(
                 text = "Similar",
                 fontSize = 20.sp,
                 textAlign = TextAlign.Center,
-                color = DarkCoffee,
                 modifier = Modifier.align(Alignment.CenterHorizontally),
                 style = FilmTypography.titleMedium
             )
             Text(
                 text = "HorizontalFilmCards Carousel, that slides horizontally with 5 options that re-appear in cycle",
-                color = DarkCoffee,
                 modifier = Modifier.padding(vertical = 10.dp, horizontal = 20.dp)
             )
         }
@@ -209,7 +203,7 @@ private fun TvShowContentUI(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(DarkCoffee)
+            .background(MaterialTheme.colorScheme.onSurface)
     ) {
         ContentHeader(
             onBackClick = onBackClick,
@@ -230,19 +224,17 @@ private fun TvShowContentUI(
                 .padding(8.dp),
             shape = RoundedCornerShape(12.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            border = BorderStroke(1.dp, DarkCoffee)
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface)
         ) {
             Text(
                 text = "Genres",
                 fontSize = 20.sp,
                 textAlign = TextAlign.Center,
-                color = DarkCoffee,
                 modifier = Modifier.align(Alignment.CenterHorizontally),
                 style = FilmTypography.titleMedium
             )
             Text(
                 text = getFilmGenre(LocalContext.current, tvShow.showId),
-                color = DarkCoffee,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(vertical = 10.dp, horizontal = 20.dp)
             )
@@ -254,19 +246,17 @@ private fun TvShowContentUI(
                 .padding(8.dp),
             shape = RoundedCornerShape(12.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            border = BorderStroke(1.dp, DarkCoffee)
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface)
         ) {
             Text(
                 text = "Overview",
                 fontSize = 20.sp,
                 textAlign = TextAlign.Center,
-                color = DarkCoffee,
                 modifier = Modifier.align(Alignment.CenterHorizontally),
                 style = FilmTypography.titleMedium
             )
             Text(
                 text = tvShow.overview,
-                color = DarkCoffee,
                 modifier = Modifier.padding(vertical = 10.dp, horizontal = 20.dp)
             )
         }
@@ -277,19 +267,17 @@ private fun TvShowContentUI(
                 .padding(8.dp),
             shape = RoundedCornerShape(12.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            border = BorderStroke(1.dp, DarkCoffee)
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface)
         ) {
             Text(
                 text = "Similar",
                 fontSize = 20.sp,
                 textAlign = TextAlign.Center,
-                color = DarkCoffee,
                 modifier = Modifier.align(Alignment.CenterHorizontally),
                 style = FilmTypography.titleMedium
             )
             Text(
                 text = "HorizontalFilmCards Carousel, that slides horizontally with 5 options that re-appear in cycle",
-                color = DarkCoffee,
                 modifier = Modifier.padding(vertical = 10.dp, horizontal = 20.dp)
             )
         }
@@ -380,7 +368,7 @@ private fun ContentHeader(
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(
-                            DarkCoffee.copy(alpha = 0.55f),
+                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
                             Color.Black.copy(alpha = 0.85f),
                             Color.Black
                         )
@@ -396,12 +384,11 @@ private fun ContentHeader(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 20.dp)
+                    .padding(20.dp)
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Back",
-                    tint = LightCaramel,
                     modifier = Modifier
                         .align(Alignment.CenterStart)
                         .size(28.dp)
@@ -419,7 +406,6 @@ private fun ContentHeader(
                     Icon(
                         imageVector = Icons.Default.Refresh,
                         contentDescription = "Reload",
-                        tint = LightCaramel,
                         modifier = Modifier.size(24.dp)
                     )
                 }
@@ -429,7 +415,6 @@ private fun ContentHeader(
 
             Text(
                 text = title,
-                color = LightCaramel,
                 fontSize = titleSize,
                 lineHeight = titleSize * 1.2f,
                 textAlign = TextAlign.Center,
@@ -446,7 +431,6 @@ private fun ContentHeader(
             if (showOriginal) {
                 Text(
                     text = originalTitle!!,
-                    color = LightCaramel,
                     fontSize = 14.sp,
                     textAlign = TextAlign.Center,
                     maxLines = 2,
@@ -469,7 +453,6 @@ private fun ContentHeader(
             ) {
                 Text(
                     text = "${runtime} min",
-                    color = LightCaramel,
                     fontSize = 16.sp,
                     textAlign = TextAlign.Center,
                     maxLines = 2,
@@ -481,7 +464,6 @@ private fun ContentHeader(
                 )
                 Text(
                     text = releaseDate.toString(),
-                    color = LightCaramel,
                     fontSize = 16.sp,
                     textAlign = TextAlign.Center,
                     maxLines = 2,
@@ -493,7 +475,6 @@ private fun ContentHeader(
                 )
                 Text(
                     text = "${rating} ★",
-                    color = LightCaramel,
                     fontSize = 16.sp,
                     textAlign = TextAlign.Center,
                     maxLines = 2,
@@ -505,10 +486,7 @@ private fun ContentHeader(
                 )
             }
 
-            HorizontalDivider(
-                color = LightCaramel,
-                thickness = 3.dp,
-            )
+            HorizontalDivider(color = MaterialTheme.colorScheme.surface, thickness = 3.dp)
         }
     }
 }
@@ -523,14 +501,14 @@ private fun ActionIconButton(
         modifier = Modifier
             .size(52.dp)
             .clip(RoundedCornerShape(12.dp))
-            .background(LightCaramel)
+            .background(MaterialTheme.colorScheme.surface)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         Icon(
             painter = painterResource(id = icon),
             contentDescription = description,
-            tint = DarkCoffee,
+            tint = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.size(25.dp)
         )
     }

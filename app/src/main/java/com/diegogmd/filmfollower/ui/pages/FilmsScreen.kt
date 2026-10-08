@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
@@ -25,9 +26,7 @@ import com.diegogmd.filmfollower.model.getWatchlistedReleasedFilms
 import com.diegogmd.filmfollower.model.getWatchlistedUpcomingFilms
 import com.diegogmd.filmfollower.ui.components.ContentCard
 import com.diegogmd.filmfollower.ui.components.EmptyContentCard
-import com.diegogmd.filmfollower.ui.theme.DarkCoffee
 import com.diegogmd.filmfollower.ui.theme.FilmTypography
-import com.diegogmd.filmfollower.ui.theme.LightCaramel
 
 @Composable
 fun FilmsScreen(modifier: Modifier, navController: NavHostController) {
@@ -39,8 +38,8 @@ fun FilmsScreen(modifier: Modifier, navController: NavHostController) {
         TabRow(
             selectedTabIndex = selectedTab,
             modifier = Modifier.fillMaxWidth(),
-            contentColor = LightCaramel,
-            containerColor = DarkCoffee,
+            containerColor = MaterialTheme.colorScheme.onPrimary,
+            contentColor = MaterialTheme.colorScheme.primary
         ) {
             tabs.forEachIndexed { index, title ->
                 Tab(

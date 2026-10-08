@@ -69,7 +69,7 @@ fun SearchScreen(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(DarkCoffee)
+                .background(MaterialTheme.colorScheme.onPrimary)
                 .padding(8.dp)
         ) {
             TextField(
@@ -86,11 +86,7 @@ fun SearchScreen(
                     ),
                 shape = RoundedCornerShape(30.dp),
                 colors = TextFieldDefaults.colors(
-                    focusedContainerColor = LightCaramel,
-                    unfocusedContainerColor = LightCaramel,
-                    disabledContainerColor = FadedCopper,
-                    cursorColor = DarkCoffee,
-                    focusedTextColor = DarkCoffee,
+                    cursorColor = MaterialTheme.colorScheme.onPrimary,
                     focusedIndicatorColor = Color.Transparent,
                     unfocusedIndicatorColor = Color.Transparent,
                     disabledIndicatorColor = Color.Transparent
@@ -98,14 +94,14 @@ fun SearchScreen(
                 placeholder = {
                     Text(
                         text = stringResource(R.string.search_bar),
-                        color = DarkCoffee
+                        color = MaterialTheme.colorScheme.onPrimary
                     )
                 },
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Default.Search,
                         contentDescription = "Search",
-                        tint = DarkCoffee
+                        tint = MaterialTheme.colorScheme.onPrimary
                     )
                 }
             )

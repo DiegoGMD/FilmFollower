@@ -79,15 +79,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.diegogmd.filmfollower.R
 import com.diegogmd.filmfollower.SecureStorage
+import com.diegogmd.filmfollower.ui.theme.Black
 import com.diegogmd.filmfollower.ui.theme.DarkCoffee
 import com.diegogmd.filmfollower.ui.theme.FilmTypography
 import com.diegogmd.filmfollower.ui.theme.LightCaramel
 import com.diegogmd.filmfollower.ui.theme.OliveWood
+import com.diegogmd.filmfollower.ui.theme.Silver
 
 // Card colour = your background nudged slightly towards the caramel, like the
 // slightly lighter brown cards in the reference.
 private val SectionCardColor = lerp(DarkCoffee, LightCaramel, 0.08f)
-private val SectionCardShape = RoundedCornerShape(28.dp)
 
 /**
  * One entry of the theme carousel.
@@ -106,9 +107,9 @@ data class ThemeOption(
 
 // TODO: replace with your real themes and screenshots.
 private val themeOptions = listOf(
-    ThemeOption("coffee", "Coffee", previewRes = null, DarkCoffee, LightCaramel),
-    ThemeOption("caramel", "Caramel", previewRes = null, LightCaramel, DarkCoffee),
-    ThemeOption("olive", "Olive", previewRes = null, OliveWood, LightCaramel)
+    ThemeOption("OldFilm", "OldFilm", previewRes = null, DarkCoffee, LightCaramel),
+    ThemeOption("OldFilm W&B", "OldFilm W&B", previewRes = null, Black, Silver),
+    ThemeOption("Darkness", "Darkness", previewRes = null, DarkCoffee, LightCaramel)
 )
 
 @Composable
@@ -147,10 +148,7 @@ fun SettingsScreen(
         // Back button: tonal circle, like the reference
         Box(
             modifier = Modifier
-                .padding(top = 12.dp)
-                .size(48.dp)
-                .clip(CircleShape)
-                .background(SectionCardColor)
+                .padding(20.dp)
                 .clickable(onClick = onBackClick),
             contentAlignment = Alignment.Center
         ) {
@@ -158,7 +156,7 @@ fun SettingsScreen(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                 contentDescription = "Back",
                 tint = LightCaramel,
-                modifier = Modifier.size(24.dp)
+                modifier = Modifier.size(28.dp)
             )
         }
 
@@ -166,7 +164,7 @@ fun SettingsScreen(
             text = "Settings",
             style = FilmTypography.titleMedium.copy(fontSize = 44.sp, lineHeight = 52.sp),
             color = LightCaramel,
-            modifier = Modifier.padding(start = 8.dp, top = 24.dp, bottom = 32.dp)
+            modifier = Modifier.padding(bottom = 12.dp)
         )
 
         // ---------- Account ----------
@@ -234,6 +232,7 @@ fun SettingsScreen(
 
         // ---------- Appearance ----------
         SettingsSection(label = "Appearance") {
+            // TODO: Make ThemeSelector and the preview themes button on the same row
             ThemeSelector(
                 options = themeOptions,
                 selectedId = selectedThemeId,
@@ -283,7 +282,7 @@ private fun SettingsSection(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(SectionCardShape)
+            .clip(RoundedCornerShape(12.dp))
             .background(SectionCardColor)
             .padding(vertical = 20.dp)
     ) {
@@ -560,6 +559,8 @@ private fun SettingsFieldRow(
         Text(supporting, fontSize = 14.sp, color = LightCaramel.copy(alpha = 0.7f))
 
         Spacer(Modifier.height(12.dp))
+
+        // TODO: Make OutlinedTextField and the save button on the same row
 
         OutlinedTextField(
             value = value,

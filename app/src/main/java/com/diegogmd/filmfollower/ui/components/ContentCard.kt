@@ -21,10 +21,12 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -49,7 +51,6 @@ import com.diegogmd.filmfollower.model.Film
 import com.diegogmd.filmfollower.model.getFilm
 import com.diegogmd.filmfollower.model.getTvShow
 import com.diegogmd.filmfollower.model.eraseFilm
-import com.diegogmd.filmfollower.ui.theme.DarkCoffee
 import com.diegogmd.filmfollower.ui.theme.FilmTypography
 import com.diegogmd.filmfollower.ui.theme.LightCaramel
 import com.diegogmd.filmfollower.viewmodels.FilmViewModel
@@ -78,11 +79,7 @@ fun ContentCard(
             .fillMaxWidth()
             .padding(8.dp),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = LightCaramel,
-            contentColor = DarkCoffee
-        ),
-        border = BorderStroke(1.dp, DarkCoffee)
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.surfaceContainer)
     ) {
 
         if (orientation) {
@@ -119,18 +116,14 @@ fun ContentCard(
     orientation: Boolean = false, // false = horizontal row, true = vertical poster
     onClick: (Int) -> Unit = {},
 ) {
-    val posterUrl = content.posterPath?.let { "https://image.tmdb.org/t/p/w342$it" }
+    val posterUrl = content.posterPath?.let { "https:image.tmdb.org/t/p/w342$it" }
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = LightCaramel,
-            contentColor = DarkCoffee
-        ),
-        border = BorderStroke(1.dp, DarkCoffee)
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.surfaceContainer)
     ) {
 
         if (orientation) {
@@ -186,6 +179,10 @@ private fun VerticalContentCard(
                 .fillMaxWidth()
                 .height(160.dp)
         )
+        HorizontalDivider(
+            color = MaterialTheme.colorScheme.onPrimary,
+            thickness = 1.dp,
+        )
         Surface(
             onClick = { onClick(filmId) },
             modifier = Modifier.fillMaxWidth(),
@@ -209,9 +206,7 @@ private fun VerticalContentCard(
                     .width(56.dp)
                     .fillMaxHeight(),
                 contentPadding = PaddingValues(0.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = DarkCoffee
-                ),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.onPrimary),
                 shape = RoundedCornerShape(
                     topStart = 0.dp, bottomStart = 0.dp,
                     topEnd = 12.dp, bottomEnd = 12.dp
@@ -221,13 +216,13 @@ private fun VerticalContentCard(
                     Icon(
                         imageVector = Icons.Default.Add,
                         contentDescription = "Not watchlisted",
-                        tint = LightCaramel
+                        tint = MaterialTheme.colorScheme.primary
                     )
                 } else {
                     Icon(
                         imageVector = Icons.Default.Check,
                         contentDescription = "Watchlisted",
-                        tint = LightCaramel
+                        tint = MaterialTheme.colorScheme.primary
                     )
                 }
             }
@@ -263,6 +258,10 @@ private fun HorizontalContentCard(
             error = painterResource(R.drawable.placeholder_poster),
             modifier = Modifier.size(100.dp)
         )
+        VerticalDivider(
+            color = MaterialTheme.colorScheme.onPrimary,
+            thickness = 1.dp,
+        )
         Surface(
             onClick = { onClick(filmId) },
             modifier = Modifier.weight(1f),
@@ -284,9 +283,7 @@ private fun HorizontalContentCard(
                     .width(56.dp)
                     .fillMaxHeight(),
                 contentPadding = PaddingValues(0.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = DarkCoffee
-                ),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.onPrimary),
                 shape = RoundedCornerShape(
                     topStart = 0.dp, bottomStart = 0.dp,
                     topEnd = 12.dp, bottomEnd = 12.dp
@@ -296,13 +293,13 @@ private fun HorizontalContentCard(
                     Icon(
                         imageVector = Icons.Default.Add,
                         contentDescription = "Not watchlisted",
-                        tint = LightCaramel
+                        tint = MaterialTheme.colorScheme.primary
                     )
                 } else {
                     Icon(
                         imageVector = Icons.Default.Check,
                         contentDescription = "Whishlisted",
-                        tint = LightCaramel
+                        tint = MaterialTheme.colorScheme.primary
                     )
                 }
             }
@@ -352,7 +349,7 @@ fun EpisodeContentCard(
             .padding(8.dp),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, DarkCoffee)
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.surfaceContainer)
     ) {
         if (orientation) {
             // Vertical layout: image on top, text below
@@ -426,11 +423,7 @@ fun EmptyContentCard(modifier: Modifier = Modifier, isFilm: Boolean) {
     Card(
         modifier = modifier.padding(8.dp),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = LightCaramel,
-            contentColor = DarkCoffee
-        ),
-        border = BorderStroke(1.dp, DarkCoffee)
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.surfaceContainer)
     ) {
         val message = if (isFilm) "No films in the watchlist" else "No TV shows in the watchlist"
 
@@ -442,12 +435,10 @@ fun EmptyContentCard(modifier: Modifier = Modifier, isFilm: Boolean) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_info_24px),
                 contentDescription = message,
-                tint = DarkCoffee,
                 modifier = Modifier.size(50.dp)
             )
             Text(
                 text = message,
-                color = DarkCoffee,
                 fontSize = 20.sp,
                 textAlign = TextAlign.Center,
                 style = FilmTypography.titleMedium,
@@ -464,11 +455,7 @@ fun NoInternetCard(modifier: Modifier = Modifier) {
     Card(
         modifier = modifier.padding(8.dp),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = LightCaramel,
-            contentColor = DarkCoffee
-        ),
-        border = BorderStroke(1.dp, DarkCoffee)
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.surfaceContainer)
     ) {
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -478,12 +465,10 @@ fun NoInternetCard(modifier: Modifier = Modifier) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_wifi_off_24px),
                 contentDescription = "No internet connection",
-                tint = DarkCoffee,
                 modifier = Modifier.size(50.dp)
             )
             Text(
                 text = "No internet connection",
-                color = DarkCoffee,
                 fontSize = 20.sp,
                 textAlign = TextAlign.Center,
                 style = FilmTypography.titleMedium,
