@@ -43,6 +43,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
@@ -79,16 +80,19 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.diegogmd.filmfollower.R
 import com.diegogmd.filmfollower.SecureStorage
-import com.diegogmd.filmfollower.ui.theme.Black
+import com.diegogmd.filmfollower.ui.theme.CharcoalBlue
 import com.diegogmd.filmfollower.ui.theme.DarkCoffee
 import com.diegogmd.filmfollower.ui.theme.FilmTypography
+import com.diegogmd.filmfollower.ui.theme.InkBlack
 import com.diegogmd.filmfollower.ui.theme.LightCaramel
 import com.diegogmd.filmfollower.ui.theme.OliveWood
-import com.diegogmd.filmfollower.ui.theme.Silver
+import com.diegogmd.filmfollower.ui.theme.ThemeManager
 
-// Card colour = your background nudged slightly towards the caramel, like the
-// slightly lighter brown cards in the reference.
-private val SectionCardColor = lerp(DarkCoffee, LightCaramel, 0.08f)
+private val PanelBg: Color @Composable get() = MaterialTheme.colorScheme.surfaceVariant
+private val PanelText: Color @Composable get() = MaterialTheme.colorScheme.onSurfaceVariant
+private val PanelOutline: Color @Composable get() = MaterialTheme.colorScheme.outline
+@Composable
+private fun sectionCardColor(): Color = lerp(PanelBg, PanelText, 0.08f)
 
 /**
  * One entry of the theme carousel.
@@ -98,7 +102,7 @@ private val SectionCardColor = lerp(DarkCoffee, LightCaramel, 0.08f)
  * using [placeholderBackground] / [placeholderAccent].
  */
 data class ThemeOption(
-    val id: String,
+    val id: Int,
     val name: String,
     @DrawableRes val previewRes: Int? = null,
     val placeholderBackground: Color = DarkCoffee,
@@ -107,39 +111,38 @@ data class ThemeOption(
 
 // TODO: replace with your real themes and screenshots.
 private val themeOptions = listOf(
-    ThemeOption("OldFilm", "OldFilm", previewRes = null, DarkCoffee, LightCaramel),
-    ThemeOption("OldFilm W&B", "OldFilm W&B", previewRes = null, Black, Silver),
-    ThemeOption("Darkness", "Darkness", previewRes = null, DarkCoffee, LightCaramel)
+    ThemeOption(0, "OldFilm", previewRes = null, DarkCoffee, LightCaramel),
+    //ThemeOption(1, "OldFilm W&B", previewRes = null, Black, Silver),
+    ThemeOption(1, "Darkness", previewRes = null, InkBlack, CharcoalBlue),
 )
 
 @Composable
 fun SettingsScreen(
-    onBackClick: () -> Unit = {}
+    modifier: Modifier,
+    onBackClick: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val isPreview = LocalInspectionMode.current
 
-    // SecureStorage can't run inside the Android Studio preview, so fall back to dummy values there.
     var username by remember {
-        mutableStateOf(if (isPreview) "GMD" else SecureStorage.getUsername(context))
+        mutableStateOf(if (isPreview) "Preview" else SecureStorage.getUsername(context).orEmpty())
     }
     var usernameError by remember { mutableStateOf(false) }
 
     var apiToken by remember {
-        mutableStateOf(if (isPreview) "apiReadAccessToken" else SecureStorage.getApiReadAccessToken(context))
+        mutableStateOf(if (isPreview) "" else SecureStorage.getApiReadAccessToken(context).orEmpty())
     }
     var apiTokenError by remember { mutableStateOf(false) }
     var showToken by remember { mutableStateOf(false) }
 
-    // TODO: initialise from your saved theme preference
-    var selectedThemeId by remember { mutableStateOf(themeOptions.first().id) }
+    val selectedThemeId = ThemeManager.themeId
     var themeExpanded by remember { mutableStateOf(false) }
     var showPreviews by remember { mutableStateOf(false) }
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
-            .background(DarkCoffee)
+            .background(PanelBg)
             .statusBarsPadding()
             .navigationBarsPadding()
             .verticalScroll(rememberScrollState())
@@ -155,7 +158,7 @@ fun SettingsScreen(
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                 contentDescription = "Back",
-                tint = LightCaramel,
+                tint = PanelText,
                 modifier = Modifier.size(28.dp)
             )
         }
@@ -163,69 +166,65 @@ fun SettingsScreen(
         Text(
             text = "Settings",
             style = FilmTypography.titleMedium.copy(fontSize = 44.sp, lineHeight = 52.sp),
-            color = LightCaramel,
+            color = PanelText,
             modifier = Modifier.padding(bottom = 12.dp)
         )
 
         // ---------- Account ----------
         SettingsSection(label = "Account") {
-            username?.let {
-                SettingsFieldRow(
-                    title = "Username",
-                    supporting = "Shown on your profile",
-                    value = it,
-                    onValueChange = {
-                        username = it
-                        usernameError = it.isBlank()
-                    },
-                    isError = usernameError,
-                    errorText = "Username can't be empty",
-                    imeAction = ImeAction.Next,
-                    saveLabel = stringResource(id = R.string.save),
-                    onSave = {
-                        val valid = username!!.isNotBlank()
-                        usernameError = !valid
-                        if (valid) SecureStorage.changeUsername(context, username!!.trim())
-                    }
-                )
-            }
+            SettingsFieldRow(
+                title = "Username",
+                supporting = "Shown on your profile",
+                value = username,
+                onValueChange = {
+                    username = it
+                    usernameError = it.isBlank()
+                },
+                isError = usernameError,
+                errorText = "Username can't be empty",
+                imeAction = ImeAction.Next,
+                saveLabel = stringResource(id = R.string.save),
+                onSave = {
+                    val valid = username.isNotBlank()
+                    usernameError = !valid
+                    if (valid) SecureStorage.changeUsername(context, username.trim())
+                }
+            )
         }
 
         Spacer(Modifier.height(16.dp))
 
         // ---------- Data source ----------
         SettingsSection(label = "Data source") {
-            apiToken?.let {
-                SettingsFieldRow(
-                    title = "API read access token",
-                    supporting = "Used to load film data",
-                    value = it,
-                    onValueChange = {
-                        apiToken = it
-                        apiTokenError = it.isBlank()
-                    },
-                    isError = apiTokenError,
-                    errorText = "Token can't be empty",
-                    imeAction = ImeAction.Done,
-                    keyboardType = KeyboardType.Password,
-                    visualTransformation = if (showToken) VisualTransformation.None
-                    else PasswordVisualTransformation(),
-                    trailing = {
-                        TextButton(onClick = { showToken = !showToken }) {
-                            Text(if (showToken) "Hide" else "Show", color = LightCaramel)
-                        }
-                    },
-                    saveLabel = stringResource(id = R.string.save),
-                    onSave = {
-                        val valid = apiToken!!.isNotBlank()
-                        apiTokenError = !valid
-                        if (valid) {
-                            // TODO: use your real setter name here
-                            SecureStorage.changeApiReadAccessToken(context, apiToken!!.trim())
-                        }
+            SettingsFieldRow(
+                title = "API read access token",
+                supporting = "Used to load film data",
+                value = apiToken,
+                onValueChange = {
+                    apiToken = it
+                    apiTokenError = it.isBlank()
+                },
+                isError = apiTokenError,
+                errorText = "Token can't be empty",
+                imeAction = ImeAction.Done,
+                keyboardType = KeyboardType.Password,
+                visualTransformation = if (showToken) VisualTransformation.None
+                else PasswordVisualTransformation(),
+                trailing = {
+                    TextButton(onClick = { showToken = !showToken }) {
+                        Text(if (showToken) "Hide" else "Show", color = PanelText)
                     }
-                )
-            }
+                },
+                saveLabel = stringResource(id = R.string.save),
+                onSave = {
+                    val valid = apiToken.isNotBlank()
+                    apiTokenError = !valid
+                    if (valid) {
+                        // TODO: use your real setter name here
+                        SecureStorage.changeApiReadAccessToken(context, apiToken.trim())
+                    }
+                }
+            )
         }
 
         Spacer(Modifier.height(16.dp))
@@ -239,8 +238,7 @@ fun SettingsScreen(
                 expanded = themeExpanded,
                 onToggle = { themeExpanded = !themeExpanded },
                 onSelect = {
-                    selectedThemeId = it
-                    // TODO: persist + apply the theme
+                    ThemeManager.setTheme(context, it)
                 }
             )
 
@@ -248,11 +246,13 @@ fun SettingsScreen(
 
             OutlinedButton(
                 onClick = { showPreviews = true },
-                modifier = Modifier.align(Alignment.End).height(48.dp),
-                border = BorderStroke(1.dp, LightCaramel),
+                modifier = Modifier
+                    .align(Alignment.End)
+                    .height(48.dp),
+                border = BorderStroke(1.dp, PanelText),
                 shape = RoundedCornerShape(24.dp)
             ) {
-                Text("Preview themes", fontSize = 16.sp, color = LightCaramel)
+                Text("Preview themes", fontSize = 16.sp, color = PanelText)
             }
         }
 
@@ -261,8 +261,7 @@ fun SettingsScreen(
                 options = themeOptions,
                 selectedId = selectedThemeId,
                 onSelect = {
-                    selectedThemeId = it
-                    // TODO: persist + apply the theme
+                    ThemeManager.setTheme(context, it)
                 },
                 onDismiss = { showPreviews = false }
             )
@@ -283,13 +282,13 @@ private fun SettingsSection(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(SectionCardColor)
+            .background(sectionCardColor())
             .padding(vertical = 20.dp)
     ) {
         Text(
             text = label,
             fontSize = 14.sp,
-            color = LightCaramel.copy(alpha = 0.7f),
+            color = PanelText.copy(alpha = 0.7f),
             modifier = Modifier.padding(horizontal = 24.dp)
         )
         Spacer(Modifier.height(16.dp))
@@ -305,8 +304,8 @@ private fun SettingsSection(
 @Composable
 private fun ThemeCarousel(
     options: List<ThemeOption>,
-    selectedId: String,
-    onSelect: (String) -> Unit
+    selectedId: Int,
+    onSelect: (Int) -> Unit
 ) {
     val listState = rememberLazyListState()
 
@@ -334,7 +333,7 @@ private fun ThemeCard(
     onClick: () -> Unit
 ) {
     val borderColor by animateColorAsState(
-        targetValue = if (selected) LightCaramel else OliveWood.copy(alpha = 0.5f),
+        targetValue = if (selected) PanelText else PanelOutline.copy(alpha = 0.5f),
         label = "themeCardBorder"
     )
     val shape = RoundedCornerShape(20.dp)
@@ -369,13 +368,13 @@ private fun ThemeCard(
                         .padding(8.dp)
                         .size(24.dp)
                         .clip(CircleShape)
-                        .background(LightCaramel),
+                        .background(PanelText),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Check,
                         contentDescription = "Selected",
-                        tint = DarkCoffee,
+                        tint = PanelBg,
                         modifier = Modifier.size(16.dp)
                     )
                 }
@@ -388,7 +387,7 @@ private fun ThemeCard(
             text = option.name,
             fontSize = 16.sp,
             fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
-            color = if (selected) LightCaramel else LightCaramel.copy(alpha = 0.7f)
+            color = if (selected) PanelText else PanelText.copy(alpha = 0.7f)
         )
     }
 }
@@ -426,10 +425,10 @@ private fun ThemePlaceholder(option: ThemeOption) {
 @Composable
 private fun ThemeSelector(
     options: List<ThemeOption>,
-    selectedId: String,
+    selectedId: Int,
     expanded: Boolean,
     onToggle: () -> Unit,
-    onSelect: (String) -> Unit
+    onSelect: (Int) -> Unit
 ) {
     val selected = options.first { it.id == selectedId }
     val chevronRotation by animateFloatAsState(
@@ -447,14 +446,16 @@ private fun ThemeSelector(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text("Theme", fontSize = 20.sp, color = LightCaramel)
-                Text(selected.name, fontSize = 14.sp, color = LightCaramel.copy(alpha = 0.7f))
+                Text("Theme", fontSize = 20.sp, color = PanelText)
+                Text(selected.name, fontSize = 14.sp, color = PanelText.copy(alpha = 0.7f))
             }
             Icon(
                 imageVector = Icons.Filled.KeyboardArrowDown,
                 contentDescription = if (expanded) "Collapse themes" else "Expand themes",
-                tint = LightCaramel,
-                modifier = Modifier.size(28.dp).rotate(chevronRotation)
+                tint = PanelText,
+                modifier = Modifier
+                    .size(28.dp)
+                    .rotate(chevronRotation)
             )
         }
 
@@ -473,11 +474,11 @@ private fun ThemeSelector(
                             selected = option.id == selectedId,
                             onClick = { onSelect(option.id) },
                             colors = RadioButtonDefaults.colors(
-                                selectedColor = LightCaramel,
-                                unselectedColor = OliveWood
+                                selectedColor = PanelText,
+                                unselectedColor = PanelOutline
                             )
                         )
-                        Text(option.name, fontSize = 16.sp, color = LightCaramel)
+                        Text(option.name, fontSize = 16.sp, color = PanelText)
                     }
                 }
             }
@@ -490,27 +491,29 @@ private fun ThemeSelector(
 @Composable
 private fun ThemePreviewSheet(
     options: List<ThemeOption>,
-    selectedId: String,
-    onSelect: (String) -> Unit,
+    selectedId: Int,
+    onSelect: (Int) -> Unit,
     onDismiss: () -> Unit
 ) {
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        containerColor = SectionCardColor,
-        contentColor = LightCaramel
+        containerColor = sectionCardColor(),
+        contentColor = PanelText
     ) {
-        Column(modifier = Modifier.navigationBarsPadding().padding(bottom = 16.dp)) {
+        Column(modifier = Modifier
+            .navigationBarsPadding()
+            .padding(bottom = 16.dp)) {
             Text(
                 text = "Theme previews",
                 fontSize = 24.sp,
-                color = LightCaramel,
+                color = PanelText,
                 modifier = Modifier.padding(horizontal = 24.dp)
             )
             Text(
                 text = "Tap a preview to switch",
                 fontSize = 14.sp,
-                color = LightCaramel.copy(alpha = 0.7f),
+                color = PanelText.copy(alpha = 0.7f),
                 modifier = Modifier.padding(horizontal = 24.dp)
             )
             Spacer(Modifier.height(16.dp))
@@ -526,8 +529,8 @@ private fun ThemePreviewSheet(
                     .padding(horizontal = 24.dp)
                     .height(48.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = LightCaramel,
-                    contentColor = DarkCoffee
+                    containerColor = PanelText,
+                    contentColor = PanelBg
                 ),
                 shape = RoundedCornerShape(24.dp)
             ) {
@@ -555,8 +558,8 @@ private fun SettingsFieldRow(
     trailing: (@Composable () -> Unit)? = null
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
-        Text(title, fontSize = 20.sp, color = LightCaramel)
-        Text(supporting, fontSize = 14.sp, color = LightCaramel.copy(alpha = 0.7f))
+        Text(title, fontSize = 20.sp, color = PanelText)
+        Text(supporting, fontSize = 14.sp, color = PanelText.copy(alpha = 0.7f))
 
         Spacer(Modifier.height(12.dp))
 
@@ -576,15 +579,15 @@ private fun SettingsFieldRow(
             keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction = imeAction),
             shape = RoundedCornerShape(16.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedTextColor = LightCaramel,
-                unfocusedTextColor = LightCaramel,
-                errorTextColor = LightCaramel,
-                focusedBorderColor = LightCaramel,
-                unfocusedBorderColor = OliveWood,
-                errorBorderColor = Color(0xFFFFB4AB),
-                cursorColor = LightCaramel,
-                errorCursorColor = Color(0xFFFFB4AB),
-                errorSupportingTextColor = Color(0xFFFFB4AB)
+                focusedTextColor = PanelText,
+                unfocusedTextColor = PanelText,
+                errorTextColor = MaterialTheme.colorScheme.error,
+                focusedBorderColor = PanelText,
+                unfocusedBorderColor = PanelOutline,
+                errorBorderColor = MaterialTheme.colorScheme.error,
+                cursorColor = PanelText,
+                errorCursorColor = MaterialTheme.colorScheme.error,
+                errorSupportingTextColor = MaterialTheme.colorScheme.error
             )
         )
 
@@ -596,8 +599,8 @@ private fun SettingsFieldRow(
                 .align(Alignment.End)
                 .height(48.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = LightCaramel,
-                contentColor = DarkCoffee
+                containerColor = PanelText,
+                contentColor = PanelBg
             ),
             shape = RoundedCornerShape(24.dp)
         ) {
@@ -609,5 +612,5 @@ private fun SettingsFieldRow(
 @Preview(showBackground = true)
 @Composable
 fun SettingsScreenPreview() {
-    SettingsScreen()
+    SettingsScreen(modifier = Modifier.fillMaxSize())
 }

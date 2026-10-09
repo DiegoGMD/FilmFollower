@@ -16,6 +16,7 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -37,12 +38,13 @@ import com.diegogmd.filmfollower.ui.theme.LightCaramel
 @Composable
 fun ProfileScreen(modifier: Modifier, navController: NavHostController) {
     var context = LocalContext.current
-    SecureStorage.getUsername(context)?.let { ProfileHeader(it) }
+    SecureStorage.getUsername(context)?.let { ProfileHeader(it, navController) }
 }
 
 @Composable
 private fun ProfileHeader(
-    username: String
+    username: String,
+    navController: NavHostController
 
 ) {
     val titleSize = when {
@@ -59,7 +61,7 @@ private fun ProfileHeader(
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(
-                            DarkCoffee.copy(alpha = 0.55f),
+                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
                             Color.Black.copy(alpha = 0.85f),
                             Color.Black
                         )
@@ -80,14 +82,13 @@ private fun ProfileHeader(
                     modifier = Modifier
                         .align(Alignment.CenterEnd)
                         .size(52.dp)
-                        .clip(CircleShape),
-                    //.clickable(onClick = onReloadClick),
+                        .clip(CircleShape)
+                        .clickable { navController.navigate("SettingsScreen") },
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.Settings,
                         contentDescription = "Settings",
-                        tint = LightCaramel,
                         modifier = Modifier.size(24.dp)
                     )
                 }
@@ -97,7 +98,6 @@ private fun ProfileHeader(
 
             Text(
                 text = username,
-                color = LightCaramel,
                 fontSize = titleSize,
                 lineHeight = titleSize * 1.2f,
                 textAlign = TextAlign.Center,
@@ -109,10 +109,7 @@ private fun ProfileHeader(
                     .padding(horizontal = 20.dp)
             )
 
-            HorizontalDivider(
-                color = LightCaramel,
-                thickness = 3.dp,
-            )
+            HorizontalDivider( color = MaterialTheme.colorScheme.surface, thickness = 3.dp )
         }
     }
 }

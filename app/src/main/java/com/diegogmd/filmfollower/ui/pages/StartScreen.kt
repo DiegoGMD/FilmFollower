@@ -62,7 +62,7 @@ fun StartScreen(modifier: Modifier, navController: NavHostController) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            //.background(DarkCoffee.copy(alpha = 0.3f))
+        //.background(DarkCoffee.copy(alpha = 0.3f))
     )
 
     Column(
@@ -150,11 +150,17 @@ fun StartScreen(modifier: Modifier, navController: NavHostController) {
                 setApiReadAccessTokenError(!validKey)
 
                 if (validUser && validKey) {
-                    SecureStorage.saveCredentials(context, username.trim(), apiReadAccessToken.trim())
-                    navController.navigate("Main")
+                    SecureStorage.saveCredentials(
+                        context,
+                        username.trim(),
+                        apiReadAccessToken.trim()
+                    )
+                    navController.navigate("Main") { popUpTo("Start") { inclusive = true } }
                 }
             },
-            modifier = Modifier.width(150.dp).height(60.dp),
+            modifier = Modifier
+                .width(150.dp)
+                .height(60.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = DarkCoffee,
                 contentColor = LightCaramel

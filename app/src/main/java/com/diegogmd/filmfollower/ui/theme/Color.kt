@@ -17,6 +17,13 @@ val DimGrey = Color(0xFF6D6D6D)
 val GreyOlive = Color(0xFF8F8F8F)
 val Silver = Color(0xFFBDBDBD)
 
+// Darkness Palette
+//val Black = Color(0xFF000000)
+val InkBlack = Color(0xFF0C1821)
+val DeepSpaceBlue = Color(0xFF1B2A41)
+val CharcoalBlue = Color(0xFF324A5F)
+
+
 // Android Studio Default
 val Purple80 = Color(0xFFD0BCFF)
 val PurpleGrey80 = Color(0xFFCCC2DC)

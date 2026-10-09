@@ -55,11 +55,13 @@ object SecureStorage {
     fun getApiReadAccessToken(context: Context): String? =
     getPrefs(context).getString(KEY_API_READ_ACCESS_TOKEN, null)
 
-    fun changeUsername(context: Context, trim: String) {
-
+    fun changeUsername(context: Context, newUsername: String) {
+        val currentToken = getApiReadAccessToken(context) ?: ""
+        saveCredentials(context, newUsername.trim(), currentToken)
     }
 
-    fun changeApiReadAccessToken(context: Context, trim: String) {
-
+    fun changeApiReadAccessToken(context: Context, newToken: String) {
+        val currentUsername = getUsername(context) ?: ""
+        saveCredentials(context, currentUsername, newToken.trim())
     }
 }

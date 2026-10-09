@@ -8,12 +8,12 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.diegogmd.filmfollower.ui.pages.ContentScreenEpisode
 import com.diegogmd.filmfollower.ui.pages.ContentScreenFilm
 import com.diegogmd.filmfollower.ui.pages.ContentScreenTvShow
 import com.diegogmd.filmfollower.ui.pages.FilmsScreen
 import com.diegogmd.filmfollower.ui.pages.ProfileScreen
 import com.diegogmd.filmfollower.ui.pages.SearchScreen
+import com.diegogmd.filmfollower.ui.pages.SettingsScreen
 import com.diegogmd.filmfollower.ui.pages.ShowsScreen
 
 @Composable
@@ -43,6 +43,12 @@ fun AppNavHost(
                 modifier = Modifier.fillMaxSize(),
                 navController = navController)
         }
+        composable("SettingsScreen") {
+            SettingsScreen(
+                modifier = Modifier.fillMaxSize(),
+                onBackClick = { navController.popBackStack() }
+            )
+        }
         composable(
             route = "film/{filmId}",
             arguments = listOf(navArgument("filmId") { type = NavType.IntType })
@@ -50,17 +56,6 @@ fun AppNavHost(
             val filmId = backStackEntry.arguments?.getInt("filmId") ?: return@composable
             ContentScreenFilm(
                 filmId = filmId,
-                onBackClick = { navController.popBackStack() }
-            )
-        }
-
-        composable(
-            route = "show/{showId}",
-            arguments = listOf(navArgument("showId") { type = NavType.IntType })
-        ) { backStackEntry ->
-            val showId = backStackEntry.arguments?.getInt("showId") ?: return@composable
-            ContentScreenTvShow(
-                showId = showId,
                 onBackClick = { navController.popBackStack() }
             )
         }
