@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">FilmFollower (Development)</string>
+    <string name="language">ca-ES</string>
+    <string name="title_home">Inici</string>
+    <string name="title_dashboard">Panell de Control</string>
+    <string name="title_notifications">Notificacions</string>
+    <string name="title_shows">Sèries</string>
+    <string name="title_films">Pel·lícules</string>
+    <string name="title_search">Explorar</string>
+    <string name="title_profile">Perfil</string>
+    <string name="watch_list">Llista Pendents</string>
+    <string name="upcoming">Pròximament</string>
+    <string name="following">Seguint</string>
+    <string name="search_bar">Cerca pel·lícules i sèries</string>
+    <string name="welcome_text">Benvingut a FilmFollower!\nPer a utilitzar la app, necesitaràs\nuna API key de TMDB (The Movie Database).</string>
+    <string name="save">GUARDAR</string>
+    <string name="choose">ELEGEIX</string>
+</resources>

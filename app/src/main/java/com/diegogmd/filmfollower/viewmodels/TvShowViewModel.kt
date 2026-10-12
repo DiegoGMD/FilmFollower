@@ -1,6 +1,7 @@
 package com.diegogmd.filmfollower.viewmodels
 
 import android.content.Context
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -42,6 +43,10 @@ class TvShowViewModel(private val repository: SearchRepository) : ViewModel() {
             val film = repository.getFilm(id)
             film.insertNewFilm(context)
         }
+    }
+
+    fun addFilmToWatchlist(context: Context, contentId: Int) {
+        Log.d("TvShowViewModel", "TvShowViewModel.addFilmToWatchlist not inplemented")
     }
 }
 

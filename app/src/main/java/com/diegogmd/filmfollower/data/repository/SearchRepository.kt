@@ -4,6 +4,7 @@ import com.diegogmd.filmfollower.model.MultiSearchResult
 import com.diegogmd.filmfollower.model.Film
 import com.diegogmd.filmfollower.data.local.remote.TmdbApiService
 import com.diegogmd.filmfollower.model.TvShow
+import com.diegogmd.filmfollower.viewmodels.bestTrailer
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 
@@ -44,4 +45,10 @@ class SearchRepository(private val api: TmdbApiService) {
     suspend fun getTvShow(id: Int): TvShow {
         return api.getTvShow(showId = id).toTvShow()
     }
+
+    suspend fun getFilmTrailerKey(filmId: Int): String? =
+        api.getFilmVideos(filmId).results.bestTrailer()?.key
+
+    suspend fun getTvSeriesTrailerKey(showId: Int): String? =
+        api.getTvSeriesVideos(showId).results.bestTrailer()?.key
 }

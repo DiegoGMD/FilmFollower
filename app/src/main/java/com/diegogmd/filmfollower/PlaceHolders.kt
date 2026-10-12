@@ -137,7 +137,7 @@ fun samplePlaceholderFilms(): List<Film> = listOf(
                 "captain Han Solo team together with the loveable robot duo R2-D2 and C-3PO to " +
                 "rescue the beautiful princess and restore peace and justice in the Empire.",
         LocalDate.of(1997, 5, 25), 121,
-        "/sLAoSvh6U1z2JuKHFBtUzikWiHm.jpg","Released",
+        "","Released",
         LocalDate.of(2026, 7, 31), 8.2, "Watchlist",
         LocalDate.of(2009, 1, 1), 10,
         LocalDate.of(2026, 7, 31)
@@ -148,7 +148,7 @@ fun samplePlaceholderFilms(): List<Film> = listOf(
                 "the Republic crumbles and from its ashes rises the evil Galactic Empire. " +
                 "Jedi hero Anakin Skywalker must choose a side.",
         LocalDate.of(2015, 5, 19), 140,
-        "/5dj0ERxM8NxoiWBdlY6TT9PJmKi.jpg","Released",
+        "","Released",
         LocalDate.of(2026, 7, 31), 7.5, "Watchlist",
         LocalDate.of(2009, 1, 1), 15,
         LocalDate.of(2026, 7, 31)
@@ -161,7 +161,7 @@ fun samplePlaceholderFilms(): List<Film> = listOf(
                 "Meanwhile, WALL•E chases EVE across the galaxy and sets into motion one of the " +
                 "most imaginative adventures ever brought to the big screen.",
         LocalDate.of(2008, 6, 21), 98,
-        "/5CXpoYB2YAZRPBcv9pjkgR6tZ0X.jpg","Released",
+        "","Released",
         LocalDate.of(2026, 7, 31), 8.1, "Watchlist",
         LocalDate.of(2009, 7, 29), 20,
         LocalDate.of(2026, 7, 31)
@@ -174,7 +174,7 @@ fun samplePlaceholderFilms(): List<Film> = listOf(
                 "and make sure that the ring arrives at its final destination: Mt. Doom, the only " +
                 "place where it can be destroyed.",
         LocalDate.of(2001, 12, 10), 208,
-        "/9xtH1RmAzQ0rrMBNUMXstb2s3er.jpg","Released",
+        "","Released",
         LocalDate.of(2026, 7, 31), 8.4, "Watchlist",
         LocalDate.of(2025, 4, 14), 2,
         LocalDate.of(2026, 7, 31)
@@ -184,7 +184,7 @@ fun samplePlaceholderFilms(): List<Film> = listOf(
                 "called out of retirement to terminate a quartet of replicants who have escaped to " +
                 "Earth seeking their creator for a way to extend their short life spans.",
         LocalDate.of(1982, 6, 25), 117,
-        "/pBA2J6iQMiP5Zd4ewMKdOWfq1HV.jpg","Released",
+        "","Released",
         LocalDate.of(2026, 7, 31), 7.9, "Watchlist",
         LocalDate.of(2016, 8, 22), 3,
         LocalDate.of(2026, 7, 31)
@@ -195,7 +195,7 @@ fun samplePlaceholderFilms(): List<Film> = listOf(
                 " them, they push each other to places they never thought possible, and inspire a" +
                 " love fit for a storybook.",
         LocalDate.of(2020, 12, 25), 99,
-        "/z1D8xi9x4uEhyFruo7uEHXUMD4K.jpg","Released",
+        "","Released",
         LocalDate.of(2026, 7, 31), 8.3, "Watchlist",
         LocalDate.of(2022, 7, 27), 4,
         LocalDate.of(2026, 7, 31)
@@ -207,7 +207,7 @@ fun samplePlaceholderFilms(): List<Film> = listOf(
                 "parents' romance and - with the help of his eccentric inventor friend Doc Brown - " +
                 "return to 1985.",
         LocalDate.of(2020, 12, 25), 99,
-        "/vN5B5WgYscRGcQpVhHl6p9DDTP0.jpg","Released",
+        "","Released",
         LocalDate.of(1985, 12, 4), 8.3, "Watchlist",
         LocalDate.of(2010, 5, 12), 5,
         LocalDate.of(2026, 7, 31)

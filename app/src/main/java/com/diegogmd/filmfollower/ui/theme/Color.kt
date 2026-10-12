@@ -17,11 +17,17 @@ val DimGrey = Color(0xFF6D6D6D)
 val GreyOlive = Color(0xFF8F8F8F)
 val Silver = Color(0xFFBDBDBD)
 
-// Darkness Palette
+// ColdBlue Palette
 //val Black = Color(0xFF000000)
-val InkBlack = Color(0xFF0C1821)
-val DeepSpaceBlue = Color(0xFF1B2A41)
-val CharcoalBlue = Color(0xFF324A5F)
+val JetBlack = Color(0xFF1A2832)
+val BalticBlue = Color(0xFF155A7A)
+val SlateGrey = Color(0xFF5A7A95)
+
+// MovieTime Palette
+//val Black = Color(0xFF000000)
+val CarbonBlack = Color(0xFF202020)
+//val Graphite = Color(0xFF2E2E2E)
+val BrightGold = Color(0xFFF7D533)
 
 
 // Android Studio Default

@@ -1,5 +1,9 @@
 package com.diegogmd.filmfollower.ui.pages
 
+import android.content.ActivityNotFoundException
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -30,6 +34,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -49,16 +56,26 @@ import com.diegogmd.filmfollower.R
 import com.diegogmd.filmfollower.viewmodels.FilmViewModel
 import com.diegogmd.filmfollower.model.Film
 import com.diegogmd.filmfollower.model.TvShow
+import com.diegogmd.filmfollower.model.eraseFilm
+import com.diegogmd.filmfollower.model.getFilm
 import com.diegogmd.filmfollower.model.getFilmGenre
-import com.diegogmd.filmfollower.ui.theme.DarkCoffee
+import com.diegogmd.filmfollower.model.isStatus
+import com.diegogmd.filmfollower.model.setStatus
 import com.diegogmd.filmfollower.ui.theme.FilmTypography
-import com.diegogmd.filmfollower.ui.theme.LightCaramel
 import com.diegogmd.filmfollower.viewmodels.FilmViewModelFactory
 import com.diegogmd.filmfollower.viewmodels.TvShowViewModel
 import com.diegogmd.filmfollower.viewmodels.TvShowViewModelFactory
 import org.threeten.bp.LocalDate
 
-// Remember, this page is for displaying the info from a film/show in full screen
+private fun openTrailer(context: Context, key: String) {
+    val app = Intent(Intent.ACTION_VIEW, Uri.parse("vnd.youtube:$key"))
+    val web = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.youtube.com/watch?v=$key"))
+    try {
+        context.startActivity(app) // YouTube app if installed
+    } catch (e: ActivityNotFoundException) {
+        context.startActivity(web) // otherwise browser
+    }
+}
 
 @Composable
 fun ContentScreenFilm(
@@ -97,6 +114,7 @@ fun ContentScreenTvShow(
     when {
         isLoading -> CircularProgressIndicator()
         tvShow != null -> TvShowContentUI(onBackClick, viewModel, tvShow!!)
+        else -> Text("TV Shows implementation coming soon")
     }
 }
 
@@ -106,7 +124,14 @@ private fun FilmContentUI(
     viewModel: FilmViewModel,
     film: Film
 ) {
+    val context = LocalContext.current
     val genres by viewModel.genres.collectAsState()
+    var watchlisted by remember(film.filmId) { mutableStateOf(getFilm(context, film.filmId) != null) }
+    var seen by remember(film.filmId) { mutableStateOf(isStatus(context, film.filmId, "seen")) }
+    var archived by remember(film.filmId) { mutableStateOf(isStatus(context, film.filmId, "archived")) }
+    val trailerKey by viewModel.trailerKey.collectAsState()
+
+    LaunchedEffect(film.filmId) { viewModel.loadTrailer(film.filmId) }
 
     Column(
         modifier = Modifier
@@ -115,7 +140,6 @@ private fun FilmContentUI(
     ) {
         ContentHeader(
             onBackClick = onBackClick,
-            //onReloadClick = { viewModel.loadFilm(film.filmId) }, // Online content
             film.title,
             film.originalTitle,
             film.releaseDate,
@@ -124,7 +148,41 @@ private fun FilmContentUI(
             film.posterPath
         )
 
-        ButtonArea()
+        ButtonArea(
+            seen = seen,
+            archived = archived,
+            watchlisted = watchlisted,
+            trailerAvailable = trailerKey != null,
+            onSeenClick = {
+                val newStatus = if (seen) "watchlist" else "seen"
+                setStatus(context, film.filmId, newStatus)
+                seen = newStatus == "seen"
+                archived = false
+            },
+            onArchiveClick = {
+                val newStatus = if (archived) "watchlist" else "archived"
+                setStatus(context, film.filmId, newStatus)
+                archived = newStatus == "archived"
+                seen = false
+            },
+            onWatchlistClick = {
+                if (watchlisted) {
+                    eraseFilm(context, film.filmId)
+                    watchlisted = false
+                    seen = false
+                    archived = false
+                } else {
+                    viewModel.addFilmToWatchlist(context, film.filmId) { ok ->
+                        if (ok) {
+                            watchlisted = true
+                            seen = false
+                            archived = false
+                        }
+                    }
+                }
+            },
+            onTrailerClick = { trailerKey?.let { openTrailer(context, it) } }
+        )
 
         if (genres.isNotEmpty()) {
             Card(
@@ -200,6 +258,12 @@ private fun TvShowContentUI(
     viewModel: TvShowViewModel,
     tvShow: TvShow
 ) {
+    val context = LocalContext.current
+//    val genres by viewModel.genres.collectAsState()
+//    var watchlisted by remember(film.filmId) { mutableStateOf(getFilm(context, film.filmId) != null) }
+//    var seen by remember(film.filmId) { mutableStateOf(isStatus(context, film.filmId, "seen")) }
+//    var archived by remember(film.filmId) { mutableStateOf(isStatus(context, film.filmId, "archived")) }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -216,7 +280,7 @@ private fun TvShowContentUI(
             tvShow.posterPath
         )
 
-        ButtonArea()
+        //ButtonArea(context = context)
 
         Card(
             modifier = Modifier
@@ -286,10 +350,16 @@ private fun TvShowContentUI(
 
 @Composable
 private fun ButtonArea(
-    beenSeen: Boolean = false,
-    addedFavourite: Boolean = false,
-    addedArchive: Boolean = false,
-    addedWatchlist: Boolean = false
+    seen: Boolean = false,
+    favourite: Boolean = false,
+    archived: Boolean = false,
+    watchlisted: Boolean = false,
+    trailerAvailable: Boolean = false,
+    onSeenClick: () -> Unit = {},
+    onFavouriteClick: () -> Unit = {},
+    onArchiveClick: () -> Unit = {},
+    onWatchlistClick: () -> Unit = {},
+    onTrailerClick: () -> Unit = {}
 ) {
     Row(
         modifier = Modifier
@@ -299,31 +369,49 @@ private fun ButtonArea(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) { // Button row
-        ActionIconButton(R.drawable.ic_play_arrow_24px, "Trailer")
-
-        if (beenSeen) {
-            ActionIconButton(R.drawable.ic_visibility_24px, "Seen")
-        } else {
-            ActionIconButton(R.drawable.ic_visibility_off_24px, "Not Seen")
-        }
-
-        if (addedFavourite) {
-            ActionIconButton(R.drawable.ic_favorite_24px, "Favourite") // Search filled heart
-        } else {
-            ActionIconButton(R.drawable.ic_favorite_24px, "Regular")
-        }
-
-        if (addedArchive) {
-            ActionIconButton(R.drawable.ic_archive_24px, "Archived")
-        } else {
-            ActionIconButton(R.drawable.ic_unarchive_24px, "Unarchived")
-        }
-
-        if (addedWatchlist) {
-            ActionIconButton(R.drawable.ic_bookmark_check_24px, "Watchlisted")
-        } else {
-            ActionIconButton(R.drawable.ic_bookmark_24dp, "Not watchlisted")
-        }
+        ActionIconButton(
+            trailerAvailable,
+            R.drawable.ic_play_arrow_24px,
+            R.drawable.ic_play_arrow_24px,
+            "Trailer button",
+            "Trailer button",
+            enabled = trailerAvailable,
+            onAction = onTrailerClick
+        )
+        ActionIconButton(
+            seen,
+            R.drawable.ic_visibility_24px,
+            R.drawable.ic_visibility_off_24px,
+            "Seen",
+            "Not seen",
+            enabled = watchlisted,
+            onAction = onSeenClick
+        )
+        ActionIconButton(
+            favourite,
+            R.drawable.ic_favorite_filled_24px,
+            R.drawable.ic_favorite_24px,
+            "Favourite",
+            "Regular",
+            onAction = onFavouriteClick
+        )
+        ActionIconButton(
+            archived,
+            R.drawable.ic_archive_24px,
+            R.drawable.ic_unarchive_24px,
+            "Archived",
+            "Unarchived",
+            enabled = watchlisted,
+            onAction = onArchiveClick
+        )
+        ActionIconButton(
+            watchlisted,
+            R.drawable.ic_bookmark_filled_24px,
+            R.drawable.ic_bookmark_24dp,
+            "Watchlisted",
+            "Not watchlisted",
+            onAction = onWatchlistClick
+        )
     }
 }
 
@@ -405,7 +493,7 @@ private fun ContentHeader(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Refresh,
-                        contentDescription = "Reload",
+                        contentDescription = "Sync/Reload",
                         modifier = Modifier.size(24.dp)
                     )
                 }
@@ -493,21 +581,25 @@ private fun ContentHeader(
 
 @Composable
 private fun ActionIconButton(
-    @DrawableRes icon: Int, // R.drawable.ic_play_arrow_24px
-    description: String,
-    onClick: () -> Unit = {}
+    boolean: Boolean,
+    @DrawableRes activeIcon: Int,
+    @DrawableRes inactiveIcon: Int,
+    activeDescription: String,
+    inactiveDescription: String,
+    enabled: Boolean = true,
+    onAction: () -> Unit = {}
 ) {
     Box(
         modifier = Modifier
             .size(52.dp)
             .clip(RoundedCornerShape(12.dp))
             .background(MaterialTheme.colorScheme.surface)
-            .clickable(onClick = onClick),
+            .clickable(enabled = enabled, onClick = onAction),
         contentAlignment = Alignment.Center
     ) {
         Icon(
-            painter = painterResource(id = icon),
-            contentDescription = description,
+            painter = painterResource(id = if (boolean) activeIcon else inactiveIcon),
+            contentDescription = if (boolean) activeDescription else inactiveDescription,
             tint = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.size(25.dp)
         )

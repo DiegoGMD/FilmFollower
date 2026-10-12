@@ -117,10 +117,13 @@ fun SearchScreen(
                     items(listToShow) { item ->
                         ContentCard(
                             content = item,
-                            orientation = false,
-                            onClick = { id ->
-                                if (item.media_type == "movie") navController.navigate("film/$id")
-                                if (item.media_type == "tv") navController.navigate("show/$id")
+                            cardType = 2,
+                            onClick = {
+                                if (item.media_type == "movie") {
+                                    navController.navigate("film/${item.id}")
+                                } else if (item.media_type == "tv") {
+                                    navController.navigate("show/${item.id}")
+                                }
                             }
                         )
                     }

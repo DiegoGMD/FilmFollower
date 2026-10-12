@@ -1,10 +1,7 @@
 package com.diegogmd.filmfollower.ui.pages
 
 import androidx.annotation.DrawableRes
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -38,7 +35,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -46,8 +42,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -61,7 +55,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.layout.ContentScale
@@ -75,17 +68,19 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.diegogmd.filmfollower.R
 import com.diegogmd.filmfollower.SecureStorage
-import com.diegogmd.filmfollower.ui.theme.CharcoalBlue
+import com.diegogmd.filmfollower.ui.theme.Black
+import com.diegogmd.filmfollower.ui.theme.BrightGold
+import com.diegogmd.filmfollower.ui.theme.SlateGrey
 import com.diegogmd.filmfollower.ui.theme.DarkCoffee
 import com.diegogmd.filmfollower.ui.theme.FilmTypography
-import com.diegogmd.filmfollower.ui.theme.InkBlack
+import com.diegogmd.filmfollower.ui.theme.Graphite
+import com.diegogmd.filmfollower.ui.theme.JetBlack
 import com.diegogmd.filmfollower.ui.theme.LightCaramel
-import com.diegogmd.filmfollower.ui.theme.OliveWood
+import com.diegogmd.filmfollower.ui.theme.Silver
 import com.diegogmd.filmfollower.ui.theme.ThemeManager
 
 private val PanelBg: Color @Composable get() = MaterialTheme.colorScheme.surfaceVariant
@@ -109,11 +104,12 @@ data class ThemeOption(
     val placeholderAccent: Color = LightCaramel
 )
 
-// TODO: replace with your real themes and screenshots.
+// TODO: replace with your real screenshots. (I don't have them yet)
 private val themeOptions = listOf(
     ThemeOption(0, "OldFilm", previewRes = null, DarkCoffee, LightCaramel),
-    //ThemeOption(1, "OldFilm W&B", previewRes = null, Black, Silver),
-    ThemeOption(1, "Darkness", previewRes = null, InkBlack, CharcoalBlue),
+    ThemeOption(1, "OldFilm B&W", previewRes = null, Graphite, Silver),
+    ThemeOption(2, "Cold Blue", previewRes = null, JetBlack, SlateGrey),
+    ThemeOption(3, "Movie Time", previewRes = null, Black, BrightGold),
 )
 
 @Composable
@@ -122,21 +118,16 @@ fun SettingsScreen(
     onBackClick: () -> Unit = {},
 ) {
     val context = LocalContext.current
-    val isPreview = LocalInspectionMode.current
 
-    var username by remember {
-        mutableStateOf(if (isPreview) "Preview" else SecureStorage.getUsername(context).orEmpty())
-    }
+    var username by remember { mutableStateOf(SecureStorage.getUsername(context).orEmpty()) }
     var usernameError by remember { mutableStateOf(false) }
 
-    var apiToken by remember {
-        mutableStateOf(if (isPreview) "" else SecureStorage.getApiReadAccessToken(context).orEmpty())
-    }
+    var apiToken by remember { mutableStateOf(SecureStorage.getApiReadAccessToken(context).orEmpty()) }
     var apiTokenError by remember { mutableStateOf(false) }
     var showToken by remember { mutableStateOf(false) }
 
     val selectedThemeId = ThemeManager.themeId
-    var themeExpanded by remember { mutableStateOf(false) }
+    val selectedTheme = themeOptions.first { it.id == selectedThemeId }
     var showPreviews by remember { mutableStateOf(false) }
 
     Column(
@@ -220,7 +211,6 @@ fun SettingsScreen(
                     val valid = apiToken.isNotBlank()
                     apiTokenError = !valid
                     if (valid) {
-                        // TODO: use your real setter name here
                         SecureStorage.changeApiReadAccessToken(context, apiToken.trim())
                     }
                 }
@@ -232,27 +222,34 @@ fun SettingsScreen(
         // ---------- Appearance ----------
         SettingsSection(label = "Appearance") {
             // TODO: Make ThemeSelector and the preview themes button on the same row
-            ThemeSelector(
-                options = themeOptions,
-                selectedId = selectedThemeId,
-                expanded = themeExpanded,
-                onToggle = { themeExpanded = !themeExpanded },
-                onSelect = {
-                    ThemeManager.setTheme(context, it)
-                }
-            )
-
-            Spacer(Modifier.height(16.dp))
-
-            OutlinedButton(
-                onClick = { showPreviews = true },
-                modifier = Modifier
-                    .align(Alignment.End)
-                    .height(48.dp),
-                border = BorderStroke(1.dp, PanelText),
-                shape = RoundedCornerShape(24.dp)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.Top,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text("Preview themes", fontSize = 16.sp, color = PanelText)
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("Theme", fontSize = 20.sp, color = PanelText)
+                    Text(
+                        text = selectedTheme.name,
+                        fontSize = 14.sp,
+                        color = PanelText.copy(alpha = 0.7f),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+
+                Button(
+                    onClick = { showPreviews = true },
+                    modifier = Modifier.height(48.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = PanelText,
+                        contentColor = PanelBg
+                    )
+                ) {
+                    Text(stringResource(id = R.string.choose), fontSize = 16.sp)
+                }
             }
         }
 
@@ -300,7 +297,6 @@ private fun SettingsSection(
 }
 
 /** Horizontally snapping carousel of app screenshots; tapping a card selects that theme. */
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun ThemeCarousel(
     options: List<ThemeOption>,
@@ -421,71 +417,6 @@ private fun ThemePlaceholder(option: ThemeOption) {
     }
 }
 
-/** Collapsible theme picker: header shows the current theme, tap to unfold the list. */
-@Composable
-private fun ThemeSelector(
-    options: List<ThemeOption>,
-    selectedId: Int,
-    expanded: Boolean,
-    onToggle: () -> Unit,
-    onSelect: (Int) -> Unit
-) {
-    val selected = options.first { it.id == selectedId }
-    val chevronRotation by animateFloatAsState(
-        targetValue = if (expanded) 180f else 0f,
-        label = "themeChevron"
-    )
-
-    Column(modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp))
-                .clickable(onClick = onToggle),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text("Theme", fontSize = 20.sp, color = PanelText)
-                Text(selected.name, fontSize = 14.sp, color = PanelText.copy(alpha = 0.7f))
-            }
-            Icon(
-                imageVector = Icons.Filled.KeyboardArrowDown,
-                contentDescription = if (expanded) "Collapse themes" else "Expand themes",
-                tint = PanelText,
-                modifier = Modifier
-                    .size(28.dp)
-                    .rotate(chevronRotation)
-            )
-        }
-
-        AnimatedVisibility(visible = expanded) {
-            Column(modifier = Modifier.padding(top = 8.dp)) {
-                options.forEach { option ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp))
-                            .clickable { onSelect(option.id) }
-                            .padding(vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        RadioButton(
-                            selected = option.id == selectedId,
-                            onClick = { onSelect(option.id) },
-                            colors = RadioButtonDefaults.colors(
-                                selectedColor = PanelText,
-                                unselectedColor = PanelOutline
-                            )
-                        )
-                        Text(option.name, fontSize = 16.sp, color = PanelText)
-                    }
-                }
-            }
-        }
-    }
-}
-
 /** Bottom sheet with the screenshot carousel. Tapping a card selects that theme. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -563,54 +494,48 @@ private fun SettingsFieldRow(
 
         Spacer(Modifier.height(12.dp))
 
-        // TODO: Make OutlinedTextField and the save button on the same row
-
-        OutlinedTextField(
-            value = value,
-            onValueChange = onValueChange,
+        Row(
             modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            isError = isError,
-            visualTransformation = visualTransformation,
-            trailingIcon = trailing,
-            supportingText = if (isError) {
-                { Text(errorText, maxLines = 1, overflow = TextOverflow.Ellipsis) }
-            } else null,
-            keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction = imeAction),
-            shape = RoundedCornerShape(16.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedTextColor = PanelText,
-                unfocusedTextColor = PanelText,
-                errorTextColor = MaterialTheme.colorScheme.error,
-                focusedBorderColor = PanelText,
-                unfocusedBorderColor = PanelOutline,
-                errorBorderColor = MaterialTheme.colorScheme.error,
-                cursorColor = PanelText,
-                errorCursorColor = MaterialTheme.colorScheme.error,
-                errorSupportingTextColor = MaterialTheme.colorScheme.error
-            )
-        )
-
-        Spacer(Modifier.height(8.dp))
-
-        Button(
-            onClick = onSave,
-            modifier = Modifier
-                .align(Alignment.End)
-                .height(48.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = PanelText,
-                contentColor = PanelBg
-            ),
-            shape = RoundedCornerShape(24.dp)
+            verticalAlignment = Alignment.Top,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Text(text = saveLabel, fontSize = 16.sp)
+            OutlinedTextField(
+                value = value,
+                onValueChange = onValueChange,
+                modifier = Modifier.weight(1f),
+                singleLine = true,
+                isError = isError,
+                visualTransformation = visualTransformation,
+                trailingIcon = trailing,
+                supportingText = if (isError) {
+                    { Text(errorText, maxLines = 1, overflow = TextOverflow.Ellipsis) }
+                } else null,
+                keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction = imeAction),
+                shape = RoundedCornerShape(16.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = PanelText,
+                    unfocusedTextColor = PanelText,
+                    errorTextColor = MaterialTheme.colorScheme.error,
+                    focusedBorderColor = PanelText,
+                    unfocusedBorderColor = PanelOutline,
+                    errorBorderColor = MaterialTheme.colorScheme.error,
+                    cursorColor = PanelText,
+                    errorCursorColor = MaterialTheme.colorScheme.error,
+                    errorSupportingTextColor = MaterialTheme.colorScheme.error
+                )
+            )
+
+            Button(
+                onClick = onSave,
+                modifier = Modifier.height(56.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = PanelText,
+                    contentColor = PanelBg
+                ),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Text(text = saveLabel, fontSize = 16.sp)
+            }
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun SettingsScreenPreview() {
-    SettingsScreen(modifier = Modifier.fillMaxSize())
 }

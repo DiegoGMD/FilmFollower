@@ -1,17 +1,13 @@
 package com.diegogmd.filmfollower.ui.theme
 
 import android.app.Activity
-import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.luminance
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
@@ -49,7 +45,7 @@ private val OldFilmColorScheme = darkColorScheme(
     // Supporting: copper for unselected nav/tab items
     secondary = FadedCopper,
     onSecondary = DarkCoffee,
-    secondaryContainer = OliveWood,          // nav-bar indicator pill (icon only, no text)
+    secondaryContainer = OliveWood, // nav-bar indicator pill (icon only, no text)
     onSecondaryContainer = LightCaramel,
 
     tertiary = FadedCopper,
@@ -76,7 +72,7 @@ private val OldFilmColorScheme = darkColorScheme(
     surfaceContainerLow = LightCaramel,
     surfaceContainer = DarkCoffee,
     surfaceContainerHigh = LightCaramel,
-    surfaceContainerHighest = LightCaramel,  // <- CARD COLOR (default for Card { })
+    surfaceContainerHighest = LightCaramel, // <- CARD COLOR (default for Card { })
 
     outline = FadedCopper,
     outlineVariant = OliveWood,
@@ -92,91 +88,164 @@ private val OldFilmColorScheme = darkColorScheme(
     scrim = Black,
 )
 
-private val DarknessScheme = darkColorScheme(
+private val OldFilmBWColorScheme = darkColorScheme(
     // Accent: caramel fills with coffee text (buttons, check marks, selected states)
-    primary = CharcoalBlue,
-    onPrimary = Black,
-    primaryContainer = Black,
-    onPrimaryContainer = CharcoalBlue,
+    primary = Silver,
+    onPrimary = Graphite,
+    primaryContainer = Graphite,
+    onPrimaryContainer = Silver,
 
     // Supporting: copper for unselected nav/tab items
-    secondary = DeepSpaceBlue,
-    onSecondary = Black,
-    secondaryContainer = InkBlack,          // nav-bar indicator pill (icon only, no text)
-    onSecondaryContainer = CharcoalBlue,
+    secondary = GreyOlive,
+    onSecondary = Graphite,
+    secondaryContainer = DimGrey, // nav-bar indicator pill (icon only, no text)
+    onSecondaryContainer = Silver,
 
-    tertiary = DeepSpaceBlue,
-    onTertiary = Black,
-    tertiaryContainer = Black,
-    onTertiaryContainer = CharcoalBlue,
+    tertiary = GreyOlive,
+    onTertiary = Graphite,
+    tertiaryContainer = Graphite,
+    onTertiaryContainer = Silver,
 
     // Page background (as in the original scheme)
-    background = InkBlack,
-    onBackground = CharcoalBlue,
+    background = DimGrey,
+    onBackground = Silver,
 
     // Caramel paper: ContentCard, EpisodeContentCard, Genres/Overview cards, search field
-    surface = CharcoalBlue,
-    onSurface = Black,
-    surfaceTint = CharcoalBlue,
+    surface = Silver,
+    onSurface = Graphite,
+    surfaceTint = Silver,
 
     // Dark tonal panels: Settings sections, bottom sheet
-    surfaceVariant = Black,
-    onSurfaceVariant = CharcoalBlue,
+    surfaceVariant = Graphite,
+    onSurfaceVariant = Silver,
 
     // Default content color for these is onSurface (coffee), so keep them caramel.
     // Dark components should pass their container color explicitly, as the bars already do.
-    surfaceContainerLowest = CharcoalBlue,
-    surfaceContainerLow = CharcoalBlue,
-    surfaceContainer = Black,
-    surfaceContainerHigh = CharcoalBlue,
-    surfaceContainerHighest = CharcoalBlue,  // <- CARD COLOR (default for Card { })
+    surfaceContainerLowest = Silver,
+    surfaceContainerLow = Silver,
+    surfaceContainer = Graphite,
+    surfaceContainerHigh = Silver,
+    surfaceContainerHighest = Silver, // <- CARD COLOR (default for Card { })
 
-    outline = DeepSpaceBlue,
-    outlineVariant = InkBlack,
+    outline = GreyOlive,
+    outlineVariant = DimGrey,
+
+    error = ErrorSoft,
+    onError = Graphite,
+
+    // Snackbars: dark pill with caramel text/action
+    inverseSurface = Graphite,
+    inverseOnSurface = Silver,
+    inversePrimary = Silver,
+
+    scrim = Black,
+)
+
+private val ColdBlueScheme = darkColorScheme(
+    // Accent: caramel fills with coffee text (buttons, check marks, selected states)
+    primary = SlateGrey,
+    onPrimary = Black,
+    primaryContainer = Black,
+    onPrimaryContainer = SlateGrey,
+
+    // Supporting: copper for unselected nav/tab items
+    secondary = BalticBlue,
+    onSecondary = Black,
+    secondaryContainer = JetBlack, // nav-bar indicator pill (icon only, no text)
+    onSecondaryContainer = SlateGrey,
+
+    tertiary = BalticBlue,
+    onTertiary = Black,
+    tertiaryContainer = Black,
+    onTertiaryContainer = SlateGrey,
+
+    // Page background (as in the original scheme)
+    background = JetBlack,
+    onBackground = SlateGrey,
+
+    // Caramel paper: ContentCard, EpisodeContentCard, Genres/Overview cards, search field
+    surface = SlateGrey,
+    onSurface = Black,
+    surfaceTint = SlateGrey,
+
+    // Dark tonal panels: Settings sections, bottom sheet
+    surfaceVariant = Black,
+    onSurfaceVariant = SlateGrey,
+
+    // Default content color for these is onSurface (coffee), so keep them caramel.
+    // Dark components should pass their container color explicitly, as the bars already do.
+    surfaceContainerLowest = SlateGrey,
+    surfaceContainerLow = SlateGrey,
+    surfaceContainer = Black,
+    surfaceContainerHigh = SlateGrey,
+    surfaceContainerHighest = SlateGrey, // <- CARD COLOR (default for Card { })
+
+    outline = BalticBlue,
+    outlineVariant = JetBlack,
 
     error = ErrorSoft,
     onError = Black,
 
     // Snackbars: dark pill with caramel text/action
     inverseSurface = Black,
-    inverseOnSurface = CharcoalBlue,
-    inversePrimary = CharcoalBlue,
+    inverseOnSurface = SlateGrey,
+    inversePrimary = SlateGrey,
 
     scrim = Black,
 )
 
-//private val OldFilmColorScheme = darkColorScheme(
-//    primary = LightCaramel,
-//    onPrimary = DarkCoffee,
-//    primaryContainer = OliveWood,
-//    onPrimaryContainer = LightCaramel,
-//
-//    secondary = FadedCopper,
-//    onSecondary = DarkCoffee,
-//    secondaryContainer = FadedCopper,
-//    onSecondaryContainer = DarkCoffee,
-//
-//    tertiary = OliveWood,
-//    onTertiary = LightCaramel,
-//    tertiaryContainer = DarkCoffee,
-//    onTertiaryContainer = LightCaramel,
-//
-//    background = OliveWood,
-//    onBackground = LightCaramel,
-//
-//    surface = LightCaramel,
-//    onSurface = DarkCoffee,
-//    surfaceVariant = OliveWood,
-//    onSurfaceVariant = LightCaramel,
-//
-//    outline = FadedCopper,
-//    outlineVariant = OliveWood,
-//
-//    inverseSurface = LightCaramel,
-//    inverseOnSurface = DarkCoffee,
-//    inversePrimary = DarkCoffee,
-//)
+private val MovieTimeScheme = darkColorScheme(
+    // Accent: caramel fills with coffee text (buttons, check marks, selected states)
+    primary = BrightGold,
+    onPrimary = Black,
+    primaryContainer = Black,
+    onPrimaryContainer = BrightGold,
 
+    // Supporting: copper for unselected nav/tab items
+    secondary = Graphite,
+    onSecondary = Black,
+    secondaryContainer = CarbonBlack, // nav-bar indicator pill (icon only, no text)
+    onSecondaryContainer = BrightGold,
+
+    tertiary = Graphite,
+    onTertiary = Black,
+    tertiaryContainer = Black,
+    onTertiaryContainer = BrightGold,
+
+    // Page background (as in the original scheme)
+    background = CarbonBlack,
+    onBackground = BrightGold,
+
+    // Caramel paper: ContentCard, EpisodeContentCard, Genres/Overview cards, search field
+    surface = Graphite,
+    onSurface = Black,
+    surfaceTint = BrightGold,
+
+    // Dark tonal panels: Settings sections, bottom sheet
+    surfaceVariant = Black,
+    onSurfaceVariant = BrightGold,
+
+    // Default content color for these is onSurface (coffee), so keep them caramel.
+    // Dark components should pass their container color explicitly, as the bars already do.
+    surfaceContainerLowest = BrightGold,
+    surfaceContainerLow = BrightGold,
+    surfaceContainer = Black,
+    surfaceContainerHigh = BrightGold,
+    surfaceContainerHighest = Graphite, // <- CARD COLOR (default for Card { })
+
+    outline = Graphite,
+    outlineVariant = CarbonBlack,
+
+    error = ErrorSoft,
+    onError = Black,
+
+    // Snackbars: dark pill with caramel text/action
+    inverseSurface = Black,
+    inverseOnSurface = BrightGold,
+    inversePrimary = BrightGold,
+
+    scrim = Black,
+)
 
 @Composable
 fun FilmFollowerTheme(
@@ -197,7 +266,9 @@ fun FilmFollowerTheme(
 //    }
 
     val colorScheme = when (themeId) {
-        ThemeManager.DARKNESS -> DarknessScheme
+        ThemeManager.OLD_FILM_BW -> OldFilmBWColorScheme
+        ThemeManager.COLD_BLUE -> ColdBlueScheme
+        ThemeManager.MOVIE_TIME -> MovieTimeScheme
         else -> OldFilmColorScheme
     }
 

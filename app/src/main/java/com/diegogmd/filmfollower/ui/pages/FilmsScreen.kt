@@ -20,10 +20,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavHostController
 import com.diegogmd.filmfollower.R
 import com.diegogmd.filmfollower.model.Film
-import com.diegogmd.filmfollower.model.anyWatchlistedReleasedFilm
-import com.diegogmd.filmfollower.model.anyWatchlistedUpcomingFilm
-import com.diegogmd.filmfollower.model.getWatchlistedReleasedFilms
-import com.diegogmd.filmfollower.model.getWatchlistedUpcomingFilms
+import com.diegogmd.filmfollower.model.getAllStatus
 import com.diegogmd.filmfollower.ui.components.ContentCard
 import com.diegogmd.filmfollower.ui.components.EmptyContentCard
 import com.diegogmd.filmfollower.ui.theme.FilmTypography
@@ -55,22 +52,30 @@ fun FilmsScreen(modifier: Modifier, navController: NavHostController) {
             }
         }
 
+        var refreshTick by remember { mutableIntStateOf(0) }
+        val watchlistedReleasedFilms =
+            remember(refreshTick) { getAllStatus(context, "watchlist", 1) }
+        val watchlistedUpcomingFilms =
+            remember(refreshTick) { getAllStatus(context, "watchlist", 0) }
+
         when (selectedTab) {
-            0 -> if (anyWatchlistedReleasedFilm(context)) {
+            0 -> if (watchlistedReleasedFilms != null) {
                 FilmList(
                     Modifier.weight(1f),
-                    films = getWatchlistedReleasedFilms(context),
-                    navController
+                    films = watchlistedReleasedFilms,
+                    navController,
+                    onChanged = { refreshTick++ }
                 )
             } else {
                 EmptyContentCard(modifier, true)
             }
 
-            1 -> if (anyWatchlistedUpcomingFilm(context)) {
+            1 -> if (watchlistedUpcomingFilms != null) {
                 FilmList(
                     Modifier.weight(1f),
-                    films = getWatchlistedUpcomingFilms(context),
-                    navController
+                    films = watchlistedUpcomingFilms,
+                    navController,
+                    onChanged = { refreshTick++ }
                 )
             } else {
                 EmptyContentCard(modifier, true)
@@ -85,12 +90,22 @@ fun FilmsScreen(modifier: Modifier, navController: NavHostController) {
 }
 
 @Composable
-private fun FilmList(modifier: Modifier, films: List<Film>, navController: NavHostController) {
+private fun FilmList(
+    modifier: Modifier,
+    films: List<Film>,
+    navController: NavHostController,
+    onChanged: () -> Unit
+) {
     LazyColumn(
         modifier = modifier.fillMaxWidth()
     ) {
         items(films, key = { it.filmId }) { film ->
-            ContentCard(film, onClick = { id -> navController.navigate("film/$id") })
+            ContentCard(
+                content = film,
+                cardType = 1,
+                onClick = { id -> navController.navigate("film/$id") },
+                onChanged = onChanged
+            )
         }
     }
 }

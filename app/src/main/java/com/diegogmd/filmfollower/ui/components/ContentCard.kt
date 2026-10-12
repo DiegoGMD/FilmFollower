@@ -1,5 +1,6 @@
 package com.diegogmd.filmfollower.ui.components
 
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -14,9 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -42,25 +40,31 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.diegogmd.filmfollower.R
 import com.diegogmd.filmfollower.model.Episode
 import com.diegogmd.filmfollower.model.MultiSearchResult
 import com.diegogmd.filmfollower.model.Film
+import com.diegogmd.filmfollower.model.eraseFilm
 import com.diegogmd.filmfollower.model.getFilm
 import com.diegogmd.filmfollower.model.getTvShow
-import com.diegogmd.filmfollower.model.eraseFilm
+import com.diegogmd.filmfollower.model.isStatus
+import com.diegogmd.filmfollower.model.setStatus
 import com.diegogmd.filmfollower.ui.theme.FilmTypography
-import com.diegogmd.filmfollower.ui.theme.LightCaramel
 import com.diegogmd.filmfollower.viewmodels.FilmViewModel
 import com.diegogmd.filmfollower.viewmodels.FilmViewModelFactory
+import com.diegogmd.filmfollower.viewmodels.TvShowViewModel
+import com.diegogmd.filmfollower.viewmodels.TvShowViewModelFactory
 
 @Composable
 fun ContentCard(
     content: MultiSearchResult,
     orientation: Boolean = false, // false = horizontal row, true = vertical poster
+    cardType: Int = 0,
     onClick: (Int) -> Unit = {},
+    onChanged: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val title = content.displayTitle
@@ -72,7 +76,6 @@ fun ContentCard(
     }
     val rating =
         if (content.vote_average != null) Math.round(content.vote_average * 10) / 10.0 else null
-    val watchlisted = if (getFilm(context, content.id) == null) false else true
 
     Card(
         modifier = Modifier
@@ -85,26 +88,28 @@ fun ContentCard(
         if (orientation) {
             // Vertical layout: image on top, text below
             VerticalContentCard(
+                content.media_type,
                 content.id,
                 posterUrl,
                 title,
                 date,
                 rating,
-                watchlisted,
-                true,
-                onClick
+                cardType,
+                onClick,
+                onChanged
             )
         } else {
             // Horizontal layout: image left, text right
             HorizontalContentCard(
+                content.media_type,
                 content.id,
                 posterUrl,
                 title,
                 date,
                 rating,
-                watchlisted,
-                true,
-                onClick
+                cardType,
+                onClick,
+                onChanged
             )
         }
     }
@@ -114,9 +119,11 @@ fun ContentCard(
 fun ContentCard(
     content: Film,
     orientation: Boolean = false, // false = horizontal row, true = vertical poster
+    cardType: Int = 0,
     onClick: (Int) -> Unit = {},
+    onChanged: () -> Unit = {}
 ) {
-    val posterUrl = content.posterPath?.let { "https:image.tmdb.org/t/p/w342$it" }
+    val posterUrl = content.posterPath?.let { "https://image.tmdb.org/t/p/w342$it" }
 
     Card(
         modifier = Modifier
@@ -129,26 +136,28 @@ fun ContentCard(
         if (orientation) {
             // Vertical layout: image on top, text below
             VerticalContentCard(
+                "movie",
                 content.filmId,
                 posterUrl,
                 content.title,
                 content.releaseDate,
                 content.rating,
-                false,
-                false,
-                onClick
+                cardType,
+                onClick,
+                onChanged
             )
         } else {
             // Horizontal layout: image left, text right
             HorizontalContentCard(
+                "movie",
                 content.filmId,
                 posterUrl,
                 content.title,
                 content.releaseDate,
                 content.rating,
-                false,
-                false,
-                onClick
+                cardType,
+                onClick,
+                onChanged
             )
         }
     }
@@ -156,17 +165,21 @@ fun ContentCard(
 
 @Composable
 private fun VerticalContentCard(
-    filmId: Int,
+    mediaType: String,
+    contentId: Int,
     posterUrl: String?,
     title: String,
     date: LocalDate?,
     rating: Double?,
-    watchlisted: Boolean = false,
-    button: Boolean = false,
+    cardType: Int = 0,
     onClick: (Int) -> Unit = {},
-    viewModel: FilmViewModel = viewModel(factory = FilmViewModelFactory())
+    onChanged: () -> Unit = {}
 ) {
-    var watchlisted by remember(watchlisted) { mutableStateOf(watchlisted) }
+    val context = LocalContext.current
+    val filmViewModel: FilmViewModel = viewModel(factory = FilmViewModelFactory())
+    val tvShowViewModel: TvShowViewModel = viewModel(factory = TvShowViewModelFactory())
+    var watchlisted by remember(contentId) { mutableStateOf(getFilm(context, contentId) != null) }
+    var seen by remember(contentId) { mutableStateOf(isStatus(context, contentId, "seen")) }
 
     Column(modifier = Modifier.padding(0.dp)) {
         AsyncImage(
@@ -184,46 +197,44 @@ private fun VerticalContentCard(
             thickness = 1.dp,
         )
         Surface(
-            onClick = { onClick(filmId) },
+            onClick = { onClick(contentId) },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(8.dp)
         ) {
             ContentCardText(title, date, rating)
         }
-        if (button) {
-            val context = LocalContext.current
-
-            Button(
-                onClick = {
-                    if (!watchlisted) {
-                        viewModel.addFilmToWatchlist(context, filmId)
-                    } else {
-                        eraseFilm(context, filmId)
-                    }
-                    watchlisted = !watchlisted
-                },
-                modifier = Modifier
-                    .width(56.dp)
-                    .fillMaxHeight(),
-                contentPadding = PaddingValues(0.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.onPrimary),
-                shape = RoundedCornerShape(
-                    topStart = 0.dp, bottomStart = 0.dp,
-                    topEnd = 12.dp, bottomEnd = 12.dp
-                )
+        when (cardType) {
+            0 -> {}
+            1 -> ButtonType(
+                seen,
+                R.drawable.ic_visibility_off_24px,
+                R.drawable.ic_visibility_24px,
+                "Seen",
+                "Not seen"
             ) {
-                if (!watchlisted) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Not watchlisted",
-                        tint = MaterialTheme.colorScheme.primary
-                    )
+                setStatus(context, contentId, if (seen) "watchlist" else "seen")
+                seen = !seen
+                onChanged()
+            }
+
+            2 -> ButtonType(
+                watchlisted,
+                R.drawable.ic_check_24px,
+                R.drawable.ic_add_24px,
+                "Watchlisted",
+                "Not watchlisted"
+            ) {
+                if (watchlisted) {
+                    eraseFilm(context, contentId)
+                    watchlisted = false
+                    onChanged()
                 } else {
-                    Icon(
-                        imageVector = Icons.Default.Check,
-                        contentDescription = "Watchlisted",
-                        tint = MaterialTheme.colorScheme.primary
-                    )
+                    filmViewModel.addFilmToWatchlist(context, contentId) { ok ->
+                        if (ok) {
+                            watchlisted = true
+                            onChanged()
+                        }
+                    }
                 }
             }
         }
@@ -232,17 +243,21 @@ private fun VerticalContentCard(
 
 @Composable
 private fun HorizontalContentCard(
-    filmId: Int,
+    mediaType: String,
+    contentId: Int,
     posterUrl: String?,
     title: String,
     date: LocalDate?,
     rating: Double?,
-    watchlisted: Boolean = false,
-    button: Boolean = false,
+    cardType: Int = 0,
     onClick: (Int) -> Unit = {},
-    viewModel: FilmViewModel = viewModel(factory = FilmViewModelFactory())
+    onChanged: () -> Unit = {}
 ) {
-    var watchlisted by remember(watchlisted) { mutableStateOf(watchlisted) }
+    val context = LocalContext.current
+    val filmViewModel: FilmViewModel = viewModel(factory = FilmViewModelFactory())
+    val tvShowViewModel: TvShowViewModel = viewModel(factory = TvShowViewModelFactory())
+    var watchlisted by remember(contentId) { mutableStateOf(getFilm(context, contentId) != null) }
+    var seen by remember(contentId) { mutableStateOf(isStatus(context, contentId, "seen")) }
 
     Row(
         modifier = Modifier
@@ -263,44 +278,42 @@ private fun HorizontalContentCard(
             thickness = 1.dp,
         )
         Surface(
-            onClick = { onClick(filmId) },
+            onClick = { onClick(contentId) },
             modifier = Modifier.weight(1f),
             shape = RoundedCornerShape(8.dp)
         ) { ContentCardText(title, date, rating) }
-        if (button) {
-            val context = LocalContext.current
-
-            Button(
-                onClick = {
-                    if (!watchlisted) {
-                        viewModel.addFilmToWatchlist(context, filmId)
-                    } else {
-                        eraseFilm(context, filmId)
-                    }
-                    watchlisted = !watchlisted
-                },
-                modifier = Modifier
-                    .width(56.dp)
-                    .fillMaxHeight(),
-                contentPadding = PaddingValues(0.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.onPrimary),
-                shape = RoundedCornerShape(
-                    topStart = 0.dp, bottomStart = 0.dp,
-                    topEnd = 12.dp, bottomEnd = 12.dp
-                )
+        when (cardType) {
+            0 -> {}
+            1 -> ButtonType(
+                seen,
+                R.drawable.ic_visibility_off_24px,
+                R.drawable.ic_visibility_24px,
+                "Seen",
+                "Not seen"
             ) {
-                if (!watchlisted) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Not watchlisted",
-                        tint = MaterialTheme.colorScheme.primary
-                    )
+                setStatus(context, contentId, if (seen) "watchlist" else "seen")
+                seen = !seen
+                onChanged()
+            }
+
+            2 -> ButtonType(
+                watchlisted,
+                R.drawable.ic_check_24px,
+                R.drawable.ic_add_24px,
+                "Watchlisted",
+                "Not watchlisted"
+            ) {
+                if (watchlisted) {
+                    eraseFilm(context, contentId)
+                    watchlisted = false
+                    onChanged()
                 } else {
-                    Icon(
-                        imageVector = Icons.Default.Check,
-                        contentDescription = "Whishlisted",
-                        tint = MaterialTheme.colorScheme.primary
-                    )
+                    filmViewModel.addFilmToWatchlist(context, contentId) { ok ->
+                        if (ok) {
+                            watchlisted = true
+                            onChanged()
+                        }
+                    }
                 }
             }
         }
@@ -325,6 +338,51 @@ private fun ContentCardText(
             fontSize = 14.sp
         )
     }
+}
+
+@Composable
+private fun CardActionButton(
+    active: Boolean,
+    @DrawableRes activeIcon: Int,
+    @DrawableRes inactiveIcon: Int,
+    activeDescription: String,
+    inactiveDescription: String,
+    onClick: () -> Unit
+) {
+    Button(
+        onClick = onClick,
+        modifier = Modifier
+            .width(56.dp)
+            .fillMaxHeight(),
+        contentPadding = PaddingValues(0.dp),
+        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.onPrimary),
+        shape = RoundedCornerShape(topStart = 0.dp, bottomStart = 0.dp, topEnd = 12.dp, bottomEnd = 12.dp)
+    ) {
+        Icon(
+            painter = painterResource(if (active) activeIcon else inactiveIcon),
+            contentDescription = if (active) activeDescription else inactiveDescription,
+            tint = MaterialTheme.colorScheme.primary
+        )
+    }
+}
+
+@Composable
+private fun ButtonType(
+    boolean: Boolean,
+    @DrawableRes activeIcon: Int,
+    @DrawableRes inactiveIcon: Int,
+    activeDescription: String,
+    inactiveDescription: String,
+    onAction: () -> Unit = {}
+) {
+    CardActionButton(
+        active = boolean,
+        activeIcon = activeIcon,
+        inactiveIcon = inactiveIcon,
+        activeDescription = activeDescription,
+        inactiveDescription = inactiveDescription,
+        onClick = { onAction() }
+    )
 }
 
 @Composable
