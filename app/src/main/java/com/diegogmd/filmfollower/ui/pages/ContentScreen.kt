@@ -59,9 +59,11 @@ import com.diegogmd.filmfollower.model.TvShow
 import com.diegogmd.filmfollower.model.eraseFilm
 import com.diegogmd.filmfollower.model.getFilm
 import com.diegogmd.filmfollower.model.getFilmGenre
+import com.diegogmd.filmfollower.model.getStatus
 import com.diegogmd.filmfollower.model.isStatus
 import com.diegogmd.filmfollower.model.setStatus
 import com.diegogmd.filmfollower.ui.theme.FilmTypography
+import com.diegogmd.filmfollower.ui.theme.placeholders
 import com.diegogmd.filmfollower.viewmodels.FilmViewModelFactory
 import com.diegogmd.filmfollower.viewmodels.TvShowViewModel
 import com.diegogmd.filmfollower.viewmodels.TvShowViewModelFactory
@@ -130,6 +132,7 @@ private fun FilmContentUI(
     var seen by remember(film.filmId) { mutableStateOf(isStatus(context, film.filmId, "seen")) }
     var archived by remember(film.filmId) { mutableStateOf(isStatus(context, film.filmId, "archived")) }
     val trailerKey by viewModel.trailerKey.collectAsState()
+    var nowStatus = getStatus(context, film.filmId)
 
     LaunchedEffect(film.filmId) { viewModel.loadTrailer(film.filmId) }
 
@@ -154,13 +157,21 @@ private fun FilmContentUI(
             watchlisted = watchlisted,
             trailerAvailable = trailerKey != null,
             onSeenClick = {
-                val newStatus = if (seen) "watchlist" else "seen"
+                val newStatus = if (!seen) {
+                    "seen"
+                } else {
+                    "watchlist"
+                }
                 setStatus(context, film.filmId, newStatus)
                 seen = newStatus == "seen"
                 archived = false
             },
             onArchiveClick = {
-                val newStatus = if (archived) "watchlist" else "archived"
+                val newStatus = if (!archived) {
+                    "archived"
+                } else {
+                    "watchlist"
+                }
                 setStatus(context, film.filmId, newStatus)
                 archived = newStatus == "archived"
                 seen = false
@@ -443,8 +454,8 @@ private fun ContentHeader(
             model = "https://image.tmdb.org/t/p/original$posterPath",
             contentDescription = "$title (poster)",
             contentScale = ContentScale.Crop,
-            placeholder = painterResource(R.drawable.placeholder_poster),
-            error = painterResource(R.drawable.placeholder_poster),
+            placeholder = painterResource(MaterialTheme.placeholders.poster),
+            error = painterResource(MaterialTheme.placeholders.poster),
             modifier = Modifier
                 .matchParentSize() // takes the size of the Column below, so it ends at the divider
         )

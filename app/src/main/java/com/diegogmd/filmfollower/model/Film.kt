@@ -5,8 +5,12 @@ import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.util.Log
+import androidx.compose.runtime.Composable
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.diegogmd.filmfollower.data.local.FilmFillowerDatabase
 import com.diegogmd.filmfollower.data.repository.SearchRepository
+import com.diegogmd.filmfollower.viewmodels.FilmViewModel
+import com.diegogmd.filmfollower.viewmodels.FilmViewModelFactory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.threeten.bp.LocalDate
@@ -268,9 +272,18 @@ fun getAllStatus(context: Context, status: String, released: Int? = null): List<
 fun isStatus(context: Context, id: Int, status: String): Boolean =
     getFilm(context, id)?.watchStatus == status
 
+@SuppressLint("ViewModelConstructorInComposable")
 fun setStatus(context: Context, id: Int, status: String) {
     val dbHelper = FilmFillowerDatabase(context)
     val db = dbHelper.writableDatabase
+
+    // If you set to seen directly add to the db/watchlist and then set it seen
+    if (getFilm(context, id) == null){
+        FilmViewModel(
+            repository = SearchRepository(),
+            factory = FilmViewModelFactory()
+        ).addFilmToWatchlist(context, id)
+    }
 
     return db.execSQL(
         "UPDATE Film SET watch_status = ? WHERE film_id = ?", arrayOf(status, id.toString())

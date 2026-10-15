@@ -1,15 +1,19 @@
 package com.diegogmd.filmfollower.ui.theme
 
 import android.app.Activity
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
+import com.diegogmd.filmfollower.R
 
 private val DarkColorScheme = darkColorScheme(
     primary = Purple80,
@@ -203,7 +207,7 @@ private val MovieTimeScheme = darkColorScheme(
 
     // Supporting: copper for unselected nav/tab items
     secondary = Graphite,
-    onSecondary = Black,
+    onSecondary = White100,
     secondaryContainer = CarbonBlack, // nav-bar indicator pill (icon only, no text)
     onSecondaryContainer = BrightGold,
 
@@ -247,6 +251,22 @@ private val MovieTimeScheme = darkColorScheme(
     scrim = Black,
 )
 
+data class ThemePlaceholders(
+    @DrawableRes val poster: Int,
+)
+
+val LocalPlaceholders = staticCompositionLocalOf {
+    ThemePlaceholders(R.drawable.placeholder_poster_oldfilm)
+}
+
+val MaterialTheme.placeholders: ThemePlaceholders
+    @Composable get() = LocalPlaceholders.current
+
+private val OldFilmPlaceholders = ThemePlaceholders(R.drawable.placeholder_poster_oldfilm)
+private val OldFilmBWPlaceholders = ThemePlaceholders(R.drawable.placeholder_poster_oldfilmbw)
+private val ColdBluePlaceholders = ThemePlaceholders(R.drawable.placeholder_poster_coldblue)
+private val MovieTimePlaceholders = ThemePlaceholders(R.drawable.placeholder_poster_movietime)
+
 @Composable
 fun FilmFollowerTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
@@ -272,18 +292,27 @@ fun FilmFollowerTheme(
         else -> OldFilmColorScheme
     }
 
+    val posterPlaceholders = when (themeId) {
+        ThemeManager.OLD_FILM_BW -> OldFilmBWPlaceholders
+        ThemeManager.COLD_BLUE -> ColdBluePlaceholders
+        ThemeManager.MOVIE_TIME -> MovieTimePlaceholders
+        else -> OldFilmPlaceholders
+    }
+
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
             WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars =
-                colorScheme.background.luminance() > 0.5f   // light background -> dark icons
+                colorScheme.background.luminance() > 0.5f // light background -> dark icons
         }
     }
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = FilmTypography,
-        content = content
-    )
+    CompositionLocalProvider(LocalPlaceholders provides posterPlaceholders) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = FilmTypography,
+            content = content
+        )
+    }
 }
