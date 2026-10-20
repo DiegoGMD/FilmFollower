@@ -29,6 +29,7 @@ val CarbonBlack = Color(0xFF202020)
 //val Graphite = Color(0xFF2E2E2E)
 val BrightGold = Color(0xFFF7D533)
 
+var Gunmetal = Color(0xFF353839)
 
 // Android Studio Default
 val Purple80 = Color(0xFFD0BCFF)

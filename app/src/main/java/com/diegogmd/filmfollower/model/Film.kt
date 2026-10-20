@@ -276,15 +276,6 @@ fun isStatus(context: Context, id: Int, status: String): Boolean =
 fun setStatus(context: Context, id: Int, status: String) {
     val dbHelper = FilmFillowerDatabase(context)
     val db = dbHelper.writableDatabase
-
-    // If you set to seen directly add to the db/watchlist and then set it seen
-    if (getFilm(context, id) == null){
-        FilmViewModel(
-            repository = SearchRepository(),
-            factory = FilmViewModelFactory()
-        ).addFilmToWatchlist(context, id)
-    }
-
     return db.execSQL(
         "UPDATE Film SET watch_status = ? WHERE film_id = ?", arrayOf(status, id.toString())
     )

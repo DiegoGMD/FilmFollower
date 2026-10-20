@@ -494,20 +494,20 @@ private fun ContentHeader(
                         .clickable(onClick = onBackClick)
                 )
 
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.CenterEnd)
-                        .size(52.dp)
-                        .clip(CircleShape),
-                        //.clickable(onClick = onReloadClick),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Refresh,
-                        contentDescription = "Sync/Reload",
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
+//                Box(
+//                    modifier = Modifier
+//                        .align(Alignment.CenterEnd)
+//                        .size(52.dp)
+//                        .clip(CircleShape),
+//                        //.clickable(onClick = onReloadClick),
+//                    contentAlignment = Alignment.Center
+//                ) {
+//                    Icon(
+//                        imageVector = Icons.Default.Refresh,
+//                        contentDescription = "Sync/Reload",
+//                        modifier = Modifier.size(24.dp)
+//                    )
+//                }
             }
 
             Spacer(Modifier.height(10.dp))

@@ -21,7 +21,7 @@ FilmFollower is designed to (as all the other ones) keep track of films and TV s
 ```
 Film                                    Genre                               List
 ├── film_id (PK)                        ├── genre_id (PK)                   ├── list_id (PK)
-├── title (NOT NULL)                    └── name (UNIQUE)                   └── name (UNIQUE)
+├── title (NOT NULL)                    └── name (UNIQUE)                   └── list_name (UNIQUE)
 ├── original_title
 ├── overview                            FilmGenre                           List_item
 ├── release_date                        ├── film_id (PK, FK → Film)         ├── list_id (PK, FK → List)

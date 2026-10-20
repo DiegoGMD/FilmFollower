@@ -126,6 +126,33 @@ class FilmFillowerDatabase(context: Context) :
             );
         """.trimIndent()
 
+        val createList = """
+            CREATE TABLE List (
+                list_id INTEGER NOT NULL,
+                list_name TEXT NOT NULL UNIQUE,
+                PRIMARY KEY (list_id)
+            );
+        """.trimIndent()
+
+        val createListItem = """
+            CREATE TABLE ListItem (
+                list_id INTEGER NOT NULL,
+                film_id INTEGER,
+                show_id INTEGER,
+                position INTEGER NOT NULL,
+                CHECK (
+                    (film_id IS NOT NULL AND show_id IS NULL) OR
+                    (film_id IS NULL AND show_id IS NOT NULL)
+                ),
+                FOREIGN KEY (list_id) REFERENCES List(list_id) ON DELETE CASCADE,
+                FOREIGN KEY (film_id) REFERENCES Film(film_id) ON DELETE CASCADE,
+                FOREIGN KEY (show_id) REFERENCES TvShow(show_id) ON DELETE CASCADE,
+                UNIQUE (list_id, film_id),
+                UNIQUE (list_id, show_id),
+                UNIQUE (list_id, position)
+            );
+        """.trimIndent()
+
         db?.apply {
             execSQL(createFilmTable)
             execSQL(createFilmGenreTable)
@@ -134,6 +161,8 @@ class FilmFillowerDatabase(context: Context) :
             execSQL(createTvShowGenreTable)
             execSQL(createSeasonTable)
             execSQL(createEpisodeTable)
+            execSQL(createList)
+            execSQL(createListItem)
         }
 
         db?.let { seedGenres(it) }
@@ -187,6 +216,8 @@ class FilmFillowerDatabase(context: Context) :
             execSQL("DROP TABLE IF EXISTS TvShowGenre")
             execSQL("DROP TABLE IF EXISTS Season")
             execSQL("DROP TABLE IF EXISTS Episode")
+            execSQL("DROP TABLE IF EXISTS List")
+            execSQL("DROP TABLE IF EXISTS ListItem")
             onCreate(this)
         }
     }

@@ -37,11 +37,12 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -56,10 +57,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -74,20 +73,16 @@ import com.diegogmd.filmfollower.R
 import com.diegogmd.filmfollower.SecureStorage
 import com.diegogmd.filmfollower.ui.theme.Black
 import com.diegogmd.filmfollower.ui.theme.BrightGold
+import com.diegogmd.filmfollower.ui.theme.CarbonBlack
 import com.diegogmd.filmfollower.ui.theme.SlateGrey
 import com.diegogmd.filmfollower.ui.theme.DarkCoffee
 import com.diegogmd.filmfollower.ui.theme.FilmTypography
 import com.diegogmd.filmfollower.ui.theme.Graphite
+import com.diegogmd.filmfollower.ui.theme.Gunmetal
 import com.diegogmd.filmfollower.ui.theme.JetBlack
 import com.diegogmd.filmfollower.ui.theme.LightCaramel
 import com.diegogmd.filmfollower.ui.theme.Silver
 import com.diegogmd.filmfollower.ui.theme.ThemeManager
-
-private val PanelBg: Color @Composable get() = MaterialTheme.colorScheme.surfaceVariant
-private val PanelText: Color @Composable get() = MaterialTheme.colorScheme.onSurfaceVariant
-private val PanelOutline: Color @Composable get() = MaterialTheme.colorScheme.outline
-@Composable
-private fun sectionCardColor(): Color = lerp(PanelBg, PanelText, 0.08f)
 
 /**
  * One entry of the theme carousel.
@@ -96,6 +91,7 @@ private fun sectionCardColor(): Color = lerp(PanelBg, PanelText, 0.08f)
  * e.g. R.drawable.theme_coffee). While it is null, a small drawn placeholder is shown
  * using [placeholderBackground] / [placeholderAccent].
  */
+
 data class ThemeOption(
     val id: Int,
     val name: String,
@@ -107,7 +103,9 @@ data class ThemeOption(
 // TODO: replace with your real screenshots. (I don't have them yet)
 private val themeOptions = listOf(
     ThemeOption(0, "OldFilm", previewRes = null, DarkCoffee, LightCaramel),
-    ThemeOption(1, "OldFilm B&W", previewRes = null, Graphite, Silver),
+    ThemeOption(1, "OldFilm B&W", previewRes = null,
+        Graphite, Silver
+    ),
     ThemeOption(2, "Cold Blue", previewRes = null, JetBlack, SlateGrey),
     ThemeOption(3, "Movie Time", previewRes = null, Black, BrightGold),
 )
@@ -133,7 +131,7 @@ fun SettingsScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(PanelBg)
+            .background(CarbonBlack)
             .statusBarsPadding()
             .navigationBarsPadding()
             .verticalScroll(rememberScrollState())
@@ -142,14 +140,14 @@ fun SettingsScreen(
         // Back button: tonal circle, like the reference
         Box(
             modifier = Modifier
-                .padding(20.dp)
+                .padding(bottom = 20.dp)
                 .clickable(onClick = onBackClick),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                 contentDescription = "Back",
-                tint = PanelText,
+                tint = Silver,
                 modifier = Modifier.size(28.dp)
             )
         }
@@ -157,7 +155,7 @@ fun SettingsScreen(
         Text(
             text = "Settings",
             style = FilmTypography.titleMedium.copy(fontSize = 44.sp, lineHeight = 52.sp),
-            color = PanelText,
+            color = Silver,
             modifier = Modifier.padding(bottom = 12.dp)
         )
 
@@ -203,7 +201,7 @@ fun SettingsScreen(
                 else PasswordVisualTransformation(),
                 trailing = {
                     TextButton(onClick = { showToken = !showToken }) {
-                        Text(if (showToken) "Hide" else "Show", color = PanelText)
+                        Text(if (showToken) "Hide" else "Show", color = Graphite)
                     }
                 },
                 saveLabel = stringResource(id = R.string.save),
@@ -221,18 +219,17 @@ fun SettingsScreen(
 
         // ---------- Appearance ----------
         SettingsSection(label = "Appearance") {
-            // TODO: Make ThemeSelector and the preview themes button on the same row
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.Top,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text("Theme", fontSize = 20.sp, color = PanelText)
+                    Text("Theme", fontSize = 20.sp, color = Silver)
                     Text(
                         text = selectedTheme.name,
                         fontSize = 14.sp,
-                        color = PanelText.copy(alpha = 0.7f),
+                        color = Silver.copy(alpha = 0.7f),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -244,8 +241,8 @@ fun SettingsScreen(
                     shape = RoundedCornerShape(16.dp),
                     contentPadding = PaddingValues(horizontal = 16.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = PanelText,
-                        contentColor = PanelBg
+                        containerColor = Silver,
+                        contentColor = Graphite
                     )
                 ) {
                     Text(stringResource(id = R.string.choose), fontSize = 16.sp)
@@ -268,31 +265,32 @@ fun SettingsScreen(
     }
 }
 
-/** Rounded tonal card with a small label on top, like "Storage" / "Account" / "Playback". */
 @Composable
 private fun SettingsSection(
     label: String,
     bleed: Boolean = false,
     content: @Composable ColumnScope.() -> Unit
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(sectionCardColor())
-            .padding(vertical = 20.dp)
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Graphite),
+        border = BorderStroke(1.dp, Gunmetal)
     ) {
-        Text(
-            text = label,
-            fontSize = 14.sp,
-            color = PanelText.copy(alpha = 0.7f),
-            modifier = Modifier.padding(horizontal = 24.dp)
-        )
-        Spacer(Modifier.height(16.dp))
-        Column(
-            modifier = Modifier.padding(horizontal = if (bleed) 0.dp else 24.dp),
-            content = content
-        )
+        Column(modifier = Modifier.padding(vertical = 20.dp)) {
+            Text(
+                text = label,
+                fontSize = 14.sp,
+                color = Silver,
+                style = FilmTypography.titleMedium,
+                modifier = Modifier.padding(horizontal = 24.dp)
+            )
+            Spacer(Modifier.height(16.dp))
+            Column(
+                modifier = Modifier.padding(horizontal = if (bleed) 0.dp else 24.dp),
+                content = content
+            )
+        }
     }
 }
 
@@ -329,7 +327,7 @@ private fun ThemeCard(
     onClick: () -> Unit
 ) {
     val borderColor by animateColorAsState(
-        targetValue = if (selected) PanelText else PanelOutline.copy(alpha = 0.5f),
+        targetValue = if (selected) MaterialTheme.colorScheme.primary else CarbonBlack.copy(alpha = 0.5f),
         label = "themeCardBorder"
     )
     val shape = RoundedCornerShape(20.dp)
@@ -364,13 +362,13 @@ private fun ThemeCard(
                         .padding(8.dp)
                         .size(24.dp)
                         .clip(CircleShape)
-                        .background(PanelText),
+                        .background(Graphite),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Check,
                         contentDescription = "Selected",
-                        tint = PanelBg,
+                        tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(16.dp)
                     )
                 }
@@ -383,7 +381,7 @@ private fun ThemeCard(
             text = option.name,
             fontSize = 16.sp,
             fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
-            color = if (selected) PanelText else PanelText.copy(alpha = 0.7f)
+            color = if (selected) Silver else Silver.copy(alpha = 0.7f)
         )
     }
 }
@@ -429,8 +427,8 @@ private fun ThemePreviewSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        containerColor = sectionCardColor(),
-        contentColor = PanelText
+        containerColor = Graphite,
+        contentColor = Silver
     ) {
         Column(modifier = Modifier
             .navigationBarsPadding()
@@ -438,13 +436,13 @@ private fun ThemePreviewSheet(
             Text(
                 text = "Theme previews",
                 fontSize = 24.sp,
-                color = PanelText,
+                color = Silver,
                 modifier = Modifier.padding(horizontal = 24.dp)
             )
             Text(
                 text = "Tap a preview to switch",
                 fontSize = 14.sp,
-                color = PanelText.copy(alpha = 0.7f),
+                color = Silver.copy(alpha = 0.7f),
                 modifier = Modifier.padding(horizontal = 24.dp)
             )
             Spacer(Modifier.height(16.dp))
@@ -460,8 +458,8 @@ private fun ThemePreviewSheet(
                     .padding(horizontal = 24.dp)
                     .height(48.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = PanelText,
-                    contentColor = PanelBg
+                    containerColor = Silver,
+                    contentColor = Graphite
                 ),
                 shape = RoundedCornerShape(24.dp)
             ) {
@@ -489,8 +487,8 @@ private fun SettingsFieldRow(
     trailing: (@Composable () -> Unit)? = null
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
-        Text(title, fontSize = 20.sp, color = PanelText)
-        Text(supporting, fontSize = 14.sp, color = PanelText.copy(alpha = 0.7f))
+        Text(title, fontSize = 20.sp, color = Silver)
+        Text(supporting, fontSize = 14.sp, color = Silver.copy(alpha = 0.7f))
 
         Spacer(Modifier.height(12.dp))
 
@@ -513,13 +511,13 @@ private fun SettingsFieldRow(
                 keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction = imeAction),
                 shape = RoundedCornerShape(16.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = PanelText,
-                    unfocusedTextColor = PanelText,
+                    focusedTextColor = Silver,
+                    unfocusedTextColor = Silver,
                     errorTextColor = MaterialTheme.colorScheme.error,
-                    focusedBorderColor = PanelText,
-                    unfocusedBorderColor = PanelOutline,
+                    focusedBorderColor = Silver,
+                    unfocusedBorderColor = Silver,
                     errorBorderColor = MaterialTheme.colorScheme.error,
-                    cursorColor = PanelText,
+                    cursorColor = Silver,
                     errorCursorColor = MaterialTheme.colorScheme.error,
                     errorSupportingTextColor = MaterialTheme.colorScheme.error
                 )
@@ -529,8 +527,8 @@ private fun SettingsFieldRow(
                 onClick = onSave,
                 modifier = Modifier.height(56.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = PanelText,
-                    contentColor = PanelBg
+                    containerColor = Silver,
+                    contentColor = Graphite
                 ),
                 shape = RoundedCornerShape(16.dp)
             ) {
