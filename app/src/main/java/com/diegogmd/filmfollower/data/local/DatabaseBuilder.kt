@@ -129,21 +129,18 @@ class FilmFillowerDatabase(context: Context) :
         val createList = """
             CREATE TABLE List (
                 list_id INTEGER NOT NULL,
-                list_name TEXT NOT NULL UNIQUE,
-                PRIMARY KEY (list_id)
+                name TEXT NOT NULL UNIQUE,
+                PRIMARY KEY (list_id),
+                UNIQUE (list_name)
             );
         """.trimIndent()
 
         val createListItem = """
             CREATE TABLE ListItem (
                 list_id INTEGER NOT NULL,
-                film_id INTEGER,
-                show_id INTEGER,
+                film_id INTEGER NOT NULL,
+                show_id INTEGER NOT NULL,
                 position INTEGER NOT NULL,
-                CHECK (
-                    (film_id IS NOT NULL AND show_id IS NULL) OR
-                    (film_id IS NULL AND show_id IS NOT NULL)
-                ),
                 FOREIGN KEY (list_id) REFERENCES List(list_id) ON DELETE CASCADE,
                 FOREIGN KEY (film_id) REFERENCES Film(film_id) ON DELETE CASCADE,
                 FOREIGN KEY (show_id) REFERENCES TvShow(show_id) ON DELETE CASCADE,

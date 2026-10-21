@@ -18,11 +18,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -59,7 +57,6 @@ import com.diegogmd.filmfollower.model.TvShow
 import com.diegogmd.filmfollower.model.eraseFilm
 import com.diegogmd.filmfollower.model.getFilm
 import com.diegogmd.filmfollower.model.getFilmGenre
-import com.diegogmd.filmfollower.model.getStatus
 import com.diegogmd.filmfollower.model.isStatus
 import com.diegogmd.filmfollower.model.setStatus
 import com.diegogmd.filmfollower.ui.theme.FilmTypography
@@ -132,7 +129,6 @@ private fun FilmContentUI(
     var seen by remember(film.filmId) { mutableStateOf(isStatus(context, film.filmId, "seen")) }
     var archived by remember(film.filmId) { mutableStateOf(isStatus(context, film.filmId, "archived")) }
     val trailerKey by viewModel.trailerKey.collectAsState()
-    var nowStatus = getStatus(context, film.filmId)
 
     LaunchedEffect(film.filmId) { viewModel.loadTrailer(film.filmId) }
 
@@ -157,21 +153,24 @@ private fun FilmContentUI(
             watchlisted = watchlisted,
             trailerAvailable = trailerKey != null,
             onSeenClick = {
-                val newStatus = if (!seen) {
-                    "seen"
+                if (!seen && !watchlisted) {
+                    viewModel.addFilmToWatchlist(context, film.filmId) { ok ->
+                        if (ok) {
+                            setStatus(context, film.filmId, "seen")
+                            watchlisted = true
+                            seen = true
+                            archived = false
+                        }
+                    }
                 } else {
-                    "watchlist"
+                    val newStatus = if (!seen) "seen" else "watchlist"
+                    setStatus(context, film.filmId, newStatus)
+                    seen = newStatus == "seen"
+                    archived = false
                 }
-                setStatus(context, film.filmId, newStatus)
-                seen = newStatus == "seen"
-                archived = false
             },
             onArchiveClick = {
-                val newStatus = if (!archived) {
-                    "archived"
-                } else {
-                    "watchlist"
-                }
+                val newStatus = if (!archived) "archived" else "watchlist"
                 setStatus(context, film.filmId, newStatus)
                 archived = newStatus == "archived"
                 seen = false
@@ -395,7 +394,6 @@ private fun ButtonArea(
             R.drawable.ic_visibility_off_24px,
             "Seen",
             "Not seen",
-            enabled = watchlisted,
             onAction = onSeenClick
         )
         ActionIconButton(
@@ -615,26 +613,6 @@ private fun ActionIconButton(
             modifier = Modifier.size(25.dp)
         )
     }
-}
-
-fun ContentScreenEpisode(
-    showId: Int,
-    onBackClick: () -> Unit = {},
-    //viewModel: FilmViewModel = viewModel(factory = FilmViewModelFactory())
-) {
-//    val context = LocalContext.current
-//    val film by viewModel.film.collectAsState()
-//    val isLoading by viewModel.isLoading.collectAsState()
-//
-//    LaunchedEffect(filmId) {
-//        viewModel.loadFilm(context, filmId)
-//    }
-//
-//    when {
-//        isLoading -> CircularProgressIndicator()
-//        film != null -> FilmContentUI(onBackClick, viewModel, film!!)
-//        else -> Text("Film not found")
-//    }
 }
 
 @Preview(showBackground = true)

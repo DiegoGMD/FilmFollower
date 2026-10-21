@@ -312,7 +312,20 @@ private fun HorizontalContentCard(
                 onClick = { onClick(contentId) },
                 modifier = Modifier.weight(1f),
                 shape = RoundedCornerShape(8.dp)
-            ) { ContentCardText(title, date, rating) }
+            ) {
+                Column(modifier = modifier.padding(10.dp)) {
+                    Text(
+                        text = title,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = (if (date != null) "${date} · " else "")
+                                + (if (rating != null) "${rating} ★" else "? ★"),
+                        fontSize = 14.sp
+                    )
+                }
+            }
             when (cardType) {
                 0 -> {}
                 1 -> ButtonType(
@@ -349,26 +362,6 @@ private fun HorizontalContentCard(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun ContentCardText(
-    title: String,
-    date: LocalDate?,
-    rating: Double?,
-    modifier: Modifier = Modifier
-) {
-    Column(modifier = modifier.padding(10.dp)) {
-        Text(
-            text = title,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Bold
-        )
-        Text(
-            text = (if (date != null) "${date} · " else "") + (if (rating != null) "${rating} ★" else "? ★"),
-            fontSize = 14.sp
-        )
     }
 }
 

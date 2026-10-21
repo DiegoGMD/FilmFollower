@@ -100,7 +100,8 @@ data class ThemeOption(
     val placeholderAccent: Color = LightCaramel
 )
 
-// TODO: replace with your real screenshots. (I don't have them yet)
+// TODO: replace with your real screenshots.
+// I don't have them yet and considering not doing it, looks good and shows an approximation
 private val themeOptions = listOf(
     ThemeOption(0, "OldFilm", previewRes = null, DarkCoffee, LightCaramel),
     ThemeOption(1, "OldFilm B&W", previewRes = null,
@@ -137,7 +138,6 @@ fun SettingsScreen(
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 16.dp)
     ) {
-        // Back button: tonal circle, like the reference
         Box(
             modifier = Modifier
                 .padding(bottom = 20.dp)
@@ -201,7 +201,7 @@ fun SettingsScreen(
                 else PasswordVisualTransformation(),
                 trailing = {
                     TextButton(onClick = { showToken = !showToken }) {
-                        Text(if (showToken) "Hide" else "Show", color = Graphite)
+                        Text(if (showToken) "Hide" else "Show", color = Silver)
                     }
                 },
                 saveLabel = stringResource(id = R.string.save),
@@ -294,7 +294,7 @@ private fun SettingsSection(
     }
 }
 
-/** Horizontally snapping carousel of app screenshots; tapping a card selects that theme. */
+// Horizontally snapping carousel of app screenshots; tapping a card selects that theme.
 @Composable
 private fun ThemeCarousel(
     options: List<ThemeOption>,
@@ -386,7 +386,7 @@ private fun ThemeCard(
     }
 }
 
-/** Tiny fake app screen, only used until you add real screenshots. */
+// Tiny fake app screen, only used until you add real screenshots.
 @Composable
 private fun ThemePlaceholder(option: ThemeOption) {
     Column(
@@ -415,7 +415,7 @@ private fun ThemePlaceholder(option: ThemeOption) {
     }
 }
 
-/** Bottom sheet with the screenshot carousel. Tapping a card selects that theme. */
+// Bottom sheet with the screenshot carousel. Tapping a card selects that theme.
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ThemePreviewSheet(
@@ -469,7 +469,6 @@ private fun ThemePreviewSheet(
     }
 }
 
-/** Title + supporting line, then a text field and a Save button underneath. */
 @Composable
 private fun SettingsFieldRow(
     title: String,
