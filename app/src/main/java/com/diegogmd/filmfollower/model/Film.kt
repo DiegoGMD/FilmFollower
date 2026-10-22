@@ -205,11 +205,11 @@ fun eraseFilm(
     }
 }
 
-fun getStatus(context: Context, id: Int): String? {
+fun getFilmStatus(context: Context, id: Int): String? {
     return getFilm(context, id)?.tmdbStatus
 }
 
-fun getAllStatus(context: Context, status: String, released: Int? = null): List<Film>? {
+fun getAllFilmStatus(context: Context, status: String, released: Int? = null): List<Film>? {
     val dbHelper = FilmFillowerDatabase(context)
     val db = dbHelper.readableDatabase
     val theFilms = mutableListOf<Film>()
@@ -265,11 +265,11 @@ fun getAllStatus(context: Context, status: String, released: Int? = null): List<
     return if (theFilms.isEmpty()) null else theFilms
 }
 
-fun isStatus(context: Context, id: Int, status: String): Boolean =
+fun isFilmStatus(context: Context, id: Int, status: String): Boolean =
     getFilm(context, id)?.watchStatus == status
 
 @SuppressLint("ViewModelConstructorInComposable")
-fun setStatus(context: Context, id: Int, status: String) {
+fun setFilmStatus(context: Context, id: Int, status: String) {
     val dbHelper = FilmFillowerDatabase(context)
     val db = dbHelper.writableDatabase
 

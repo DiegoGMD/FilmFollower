@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -16,8 +17,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
@@ -44,24 +47,123 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.diegogmd.filmfollower.SecureStorage
 import com.diegogmd.filmfollower.model.Film
-import com.diegogmd.filmfollower.model.getAllStatus
+import com.diegogmd.filmfollower.model.getAllFilmStatus
 import com.diegogmd.filmfollower.ui.components.ContentCard
 import com.diegogmd.filmfollower.ui.theme.FilmTypography
 
 @Composable
-fun ProfileScreen(modifier: Modifier, navController: NavHostController) {
+fun ProfileScreen(modifier: Modifier, navController: NavHostController) { // Has to be scrollable
     var context = LocalContext.current
     var refreshTick by remember { mutableIntStateOf(0) }
-    val seenFilms = remember(refreshTick) { getAllStatus(context, "seen") }
+    val favouriteFilms = remember(refreshTick) { getAllFilmStatus(context, "seen") }
+    val favouriteShows = remember(refreshTick) { getAllFilmStatus(context, "seen") }
+    val seenFilms = remember(refreshTick) { getAllFilmStatus(context, "seen") }
+    val seenShows = remember(refreshTick) { getAllFilmStatus(context, "seen") }
 
-    Column(modifier = modifier) {
+    Column(modifier = modifier.verticalScroll(rememberScrollState())) {
         SecureStorage.getUsername(context)?.let { ProfileHeader(it, navController) }
+
+        Row {
+            Card(
+                modifier = Modifier.weight(1f).padding(8.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = (seenFilms?.count() ?: 0).toString(),
+                        style = FilmTypography.titleMedium,
+                        fontSize = 32.sp
+                    )
+                    Text(
+                        text = "Seen Films",
+                        style = FilmTypography.titleMedium,
+                        fontSize = 14.sp
+                    )
+                }
+            }
+
+            Card(
+                modifier = Modifier.weight(1f).padding(8.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = (seenShows?.count() ?: 0).toString(),
+                        style = FilmTypography.titleMedium,
+                        fontSize = 32.sp
+                    )
+                    Text(
+                        text = "Seen Shows",
+                        style = FilmTypography.titleMedium,
+                        fontSize = 14.sp
+                    )
+                }
+            }
+        }
+
+        if (favouriteFilms != null) {
+            Card(
+                modifier = Modifier.fillMaxWidth().padding(8.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface)
+            ) {
+                Text(
+                    text = "Favourite Films",
+                    fontSize = 20.sp,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                    style = FilmTypography.titleMedium
+                )
+                ContentCarousel(
+                    modifier = modifier,
+                    films = favouriteFilms,
+                    navController = navController,
+                    onChanged = { refreshTick++ }
+                )
+            }
+        }
+
+        if (favouriteShows != null) {
+            Card(
+                modifier = Modifier.fillMaxWidth().padding(8.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface)
+            ) {
+                Text(
+                    text = "Favourite Tv Shows",
+                    fontSize = 20.sp,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                    style = FilmTypography.titleMedium
+                )
+                ContentCarousel(
+                    modifier = modifier,
+                    films = favouriteShows,
+                    navController = navController,
+                    onChanged = { refreshTick++ }
+                )
+            }
+        }
 
         if (seenFilms != null) {
             Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp),
+                modifier = Modifier.fillMaxWidth().padding(8.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface)
@@ -81,6 +183,29 @@ fun ProfileScreen(modifier: Modifier, navController: NavHostController) {
                 )
             }
         }
+
+//        if (seenShows != null) {
+//            Card(
+//                modifier = Modifier.fillMaxWidth().padding(8.dp),
+//                shape = RoundedCornerShape(12.dp),
+//                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+//                border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface)
+//            ) {
+//                Text(
+//                    text = "Seen Tv Shows",
+//                    fontSize = 20.sp,
+//                    textAlign = TextAlign.Center,
+//                    modifier = Modifier.align(Alignment.CenterHorizontally),
+//                    style = FilmTypography.titleMedium
+//                )
+//                ContentCarousel(
+//                    modifier = modifier,
+//                    films = seenShows,
+//                    navController = navController,
+//                    onChanged = { refreshTick++ }
+//                )
+//            }
+//        }
     }
 }
 

@@ -57,8 +57,8 @@ import com.diegogmd.filmfollower.model.TvShow
 import com.diegogmd.filmfollower.model.eraseFilm
 import com.diegogmd.filmfollower.model.getFilm
 import com.diegogmd.filmfollower.model.getFilmGenre
-import com.diegogmd.filmfollower.model.isStatus
-import com.diegogmd.filmfollower.model.setStatus
+import com.diegogmd.filmfollower.model.isFilmStatus
+import com.diegogmd.filmfollower.model.setFilmStatus
 import com.diegogmd.filmfollower.ui.theme.FilmTypography
 import com.diegogmd.filmfollower.ui.theme.placeholders
 import com.diegogmd.filmfollower.viewmodels.FilmViewModelFactory
@@ -126,8 +126,8 @@ private fun FilmContentUI(
     val context = LocalContext.current
     val genres by viewModel.genres.collectAsState()
     var watchlisted by remember(film.filmId) { mutableStateOf(getFilm(context, film.filmId) != null) }
-    var seen by remember(film.filmId) { mutableStateOf(isStatus(context, film.filmId, "seen")) }
-    var archived by remember(film.filmId) { mutableStateOf(isStatus(context, film.filmId, "archived")) }
+    var seen by remember(film.filmId) { mutableStateOf(isFilmStatus(context, film.filmId, "seen")) }
+    var archived by remember(film.filmId) { mutableStateOf(isFilmStatus(context, film.filmId, "archived")) }
     val trailerKey by viewModel.trailerKey.collectAsState()
 
     LaunchedEffect(film.filmId) { viewModel.loadTrailer(film.filmId) }
@@ -156,7 +156,7 @@ private fun FilmContentUI(
                 if (!seen && !watchlisted) {
                     viewModel.addFilmToWatchlist(context, film.filmId) { ok ->
                         if (ok) {
-                            setStatus(context, film.filmId, "seen")
+                            setFilmStatus(context, film.filmId, "seen")
                             watchlisted = true
                             seen = true
                             archived = false
@@ -164,14 +164,14 @@ private fun FilmContentUI(
                     }
                 } else {
                     val newStatus = if (!seen) "seen" else "watchlist"
-                    setStatus(context, film.filmId, newStatus)
+                    setFilmStatus(context, film.filmId, newStatus)
                     seen = newStatus == "seen"
                     archived = false
                 }
             },
             onArchiveClick = {
                 val newStatus = if (!archived) "archived" else "watchlist"
-                setStatus(context, film.filmId, newStatus)
+                setFilmStatus(context, film.filmId, newStatus)
                 archived = newStatus == "archived"
                 seen = false
             },

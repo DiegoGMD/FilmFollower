@@ -97,12 +97,16 @@ class ContentListItem(
     val listId: Int,
     val filmId: Int,
     val showId: Int,
-    val position: Int
+    var position: Int? = null
 ) {
     fun insertNewContentListItem(context: Context): Boolean {
         val dbHelper = FilmFillowerDatabase(context)
         val db = dbHelper.writableDatabase
         var ok = false
+
+        if (position == null) {
+            position = (getContentListItemCount(context, listId)?: 0) + 1
+        }
 
         try {
             val contentValues = ContentValues().apply {
@@ -242,6 +246,91 @@ fun eraseContentListItem(context: Context, listId: Int, position: Int): Int? {
         }
         return 1
     }
+}
+
+fun changePositionContentListItem(
+    context: Context,
+    listId: Int,
+    oldPosition: Int,
+    newPosition: Int
+): Int? {
+    val selectedContentListItem = getContentListItem(context, listId, oldPosition)
+    if (selectedContentListItem == null) {
+        Log.e("Database", "Error getting list item")
+        return null
+    }
+    if (oldPosition == newPosition) return 1
+
+    val dbHelper = FilmFillowerDatabase(context)
+    val db = dbHelper.writableDatabase
+
+    try {
+        db.beginTransaction()
+        try {
+            // Set moving item on a temporary position so nothing collides
+            db.execSQL(
+                "UPDATE ListItem SET position = -1 WHERE list_id = ? AND position = ?",
+                arrayOf<Any>(listId, oldPosition)
+            )
+
+            if (newPosition < oldPosition) {
+                // If you move up: items in [new, old-1] go +1
+                db.execSQL(
+                    "UPDATE ListItem SET position = position + 1 " +
+                            "WHERE list_id = ? AND position BETWEEN ? AND ?",
+                    arrayOf<Any>(listId, newPosition, oldPosition - 1)
+                )
+            } else {
+                // If you move down: items in [old+1, new] go -1
+                db.execSQL(
+                    "UPDATE ListItem SET position = position - 1 " +
+                            "WHERE list_id = ? AND position BETWEEN ? AND ?",
+                    arrayOf<Any>(listId, oldPosition + 1, newPosition)
+                )
+            }
+
+            // Place the moving item in its new position
+            db.execSQL(
+                "UPDATE ListItem SET position = ? WHERE list_id = ? AND position = -1",
+                arrayOf<Any>(newPosition, listId)
+            )
+
+            db.setTransactionSuccessful()
+        } finally {
+            db.endTransaction()
+        }
+        Log.d("Database", "Item moved from $oldPosition to $newPosition in list $listId")
+    } catch (e: Exception) {
+        Log.e("Database", "Error changing item position", e)
+        return 0
+    } finally {
+        db.close()
+    }
+    return 1
+}
+
+fun getContentListItemCount(context: Context, listId: Int): Int? {
+    val dbHelper = FilmFillowerDatabase(context)
+    val db = dbHelper.readableDatabase
+    var count: Int? = null
+
+    val query = "SELECT COUNT(*) FROM ListItem WHERE list_id = ?"
+    val selectionArgs = arrayOf(listId.toString())
+
+    try {
+        db.rawQuery(query, selectionArgs).use { cursor ->
+            if (cursor.moveToFirst()) {
+                count = cursor.getInt(0)
+            }
+        }
+        Log.d("Database", "Successful Mission: Getting item count for list $listId")
+    } catch (e: Exception) {
+        Log.e("Database", "Error getting item count", e)
+    } finally {
+        db.close()
+    }
+
+    return count
 }
 
 fun getContentListItems(context: Context, listId: Int): List<ContentListItem>? {

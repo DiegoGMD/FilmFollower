@@ -4,6 +4,7 @@ import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
+import com.diegogmd.filmfollower.ui.pages.ContentList
 
 class FilmFillowerDatabase(context: Context) :
     SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
@@ -162,7 +163,10 @@ class FilmFillowerDatabase(context: Context) :
             execSQL(createListItem)
         }
 
-        db?.let { seedGenres(it) }
+        db?.let {
+            seedGenres(it)
+            favouritesList(it)
+        }
     }
 
     private fun seedGenres(db: SQLiteDatabase) {
@@ -201,6 +205,20 @@ class FilmFillowerDatabase(context: Context) :
                 put("name", name)
             }
             db.insertWithOnConflict("Genre", null, values, SQLiteDatabase.CONFLICT_IGNORE)
+        }
+    }
+
+    fun favouritesList(db: SQLiteDatabase) {
+        val favouriteLists = mapOf(
+            0 to "Favourite Films",
+            1 to "Favourite Tv Shows",
+        )
+        favouriteLists.forEach { (listId, name) ->
+            val values = ContentValues().apply {
+                put("list_id", listId)
+                put("name", name)
+            }
+            db.insertWithOnConflict("List", null, values, SQLiteDatabase.CONFLICT_IGNORE)
         }
     }
 

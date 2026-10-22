@@ -43,7 +43,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.diegogmd.filmfollower.R
@@ -53,8 +52,8 @@ import com.diegogmd.filmfollower.model.Film
 import com.diegogmd.filmfollower.model.eraseFilm
 import com.diegogmd.filmfollower.model.getFilm
 import com.diegogmd.filmfollower.model.getTvShow
-import com.diegogmd.filmfollower.model.isStatus
-import com.diegogmd.filmfollower.model.setStatus
+import com.diegogmd.filmfollower.model.isFilmStatus
+import com.diegogmd.filmfollower.model.setFilmStatus
 import com.diegogmd.filmfollower.ui.theme.FilmTypography
 import com.diegogmd.filmfollower.ui.theme.placeholders
 import com.diegogmd.filmfollower.viewmodels.FilmViewModel
@@ -175,7 +174,7 @@ private fun VerticalContentCard(
     val filmViewModel: FilmViewModel = viewModel(factory = FilmViewModelFactory())
     val tvShowViewModel: TvShowViewModel = viewModel(factory = TvShowViewModelFactory())
     var watchlisted by remember(contentId) { mutableStateOf(getFilm(context, contentId) != null) }
-    var seen by remember(contentId) { mutableStateOf(isStatus(context, contentId, "seen")) }
+    var seen by remember(contentId) { mutableStateOf(isFilmStatus(context, contentId, "seen")) }
 
     Card (
         modifier = modifier
@@ -235,7 +234,7 @@ private fun VerticalContentCard(
                     "Seen",
                     "Not seen"
                 ) {
-                    setStatus(context, contentId, if (seen) "watchlist" else "seen")
+                    setFilmStatus(context, contentId, if (seen) "watchlist" else "seen")
                     seen = !seen
                     onChanged()
                 }
@@ -282,7 +281,7 @@ private fun HorizontalContentCard(
     val filmViewModel: FilmViewModel = viewModel(factory = FilmViewModelFactory())
     val tvShowViewModel: TvShowViewModel = viewModel(factory = TvShowViewModelFactory())
     var watchlisted by remember(contentId) { mutableStateOf(getFilm(context, contentId) != null) }
-    var seen by remember(contentId) { mutableStateOf(isStatus(context, contentId, "seen")) }
+    var seen by remember(contentId) { mutableStateOf(isFilmStatus(context, contentId, "seen")) }
 
     Card (modifier = modifier
         .fillMaxWidth()
@@ -335,7 +334,7 @@ private fun HorizontalContentCard(
                     "Seen",
                     "Not seen"
                 ) {
-                    setStatus(context, contentId, if (seen) "watchlist" else "seen")
+                    setFilmStatus(context, contentId, if (seen) "watchlist" else "seen")
                     seen = !seen
                     onChanged()
                 }

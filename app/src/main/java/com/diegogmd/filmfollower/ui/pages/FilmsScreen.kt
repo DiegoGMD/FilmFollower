@@ -20,7 +20,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavHostController
 import com.diegogmd.filmfollower.R
 import com.diegogmd.filmfollower.model.Film
-import com.diegogmd.filmfollower.model.getAllStatus
+import com.diegogmd.filmfollower.model.getAllFilmStatus
 import com.diegogmd.filmfollower.ui.components.ContentCard
 import com.diegogmd.filmfollower.ui.components.EmptyContentCard
 import com.diegogmd.filmfollower.ui.theme.FilmTypography
@@ -54,9 +54,9 @@ fun FilmsScreen(modifier: Modifier, navController: NavHostController) {
 
         var refreshTick by remember { mutableIntStateOf(0) }
         val watchlistedReleasedFilms =
-            remember(refreshTick) { getAllStatus(context, "watchlist", 1) }
+            remember(refreshTick) { getAllFilmStatus(context, "watchlist", 1) }
         val watchlistedUpcomingFilms =
-            remember(refreshTick) { getAllStatus(context, "watchlist", 0) }
+            remember(refreshTick) { getAllFilmStatus(context, "watchlist", 0) }
 
         when (selectedTab) {
             0 -> if (watchlistedReleasedFilms != null) {
