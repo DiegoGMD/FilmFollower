@@ -14,13 +14,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
@@ -47,172 +46,132 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.diegogmd.filmfollower.SecureStorage
 import com.diegogmd.filmfollower.model.Film
+import com.diegogmd.filmfollower.model.TvShow
+import com.diegogmd.filmfollower.model.getAllFavouriteFilms
 import com.diegogmd.filmfollower.model.getAllFilmStatus
 import com.diegogmd.filmfollower.ui.components.ContentCard
 import com.diegogmd.filmfollower.ui.theme.FilmTypography
 
 @Composable
-fun ProfileScreen(modifier: Modifier, navController: NavHostController) { // Has to be scrollable
+fun ProfileScreen(modifier: Modifier, navController: NavHostController) {
     var context = LocalContext.current
     var refreshTick by remember { mutableIntStateOf(0) }
-    val favouriteFilms = remember(refreshTick) { getAllFilmStatus(context, "seen") }
-    val favouriteShows = remember(refreshTick) { getAllFilmStatus(context, "seen") }
+    val favouriteFilms = remember(refreshTick) { getAllFavouriteFilms(context) }
+    val favouriteShows = remember(refreshTick) { getAllFavouriteFilms(context) }
     val seenFilms = remember(refreshTick) { getAllFilmStatus(context, "seen") }
     val seenShows = remember(refreshTick) { getAllFilmStatus(context, "seen") }
 
-    Column(modifier = modifier.verticalScroll(rememberScrollState())) {
+    Column {
         SecureStorage.getUsername(context)?.let { ProfileHeader(it, navController) }
 
-        Row {
-            Card(
-                modifier = Modifier.weight(1f).padding(8.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(12.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = (seenFilms?.count() ?: 0).toString(),
-                        style = FilmTypography.titleMedium,
-                        fontSize = 32.sp
+        LazyColumn(modifier = Modifier.weight(1f)) {
+            item {
+                Row {
+                    StatCard(
+                        count = seenFilms?.count() ?: 0,
+                        label = "Seen Films",
+                        modifier = Modifier.weight(1f)
                     )
-                    Text(
-                        text = "Seen Films",
-                        style = FilmTypography.titleMedium,
-                        fontSize = 14.sp
+                    StatCard(
+                        count = seenShows?.count() ?: 0,
+                        label = "Seen Shows",
+                        modifier = Modifier.weight(1f)
                     )
                 }
             }
 
-            Card(
-                modifier = Modifier.weight(1f).padding(8.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(12.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = (seenShows?.count() ?: 0).toString(),
-                        style = FilmTypography.titleMedium,
-                        fontSize = 32.sp
-                    )
-                    Text(
-                        text = "Seen Shows",
-                        style = FilmTypography.titleMedium,
-                        fontSize = 14.sp
-                    )
+            if (favouriteFilms != null) {
+                item {
+                    FilmCarouselSection(
+                        "Favourite Films", favouriteFilms, navController
+                    ) { refreshTick++ }
+                }
+            }
+            if (favouriteShows != null) {
+                item {
+                    FilmCarouselSection(
+                        "Favourite Tv Shows", favouriteShows, navController
+                    ) { refreshTick++ }
+                }
+            }
+            if (seenFilms != null) {
+                item {
+                    FilmCarouselSection("Seen Films", seenFilms, navController) { refreshTick++ }
                 }
             }
         }
+    }
+}
 
-        if (favouriteFilms != null) {
-            Card(
-                modifier = Modifier.fillMaxWidth().padding(8.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface)
-            ) {
-                Text(
-                    text = "Favourite Films",
-                    fontSize = 20.sp,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.align(Alignment.CenterHorizontally),
-                    style = FilmTypography.titleMedium
-                )
-                ContentCarousel(
-                    modifier = modifier,
-                    films = favouriteFilms,
-                    navController = navController,
-                    onChanged = { refreshTick++ }
-                )
-            }
+@Composable
+fun StatCard(count: Int, label: String, modifier: Modifier) {
+    Card(
+        modifier = modifier.padding(8.dp),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(text = count.toString(), style = FilmTypography.titleMedium, fontSize = 32.sp)
+            Text(text = label, style = FilmTypography.titleMedium, fontSize = 14.sp)
         }
+    }
+}
 
-        if (favouriteShows != null) {
-            Card(
-                modifier = Modifier.fillMaxWidth().padding(8.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface)
-            ) {
-                Text(
-                    text = "Favourite Tv Shows",
-                    fontSize = 20.sp,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.align(Alignment.CenterHorizontally),
-                    style = FilmTypography.titleMedium
-                )
-                ContentCarousel(
-                    modifier = modifier,
-                    films = favouriteShows,
-                    navController = navController,
-                    onChanged = { refreshTick++ }
-                )
-            }
-        }
+@Composable
+fun FilmCarouselSection(
+    title: String, films: List<Film>, navController: NavHostController, onChanged: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface)
+    ) {
+        Text(
+            text = title,
+            fontSize = 20.sp,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.align(Alignment.CenterHorizontally),
+            style = FilmTypography.titleMedium
+        )
+        ContentCarousel(films = films, navController = navController, onChanged = onChanged)
+    }
+}
 
-        if (seenFilms != null) {
-            Card(
-                modifier = Modifier.fillMaxWidth().padding(8.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface)
-            ) {
-                Text(
-                    text = "Seen Films",
-                    fontSize = 20.sp,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.align(Alignment.CenterHorizontally),
-                    style = FilmTypography.titleMedium
-                )
-                ContentCarousel(
-                    modifier = modifier,
-                    films = seenFilms,
-                    navController = navController,
-                    onChanged = { refreshTick++ }
-                )
-            }
-        }
-
-//        if (seenShows != null) {
-//            Card(
-//                modifier = Modifier.fillMaxWidth().padding(8.dp),
-//                shape = RoundedCornerShape(12.dp),
-//                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-//                border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface)
-//            ) {
-//                Text(
-//                    text = "Seen Tv Shows",
-//                    fontSize = 20.sp,
-//                    textAlign = TextAlign.Center,
-//                    modifier = Modifier.align(Alignment.CenterHorizontally),
-//                    style = FilmTypography.titleMedium
-//                )
-//                ContentCarousel(
-//                    modifier = modifier,
-//                    films = seenShows,
-//                    navController = navController,
-//                    onChanged = { refreshTick++ }
-//                )
-//            }
-//        }
+@Composable
+fun TvShowCarouselSection(
+    title: String, tvShows: List<TvShow>, navController: NavHostController, onChanged: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface)
+    ) {
+        Text(
+            text = title,
+            fontSize = 20.sp,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.align(Alignment.CenterHorizontally),
+            style = FilmTypography.titleMedium
+        )
+        //ContentCarousel(tvShows = tvShows, navController = navController, onChanged = onChanged)
     }
 }
 
 @Composable
 private fun ProfileHeader(
-    username: String,
-    navController: NavHostController
+    username: String, navController: NavHostController
 
 ) {
     val titleSize = when {
@@ -277,7 +236,7 @@ private fun ProfileHeader(
                     .padding(horizontal = 20.dp)
             )
 
-            HorizontalDivider( color = MaterialTheme.colorScheme.surface, thickness = 3.dp )
+            HorizontalDivider(color = MaterialTheme.colorScheme.surface, thickness = 3.dp)
         }
     }
 }
@@ -296,7 +255,9 @@ private fun ContentCarousel(
         flingBehavior = rememberSnapFlingBehavior(lazyListState = listState),
         contentPadding = PaddingValues(horizontal = 24.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
-        modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 8.dp)
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 8.dp, bottom = 8.dp)
     ) {
         items(films, key = { it.filmId }) { film ->
             ContentCard(
@@ -309,3 +270,33 @@ private fun ContentCarousel(
         }
     }
 }
+
+//@Composable
+//private fun ContentCarousel(
+//    modifier: Modifier = Modifier,
+//    tvShows: List<TvShow>,
+//    navController: NavHostController,
+//    onChanged: () -> Unit
+//) {
+//    val listState = rememberLazyListState()
+//
+//    LazyRow(
+//        state = listState,
+//        flingBehavior = rememberSnapFlingBehavior(lazyListState = listState),
+//        contentPadding = PaddingValues(horizontal = 24.dp),
+//        horizontalArrangement = Arrangement.spacedBy(16.dp),
+//        modifier = Modifier
+//            .fillMaxWidth()
+//            .padding(top = 8.dp, bottom = 8.dp)
+//    ) {
+//        items(tvShows, key = { it.showId }) { tvShow ->
+//            ContentCard(
+//                content = tvShow,
+//                orientation = true,
+//                cardType = 0,
+//                onClick = { id -> navController.navigate("show/$id") },
+//                onChanged = onChanged
+//            )
+//        }
+//    }
+//}

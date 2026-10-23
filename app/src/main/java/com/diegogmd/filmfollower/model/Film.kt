@@ -300,3 +300,86 @@ suspend fun syncFilm(context: Context, id: Int, repository: SearchRepository): B
     withContext(Dispatchers.IO) { fresh.updateFromTmdb(context) }
     return true
 }
+
+fun isFavouriteFilm(context: Context, filmId: Int):Boolean {
+    val dbHelper = FilmFillowerDatabase(context)
+    val db = dbHelper.readableDatabase
+    var isFavourite = false
+
+    val query = """
+        SELECT 1 FROM ListItem
+        WHERE list_id = ? AND film_id = ?
+        LIMIT 1
+    """
+    var selectionArgs = arrayOf("0", filmId.toString())
+
+    try {
+        db.rawQuery(query, selectionArgs).use { cursor ->
+            isFavourite = cursor.moveToFirst()
+        }
+    } catch (e: Exception) {
+        Log.e("Database", "Error getting favourite films", e)
+    } finally {
+        db.close()
+    }
+
+    return isFavourite
+}
+
+fun setFavouriteFilm(context: Context, filmId: Int):Boolean {
+    val contentListItem = ContentListItem(listId = 0, filmId = filmId, showId = 0)
+    return contentListItem.insertNewContentListItem(context)
+}
+
+fun unsetFavouriteFilm(context: Context, filmId: Int): Boolean {
+    return eraseContentListItem(context, listId = 0, filmId = filmId, showId = 0) == 1
+}
+
+fun getAllFavouriteFilms(context: Context): List<Film> {
+    val dbHelper = FilmFillowerDatabase(context)
+    val db = dbHelper.readableDatabase
+    val theFilms = mutableListOf<Film>()
+
+    val query = """
+    SELECT Film.* FROM Film
+    INNER JOIN ListItem ON Film.film_id = ListItem.film_id
+    WHERE ListItem.list_id = ?
+    ORDER BY ListItem.position
+    """
+
+    try {
+        db.rawQuery(query, arrayOf("0")).use { cursor ->
+            while (cursor.moveToNext()) {
+                val dateStr1 = cursor.getString(cursor.getColumnIndexOrThrow("release_date"))
+                val dateStr2 = cursor.getString(cursor.getColumnIndexOrThrow("tmdb_last_synced"))
+                val dateStr3 = cursor.getString(cursor.getColumnIndexOrThrow("watched_date"))
+                val dateStr4 = cursor.getString(cursor.getColumnIndexOrThrow("added_at"))
+
+                val film = Film(
+                    filmId = cursor.getInt(cursor.getColumnIndexOrThrow("film_id")),
+                    title = cursor.getString(cursor.getColumnIndexOrThrow("title")),
+                    originalTitle = cursor.getString(cursor.getColumnIndexOrThrow("original_title")),
+                    overview = cursor.getString(cursor.getColumnIndexOrThrow("overview")),
+                    releaseDate = LocalDate.parse(dateStr1),
+                    runtime = cursor.getInt(cursor.getColumnIndexOrThrow("runtime")),
+                    posterPath = cursor.getString(cursor.getColumnIndexOrThrow("poster_path")),
+                    tmdbStatus = cursor.getString(cursor.getColumnIndexOrThrow("tmdb_status")),
+                    tmdbLastSynced = LocalDate.parse(dateStr2),
+                    rating = cursor.getDouble(cursor.getColumnIndexOrThrow("rating")),
+                    watchStatus = cursor.getString(cursor.getColumnIndexOrThrow("watch_status")),
+                    watchedDate = dateStr3?.let { LocalDate.parse(it) },
+                    timesWatched = cursor.getInt(cursor.getColumnIndexOrThrow("times_watched")),
+                    addedAt = LocalDate.parse(dateStr4)
+                )
+
+                theFilms.add(film)
+            }
+        }
+    } catch (e: Exception) {
+        Log.e("Database", "Error getting favourite films", e)
+    } finally {
+        db.close()
+    }
+
+    return theFilms
+}

@@ -1,4 +1,4 @@
-package com.diegogmd.filmfollower.ui.pages
+package com.diegogmd.filmfollower.model
 
 import android.content.ContentValues
 import android.content.Context
@@ -105,14 +105,14 @@ class ContentListItem(
         var ok = false
 
         if (position == null) {
-            position = (getContentListItemCount(context, listId)?: 0) + 1
+            position = (getContentListItemCount(context, listId) ?: 0) + 1
         }
 
         try {
             val contentValues = ContentValues().apply {
                 put("list_id", listId)
-                put("film_id", filmId)
-                put("show_id", showId)
+                if (filmId != 0) put("film_id", filmId) else putNull("film_id")
+                if (showId != 0) put("show_id", showId) else putNull("show_id")
                 put("position", position)
             }
             db.beginTransaction()
@@ -140,7 +140,7 @@ fun getContentListItem(context: Context, listId: Int, filmId: Int, showId: Int):
 
     val query = """
         SELECT * FROM ListItem
-        WHERE list_id = ? AND film_id = ? AND show_id = ?
+        WHERE list_id = ? AND COALESCE(film_id, 0) = ? AND COALESCE(show_id, 0) = ?
     """.trimIndent()
     val selectionArgs = arrayOf(listId.toString(), filmId.toString(), showId.toString())
 
@@ -198,32 +198,44 @@ fun getContentListItem(context: Context, listId: Int, position: Int): ContentLis
 }
 
 fun eraseContentListItem(context: Context, listId: Int, filmId: Int, showId: Int): Int? {
-    val selectedContentListItem: ContentListItem? =
-        getContentListItem(context, listId, filmId, showId)
-    if (selectedContentListItem == null) {
-        Log.e("Database", "Error getting list")
+    val item = getContentListItem(context, listId, filmId, showId)
+    if (item == null) {
+        Log.e("Database", "Error getting list item")
         return null
-    } else {
-        val dbHelper = FilmFillowerDatabase(context)
-        val db = dbHelper.writableDatabase
+    }
+    val removedPosition = item.position ?: 0
 
+    val db = FilmFillowerDatabase(context).writableDatabase
+    try {
+        db.beginTransaction()
         try {
             db.execSQL(
-                "DELETE FROM List WHERE list_id = ? AND film_id = ? AND show_id = ?",
+                "DELETE FROM ListItem WHERE list_id = ? AND film_id = ? AND show_id = ?",
                 arrayOf(listId.toString(), filmId.toString(), showId.toString())
             )
-            Log.d("Database", "List item with ID $listId deleted successfully")
-        } catch (e: Exception) {
-            Log.e("Database", "Error deleting list", e)
-            return 0
+            db.execSQL(
+                "UPDATE ListItem SET position = position - 1 WHERE list_id = ? AND position > ?",
+                arrayOf<Any>(listId, removedPosition)
+            )
+            db.execSQL(
+                "UPDATE ListItem SET position = -position - 1 WHERE list_id = ? AND position < 0",
+                arrayOf<Any>(listId)
+            )
+            db.setTransactionSuccessful()
         } finally {
-            db.close()
+            db.endTransaction()
         }
-        return 1
+        Log.d("Database", "List item deleted from list $listId")
+    } catch (e: Exception) {
+        Log.e("Database", "Error deleting list item", e)
+        return 0
+    } finally {
+        db.close()
     }
+    return 1
 }
 
-fun eraseContentListItem(context: Context, listId: Int, position: Int): Int? {
+fun eraseContentListItem(context: Context, listId: Int, position: Int): Int? { // Not finished
     val selectedContentListItem: ContentListItem? = getContentListItem(context, listId, position)
     if (selectedContentListItem == null) {
         Log.e("Database", "Error getting list")

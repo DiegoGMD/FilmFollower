@@ -57,8 +57,11 @@ import com.diegogmd.filmfollower.model.TvShow
 import com.diegogmd.filmfollower.model.eraseFilm
 import com.diegogmd.filmfollower.model.getFilm
 import com.diegogmd.filmfollower.model.getFilmGenre
+import com.diegogmd.filmfollower.model.isFavouriteFilm
 import com.diegogmd.filmfollower.model.isFilmStatus
+import com.diegogmd.filmfollower.model.setFavouriteFilm
 import com.diegogmd.filmfollower.model.setFilmStatus
+import com.diegogmd.filmfollower.model.unsetFavouriteFilm
 import com.diegogmd.filmfollower.ui.theme.FilmTypography
 import com.diegogmd.filmfollower.ui.theme.placeholders
 import com.diegogmd.filmfollower.viewmodels.FilmViewModelFactory
@@ -128,6 +131,7 @@ private fun FilmContentUI(
     var watchlisted by remember(film.filmId) { mutableStateOf(getFilm(context, film.filmId) != null) }
     var seen by remember(film.filmId) { mutableStateOf(isFilmStatus(context, film.filmId, "seen")) }
     var archived by remember(film.filmId) { mutableStateOf(isFilmStatus(context, film.filmId, "archived")) }
+    var favourite by remember(film.filmId) { mutableStateOf(isFavouriteFilm(context, film.filmId)) }
     val trailerKey by viewModel.trailerKey.collectAsState()
 
     LaunchedEffect(film.filmId) { viewModel.loadTrailer(film.filmId) }
@@ -149,6 +153,7 @@ private fun FilmContentUI(
 
         ButtonArea(
             seen = seen,
+            favourite = favourite,
             archived = archived,
             watchlisted = watchlisted,
             trailerAvailable = trailerKey != null,
@@ -168,6 +173,11 @@ private fun FilmContentUI(
                     seen = newStatus == "seen"
                     archived = false
                 }
+            },
+            onFavouriteClick = {
+                val ok = if (favourite) unsetFavouriteFilm(context, film.filmId)
+                else setFavouriteFilm(context, film.filmId)
+                if (ok) favourite = !favourite
             },
             onArchiveClick = {
                 val newStatus = if (!archived) "archived" else "watchlist"

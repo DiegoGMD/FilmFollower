@@ -4,7 +4,6 @@ import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
-import com.diegogmd.filmfollower.ui.pages.ContentList
 
 class FilmFillowerDatabase(context: Context) :
     SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
@@ -131,20 +130,21 @@ class FilmFillowerDatabase(context: Context) :
             CREATE TABLE List (
                 list_id INTEGER NOT NULL,
                 name TEXT NOT NULL UNIQUE,
-                PRIMARY KEY (list_id),
-                UNIQUE (list_name)
+                PRIMARY KEY (list_id)
             );
         """.trimIndent()
 
         val createListItem = """
             CREATE TABLE ListItem (
                 list_id INTEGER NOT NULL,
-                film_id INTEGER NOT NULL,
-                show_id INTEGER NOT NULL,
+                film_id INTEGER,
+                show_id INTEGER,
                 position INTEGER NOT NULL,
                 FOREIGN KEY (list_id) REFERENCES List(list_id) ON DELETE CASCADE,
                 FOREIGN KEY (film_id) REFERENCES Film(film_id) ON DELETE CASCADE,
                 FOREIGN KEY (show_id) REFERENCES TvShow(show_id) ON DELETE CASCADE,
+                CHECK ((film_id IS NOT NULL AND show_id IS NULL)
+                    OR (film_id IS NULL AND show_id IS NOT NULL)),
                 UNIQUE (list_id, film_id),
                 UNIQUE (list_id, show_id),
                 UNIQUE (list_id, position)
