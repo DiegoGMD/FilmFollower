@@ -53,15 +53,13 @@ private fun typewriter(
     letterSpacing = 0.5.sp
 )
 
-// lineHeight in `em` scales with any fontSize passed at the call site, so the many
-// `Text(fontSize = ..., style = FilmTypography.titleMedium)` usages never clip.
 val FilmTypography = Typography(
     // Display: screen titles (Settings uses displayMedium)
     displayLarge = serif(57.sp, 64.sp, letterSpacing = 0.sp),
     displayMedium = serif(44.sp, 52.sp, letterSpacing = 1.sp),
     displaySmall = serif(36.sp, 44.sp, letterSpacing = 1.sp),
 
-    // Headline: page/film titles (ContentHeader, ProfileHeader use 32sp / 26sp / 22sp)
+    // Headline: page/film titles (ContentHeader, ProfileHeader)
     headlineLarge = serif(32.sp, 38.sp, letterSpacing = 1.sp),
     headlineMedium = serif(28.sp, 34.sp, letterSpacing = 1.sp),
     headlineSmall = serif(24.sp, 30.sp, letterSpacing = 1.sp),
@@ -108,33 +106,3 @@ val Typography = Typography(
     )
     */
 )
-
-//val FilmTypography = Typography(
-//    titleMedium = TextStyle(
-//        fontFamily = PlayfairDisplay_Bold,
-//        fontWeight = FontWeight.Bold,
-//        fontSize = 45.sp,
-//        letterSpacing = 1.sp
-//    ),
-//    titleSmall = TextStyle(
-//        fontFamily = PlayfairDisplay_Italic,
-//        fontWeight = FontWeight.Bold,
-//        fontSize = 14.sp,
-//        letterSpacing = 0.5.sp
-//    ),
-//    bodyLarge = TextStyle(
-//        fontFamily = PlayfairDisplay_Medium,
-//        fontWeight = FontWeight.Normal,
-//        fontSize = 14.sp,
-//        lineHeight = 24.sp,
-//        letterSpacing = 0.5.sp
-//    ),
-//    labelMedium = TextStyle(
-//        fontFamily = CourierPrime_Bold,
-//        fontWeight = FontWeight.Normal,
-//        fontSize = 14.sp,
-//
-//        lineHeight = 24.sp,
-//        letterSpacing = 0.5.sp
-//    )
-//)

@@ -39,6 +39,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -60,8 +61,6 @@ import com.diegogmd.filmfollower.viewmodels.FilmViewModel
 import com.diegogmd.filmfollower.viewmodels.FilmViewModelFactory
 import com.diegogmd.filmfollower.viewmodels.TvShowViewModel
 import com.diegogmd.filmfollower.viewmodels.TvShowViewModelFactory
-
-enum class CardOrientation { Horizontal, Vertical }
 
 @Composable
 fun ContentCard(
@@ -187,7 +186,7 @@ private fun VerticalContentCard(
         Column {
             AsyncImage(
                 model = posterUrl,
-                contentDescription = title,
+                contentDescription = "poster",
                 contentScale = ContentScale.Crop,
                 placeholder = painterResource(MaterialTheme.placeholders.poster),
                 error = painterResource(MaterialTheme.placeholders.poster),
@@ -297,7 +296,7 @@ private fun HorizontalContentCard(
         ) {
             AsyncImage(
                 model = posterUrl,
-                contentDescription = title,
+                contentDescription = "poster",
                 contentScale = ContentScale.Crop,
                 placeholder = painterResource(MaterialTheme.placeholders.poster),
                 error = painterResource(MaterialTheme.placeholders.poster),
@@ -507,7 +506,7 @@ fun EmptyContentCard(modifier: Modifier = Modifier, isFilm: Boolean) {
         shape = RoundedCornerShape(12.dp),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.surfaceContainer)
     ) {
-        val message = if (isFilm) "No films in the watchlist" else "No TV shows in the watchlist"
+        val message = if (isFilm) stringResource(R.string.empty_films) else stringResource(R.string.empty_tvshows)
 
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -546,11 +545,11 @@ fun NoInternetCard(modifier: Modifier = Modifier) {
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_wifi_off_24px),
-                contentDescription = "No internet connection",
+                contentDescription = "No internet",
                 modifier = Modifier.size(50.dp)
             )
             Text(
-                text = "No internet connection",
+                text = stringResource(R.string.no_internet),
                 fontSize = 20.sp,
                 textAlign = TextAlign.Center,
                 style = FilmTypography.titleMedium,

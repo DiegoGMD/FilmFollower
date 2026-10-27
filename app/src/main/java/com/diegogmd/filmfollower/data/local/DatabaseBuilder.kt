@@ -143,11 +143,8 @@ class FilmFillowerDatabase(context: Context) :
                 FOREIGN KEY (list_id) REFERENCES List(list_id) ON DELETE CASCADE,
                 FOREIGN KEY (film_id) REFERENCES Film(film_id) ON DELETE CASCADE,
                 FOREIGN KEY (show_id) REFERENCES TvShow(show_id) ON DELETE CASCADE,
-                CHECK ((film_id IS NOT NULL AND show_id IS NULL)
-                    OR (film_id IS NULL AND show_id IS NOT NULL)),
-                UNIQUE (list_id, film_id),
-                UNIQUE (list_id, show_id),
-                UNIQUE (list_id, position)
+                UNIQUE (list_id, position),
+                CHECK ((film_id IS NULL) <> (show_id IS NULL))
             );
         """.trimIndent()
 

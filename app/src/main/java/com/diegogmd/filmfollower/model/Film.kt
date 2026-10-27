@@ -29,6 +29,35 @@ class Film(
     val addedAt: LocalDate,
     val genres: List<Genre> = emptyList()
 ) {
+    fun insertInto(db: SQLiteDatabase): Boolean {
+        val contentValues = ContentValues().apply {
+            put("film_id", filmId)
+            put("title", title)
+            put("original_title", originalTitle)
+            put("overview", overview)
+            put("release_date", releaseDate.toString())
+            put("runtime", runtime)
+            put("poster_path", posterPath)
+            put("tmdb_status", tmdbStatus)
+            put("tmdb_last_synced", tmdbLastSynced.toString())
+            if (rating != null) put("rating", Math.round(rating * 10) / 10.0) else putNull("rating")
+            put("watch_status", watchStatus)
+            if (watchedDate != null) put("watched_date", watchedDate.toString()) else putNull("watched_date")
+            put("times_watched", timesWatched)
+            put("added_at", addedAt.toString())
+        }
+        if (db.insert("Film", null, contentValues) == -1L) return false
+
+        genres.forEach { g ->
+            val fg = ContentValues().apply {
+                put("film_id", filmId)
+                put("genre_id", g.genreId)
+            }
+            db.insertWithOnConflict("FilmGenre", null, fg, SQLiteDatabase.CONFLICT_IGNORE)
+        }
+        return true
+    }
+
     @SuppressLint("DefaultLocale")
     fun insertNewFilm(context: Context): Boolean {
         val dbHelper = FilmFillowerDatabase(context)
@@ -335,7 +364,7 @@ fun unsetFavouriteFilm(context: Context, filmId: Int): Boolean {
     return eraseContentListItem(context, listId = 0, filmId = filmId, showId = 0) == 1
 }
 
-fun getAllFavouriteFilms(context: Context): List<Film> {
+fun getAllFavouriteFilms(context: Context): List<Film>? {
     val dbHelper = FilmFillowerDatabase(context)
     val db = dbHelper.readableDatabase
     val theFilms = mutableListOf<Film>()
@@ -381,5 +410,5 @@ fun getAllFavouriteFilms(context: Context): List<Film> {
         db.close()
     }
 
-    return theFilms
+    return if (theFilms.isEmpty()) null else theFilms
 }

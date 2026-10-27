@@ -16,4 +16,7 @@
     <string name="welcome_text">Welcome to FilmFollower!\nTo use this app, you will need\na TMDB (The Movie Database) API key.</string>
     <string name="save">SAVE</string>
     <string name="choose">CHOOSE</string>
+    <string name="no_internet">No internet connection</string>
+    <string name="empty_films">No films in the watchlist</string>
+    <string name="empty_tvshows">No TV shows in the watchlist</string>
 </resources>

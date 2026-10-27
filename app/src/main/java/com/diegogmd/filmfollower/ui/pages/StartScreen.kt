@@ -35,6 +35,7 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
@@ -76,9 +77,10 @@ fun StartScreen(modifier: Modifier, navController: NavHostController) {
             text = "FilmFollower",
             color = DarkCoffee,
             textAlign = TextAlign.Center,
-            style = FilmTypography.titleMedium
+            style = FilmTypography.titleMedium,
+            fontSize = 45.sp
         )
-        Spacer(modifier = Modifier.size(20.dp))
+        Spacer(modifier = Modifier.size(10.dp))
         Text(
             text = stringResource(id = R.string.welcome_text),
             color = DarkCoffee,
@@ -87,7 +89,7 @@ fun StartScreen(modifier: Modifier, navController: NavHostController) {
             modifier = Modifier.padding(horizontal = 20.dp),
             lineHeight = 20.sp
         )
-        Spacer(modifier = Modifier.size(20.dp))
+        Spacer(modifier = Modifier.size(10.dp))
         OutlinedTextField(
             value = username,
             onValueChange = {
@@ -182,8 +184,19 @@ fun StartScreen(modifier: Modifier, navController: NavHostController) {
 fun wallpaper() {
     Image(
         painter = painterResource(id = R.drawable.filmfollower_wallpaper),
-        contentDescription = null,
+        contentDescription = "background image",
         contentScale = ContentScale.Crop,
         modifier = Modifier.fillMaxSize()
+    )
+}
+
+
+@Composable
+@Preview(showBackground = true)
+fun StartScreenPreview() {
+    val navController = NavHostController(LocalContext.current)
+    StartScreen(
+        modifier = Modifier,
+        navController = navController
     )
 }

@@ -16,4 +16,7 @@
     <string name="welcome_text">Bienvenido a FilmFollower!\nPara usar la app, necesitarás\nuna API key de TMDB (The Movie Database).</string>
     <string name="save">GUARDAR</string>
     <string name="choose">ESCOJE</string>
+    <string name="no_internet">Sin conexión a internet</string>
+    <string name="empty_films">No hay películas en la lista</string>
+    <string name="empty_tvshows">No hay series en la lista</string>
 </resources>

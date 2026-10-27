@@ -17,6 +17,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavHostController
 import com.diegogmd.filmfollower.R
 import com.diegogmd.filmfollower.model.Episode
@@ -67,4 +68,14 @@ private fun EpisodeList(modifier: Modifier, episodes: List<Episode>) {
             EpisodeContentCard(episode)
         }
     }
+}
+
+@Composable
+@Preview(showBackground = true)
+fun ShowsScreenPreview() {
+    val navController = NavHostController(LocalContext.current)
+    ShowsScreen(
+        modifier = Modifier,
+        navController = navController
+    )
 }

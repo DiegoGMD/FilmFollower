@@ -1,5 +1,6 @@
 package com.diegogmd.filmfollower.ui.pages
 
+import android.widget.Toast
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.BorderStroke
@@ -40,6 +41,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -52,6 +54,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -59,6 +62,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -67,10 +71,14 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
+import coil.compose.AsyncImage
 import com.diegogmd.filmfollower.R
 import com.diegogmd.filmfollower.SecureStorage
+import com.diegogmd.filmfollower.seedFilms
 import com.diegogmd.filmfollower.ui.theme.Black
 import com.diegogmd.filmfollower.ui.theme.BrightGold
 import com.diegogmd.filmfollower.ui.theme.CarbonBlack
@@ -83,6 +91,9 @@ import com.diegogmd.filmfollower.ui.theme.JetBlack
 import com.diegogmd.filmfollower.ui.theme.LightCaramel
 import com.diegogmd.filmfollower.ui.theme.Silver
 import com.diegogmd.filmfollower.ui.theme.ThemeManager
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * One entry of the theme carousel.
@@ -117,6 +128,7 @@ fun SettingsScreen(
     onBackClick: () -> Unit = {},
 ) {
     val context = LocalContext.current
+    val uriHandler = LocalUriHandler.current
 
     var username by remember { mutableStateOf(SecureStorage.getUsername(context).orEmpty()) }
     var usernameError by remember { mutableStateOf(false) }
@@ -247,6 +259,83 @@ fun SettingsScreen(
                 ) {
                     Text(stringResource(id = R.string.choose), fontSize = 16.sp)
                 }
+            }
+        }
+
+        Spacer(Modifier.height(16.dp))
+
+        // ---------- Credits ----------
+        SettingsSection(label = "Credits") {
+            // Developer
+            Image(
+                painter = painterResource(R.drawable.diegogmd_logo),
+                contentDescription = "Developer logo",
+                contentScale = ContentScale.Fit,
+                modifier = Modifier
+                    .height(40.dp)
+                    .clickable { uriHandler.openUri("https://github.com/DiegoGMD") }
+            )
+            Spacer(Modifier.height(8.dp))
+            Text("DiegoGMD", fontSize = 20.sp, color = Silver)
+            Text("Developer", fontSize = 14.sp, color = Silver.copy(alpha = 0.7f))
+
+            Spacer(Modifier.height(16.dp))
+            HorizontalDivider(color = Gunmetal, thickness = 1.dp)
+            Spacer(Modifier.height(16.dp))
+
+            // Data source
+            Spacer(Modifier.height(8.dp))
+            Image(
+                painter = painterResource(R.drawable.tmdb_logo),
+                contentDescription = "TMDB logo",
+                contentScale = ContentScale.Fit,
+                modifier = Modifier
+                    .height(32.dp)
+                    .clickable { uriHandler.openUri("https://www.themoviedb.org") }
+            )
+            Spacer(Modifier.height(8.dp))
+            Text("The Movie Database", fontSize = 20.sp, color = Silver)
+            Text("Films and shows data", fontSize = 14.sp, color = Silver.copy(alpha = 0.7f))
+
+            Spacer(Modifier.height(12.dp))
+
+            Text(
+                text = "This product uses the TMDB API but is not endorsed or certified by TMDB.",
+                fontSize = 12.sp,
+                lineHeight = 16.sp,
+                color = Silver.copy(alpha = 0.7f)
+            )
+        }
+
+        Spacer(Modifier.height(16.dp))
+
+        val scope = rememberCoroutineScope()
+        // ---------- Testing Data ----------
+        SettingsSection(label = "Testing Data") {
+            Button(
+                onClick = {
+                    scope.launch {
+                        val result = withContext(Dispatchers.IO) {
+                            runCatching { seedFilms(context.applicationContext) }
+                        }
+                        Toast.makeText(
+                            context,
+                            if (result.isSuccess) "Testing data loaded"
+                            else "Failed: ${result.exceptionOrNull()?.message}",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Silver,
+                    contentColor = Graphite
+                ),
+                shape = RoundedCornerShape(24.dp)
+            ) {
+                Text("Load Testing Data", fontSize = 16.sp)
             }
         }
 
@@ -535,4 +624,12 @@ private fun SettingsFieldRow(
             }
         }
     }
+}
+
+@Composable
+@Preview(showBackground = true)
+fun SettingsScreenPreview() {
+    SettingsScreen(
+        modifier = Modifier,
+    )
 }

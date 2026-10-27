@@ -7,8 +7,7 @@ import com.diegogmd.filmfollower.data.local.FilmFillowerDatabase
 
 // ---------- ContentList ----------
 class ContentList(
-    val listId: Int,
-    val name: String
+    val listId: Int, val name: String
 ) {
     fun insertNewContentList(context: Context): Boolean {
         val dbHelper = FilmFillowerDatabase(context)
@@ -94,10 +93,7 @@ fun eraseContentList(context: Context, listId: Int): Int? {
 
 // ---------- ListItem ----------
 class ContentListItem(
-    val listId: Int,
-    val filmId: Int,
-    val showId: Int,
-    var position: Int? = null
+    val listId: Int, val filmId: Int = 0, val showId: Int = 0, var position: Int? = null
 ) {
     fun insertNewContentListItem(context: Context): Boolean {
         val dbHelper = FilmFillowerDatabase(context)
@@ -105,7 +101,12 @@ class ContentListItem(
         var ok = false
 
         if (position == null) {
-            position = (getContentListItemCount(context, listId) ?: 0) + 1
+            position = (getContentListItemCount(context, listId) ?: 0)
+        }
+
+        if (filmId == 0 && showId == 0) {
+            Log.e("Database", "Error filmId and showId are both 0")
+            return ok
         }
 
         try {
@@ -133,7 +134,9 @@ class ContentListItem(
     }
 }
 
-fun getContentListItem(context: Context, listId: Int, filmId: Int, showId: Int): ContentListItem? {
+fun getContentListItem(
+    context: Context, listId: Int = 0, filmId: Int, showId: Int = 0
+): ContentListItem? {
     val dbHelper = FilmFillowerDatabase(context)
     val db = dbHelper.readableDatabase
     var theItem: ContentListItem? = null
@@ -197,7 +200,7 @@ fun getContentListItem(context: Context, listId: Int, position: Int): ContentLis
     return theItem
 }
 
-fun eraseContentListItem(context: Context, listId: Int, filmId: Int, showId: Int): Int? {
+fun eraseContentListItem(context: Context, listId: Int, filmId: Int = 0, showId: Int = 0): Int? {
     val item = getContentListItem(context, listId, filmId, showId)
     if (item == null) {
         Log.e("Database", "Error getting list item")
@@ -210,7 +213,7 @@ fun eraseContentListItem(context: Context, listId: Int, filmId: Int, showId: Int
         db.beginTransaction()
         try {
             db.execSQL(
-                "DELETE FROM ListItem WHERE list_id = ? AND film_id = ? AND show_id = ?",
+                "DELETE FROM ListItem WHERE list_id = ? AND COALESCE(film_id, 0) = ? AND COALESCE(show_id, 0) = ?",
                 arrayOf(listId.toString(), filmId.toString(), showId.toString())
             )
             db.execSQL(
@@ -236,35 +239,44 @@ fun eraseContentListItem(context: Context, listId: Int, filmId: Int, showId: Int
 }
 
 fun eraseContentListItem(context: Context, listId: Int, position: Int): Int? { // Not finished
-    val selectedContentListItem: ContentListItem? = getContentListItem(context, listId, position)
-    if (selectedContentListItem == null) {
-        Log.e("Database", "Error getting list")
+    val item = getContentListItem(context, listId, position)
+    if (item == null) {
+        Log.e("Database", "Error getting list item")
         return null
-    } else {
-        val dbHelper = FilmFillowerDatabase(context)
-        val db = dbHelper.writableDatabase
+    }
 
+    val db = FilmFillowerDatabase(context).writableDatabase
+    try {
+        db.beginTransaction()
         try {
             db.execSQL(
-                "DELETE FROM List WHERE list_id = ? AND position = ?",
+                "DELETE FROM ListItem WHERE list_id = ? AND position = ?",
                 arrayOf(listId.toString(), position.toString())
             )
-            Log.d("Database", "List item with ID $listId deleted successfully")
-        } catch (e: Exception) {
-            Log.e("Database", "Error deleting list", e)
-            return 0
+            db.execSQL(
+                "UPDATE ListItem SET position = position - 1 WHERE list_id = ? AND position > ?",
+                arrayOf(listId.toString(), position.toString())
+            )
+            db.execSQL(
+                "UPDATE ListItem SET position = -position - 1 WHERE list_id = ? AND position < 0",
+                arrayOf(listId.toString())
+            )
+            db.setTransactionSuccessful()
         } finally {
-            db.close()
+            db.endTransaction()
         }
-        return 1
+        Log.d("Database", "List item deleted from list $listId")
+    } catch (e: Exception) {
+        Log.e("Database", "Error deleting list item", e)
+        return 0
+    } finally {
+        db.close()
     }
+    return 1
 }
 
 fun changePositionContentListItem(
-    context: Context,
-    listId: Int,
-    oldPosition: Int,
-    newPosition: Int
+    context: Context, listId: Int, oldPosition: Int, newPosition: Int
 ): Int? {
     val selectedContentListItem = getContentListItem(context, listId, oldPosition)
     if (selectedContentListItem == null) {
@@ -288,15 +300,13 @@ fun changePositionContentListItem(
             if (newPosition < oldPosition) {
                 // If you move up: items in [new, old-1] go +1
                 db.execSQL(
-                    "UPDATE ListItem SET position = position + 1 " +
-                            "WHERE list_id = ? AND position BETWEEN ? AND ?",
+                    "UPDATE ListItem SET position = position + 1 " + "WHERE list_id = ? AND position BETWEEN ? AND ?",
                     arrayOf<Any>(listId, newPosition, oldPosition - 1)
                 )
             } else {
                 // If you move down: items in [old+1, new] go -1
                 db.execSQL(
-                    "UPDATE ListItem SET position = position - 1 " +
-                            "WHERE list_id = ? AND position BETWEEN ? AND ?",
+                    "UPDATE ListItem SET position = position - 1 " + "WHERE list_id = ? AND position BETWEEN ? AND ?",
                     arrayOf<Any>(listId, oldPosition + 1, newPosition)
                 )
             }
