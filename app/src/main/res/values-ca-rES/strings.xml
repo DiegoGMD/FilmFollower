@@ -19,4 +19,8 @@
     <string name="no_internet">Sense conexió a internet</string>
     <string name="empty_films">No hi ha pel·lícules a la llista</string>
     <string name="empty_tvshows">No hi ha sèries a la llista</string>
+    <string name="username">Nom d\'usuari</string>
+    <string name="read_access_token">Token d\'accés de lectura a l\'API</string>
+    <string name="token_info_1">Pots obtindre el token registrant-te a </string>
+    <string name="token_info_2">\nTrobareu el token dins l\àrea d\'API a Configuració</string>
 </resources>

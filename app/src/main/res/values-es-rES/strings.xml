@@ -19,4 +19,8 @@
     <string name="no_internet">Sin conexión a internet</string>
     <string name="empty_films">No hay películas en la lista</string>
     <string name="empty_tvshows">No hay series en la lista</string>
+    <string name="username">Nombre de Usuario</string>
+    <string name="read_access_token">Token de acceso de lectura a la API</string>
+    <string name="token_info_1">"Puedes obtener el token registrandote en "</string>
+    <string name="token_info_2">\nEncontrará el token dentro del área de API en Configuración</string>
 </resources>

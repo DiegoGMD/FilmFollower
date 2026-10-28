@@ -30,11 +30,18 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withLink
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -45,6 +52,7 @@ import com.diegogmd.filmfollower.ui.theme.DarkCoffee
 import com.diegogmd.filmfollower.ui.theme.FilmTypography
 import com.diegogmd.filmfollower.ui.theme.LightCaramel
 import com.diegogmd.filmfollower.ui.theme.OliveWood
+import com.diegogmd.filmfollower.ui.theme.Silver
 
 @Composable
 fun StartScreen(modifier: Modifier, navController: NavHostController) {
@@ -54,6 +62,26 @@ fun StartScreen(modifier: Modifier, navController: NavHostController) {
     var apiReadAccessToken by remember { mutableStateOf("") }
     val (apiReadAccessTokenError, setApiReadAccessTokenError) = remember { mutableStateOf(false) }
 
+    val linkText = buildAnnotatedString {
+        // stringResource(id = R.string.welcome_text)
+        append("You can get the token by registering in ")
+        withLink(
+            LinkAnnotation.Url(
+                url = "https://www.themoviedb.org/",
+                styles = TextLinkStyles(
+                    style = SpanStyle(
+                        color = DarkCoffee,
+                        fontWeight = FontWeight.Bold,
+                        textDecoration = TextDecoration.Underline
+                    )
+                )
+            )
+        ) {
+            append("TMDB")
+        }
+        append("\nYou will find the key inside the API area in Settings")
+    }
+
     val CourierPrimeFont = FontFamily(
         Font(R.font.courierprime_bold)
     )
@@ -61,8 +89,7 @@ fun StartScreen(modifier: Modifier, navController: NavHostController) {
     wallpaper()
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
+        modifier = Modifier.fillMaxSize()
         //.background(DarkCoffee.copy(alpha = 0.3f))
     )
 
@@ -97,7 +124,7 @@ fun StartScreen(modifier: Modifier, navController: NavHostController) {
                 setUsernameError(it.isEmpty())
             },
             isError = usernameError,
-            label = { Text("Username") },
+            label = { stringResource(id = R.string.username) },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 30.dp),
@@ -124,7 +151,7 @@ fun StartScreen(modifier: Modifier, navController: NavHostController) {
                 setApiReadAccessTokenError(it.isEmpty())
             },
             isError = apiReadAccessTokenError,
-            label = { Text("API Read Access Token") },
+            label = { stringResource(id = R.string.read_access_token) },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 30.dp),
@@ -153,9 +180,7 @@ fun StartScreen(modifier: Modifier, navController: NavHostController) {
 
                 if (validUser && validKey) {
                     SecureStorage.saveCredentials(
-                        context,
-                        username.trim(),
-                        apiReadAccessToken.trim()
+                        context, username.trim(), apiReadAccessToken.trim()
                     )
                     navController.navigate("Main") { popUpTo("Start") { inclusive = true } }
                 }
@@ -164,8 +189,7 @@ fun StartScreen(modifier: Modifier, navController: NavHostController) {
                 .width(150.dp)
                 .height(60.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = DarkCoffee,
-                contentColor = LightCaramel
+                containerColor = DarkCoffee, contentColor = LightCaramel
             ),
             shape = RoundedCornerShape(24.dp),
             elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
@@ -177,6 +201,15 @@ fun StartScreen(modifier: Modifier, navController: NavHostController) {
                 fontFamily = CourierPrimeFont
             )
         }
+        Spacer(modifier = Modifier.size(20.dp))
+
+        Text(
+            text = linkText,
+            fontSize = 12.sp,
+            textAlign = TextAlign.Center,
+            lineHeight = 16.sp,
+            color = DarkCoffee.copy(alpha = 0.7f)
+        )
     }
 }
 
@@ -190,13 +223,11 @@ fun wallpaper() {
     )
 }
 
-
 @Composable
 @Preview(showBackground = true)
 fun StartScreenPreview() {
     val navController = NavHostController(LocalContext.current)
     StartScreen(
-        modifier = Modifier,
-        navController = navController
+        modifier = Modifier, navController = navController
     )
 }

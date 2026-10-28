@@ -4,6 +4,7 @@ import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.widget.Toast
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -175,9 +176,13 @@ private fun FilmContentUI(
                 }
             },
             onFavouriteClick = {
-                val ok = if (favourite) unsetFavouriteFilm(context, film.filmId)
-                else setFavouriteFilm(context, film.filmId)
-                if (ok) favourite = !favourite
+                if (!seen && !watchlisted) {
+                    Toast.makeText(context, "You should see it before setting it favourite", Toast.LENGTH_LONG).show()
+                } else if (favourite) {
+                    if (unsetFavouriteFilm(context, film.filmId)) favourite = false
+                } else {
+                    if (setFavouriteFilm(context, film.filmId)) favourite = true
+                }
             },
             onArchiveClick = {
                 val newStatus = if (!archived) "archived" else "watchlist"

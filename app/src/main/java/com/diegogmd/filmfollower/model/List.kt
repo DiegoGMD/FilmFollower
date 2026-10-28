@@ -143,7 +143,9 @@ fun getContentListItem(
 
     val query = """
         SELECT * FROM ListItem
-        WHERE list_id = ? AND COALESCE(film_id, 0) = ? AND COALESCE(show_id, 0) = ?
+        WHERE list_id = ?
+            AND COALESCE(film_id, 0) = CAST(? AS INTEGER)
+            AND COALESCE(show_id, 0) = CAST(? AS INTEGER)
     """.trimIndent()
     val selectionArgs = arrayOf(listId.toString(), filmId.toString(), showId.toString())
 
@@ -212,12 +214,15 @@ fun eraseContentListItem(context: Context, listId: Int, filmId: Int = 0, showId:
     try {
         db.beginTransaction()
         try {
-            db.execSQL(
-                "DELETE FROM ListItem WHERE list_id = ? AND COALESCE(film_id, 0) = ? AND COALESCE(show_id, 0) = ?",
+            val removed = db.delete(
+                "ListItem",
+                "list_id = ? AND COALESCE(film_id, 0) = CAST(? AS INTEGER) AND COALESCE(show_id, 0) = CAST(? AS INTEGER)",
                 arrayOf(listId.toString(), filmId.toString(), showId.toString())
             )
+            if (removed == 0) throw IllegalStateException("No ListItem row deleted")
+
             db.execSQL(
-                "UPDATE ListItem SET position = position - 1 WHERE list_id = ? AND position > ?",
+                "UPDATE ListItem SET position = -position WHERE list_id = ? AND position > ?",
                 arrayOf<Any>(listId, removedPosition)
             )
             db.execSQL(

@@ -19,4 +19,8 @@
     <string name="no_internet">No internet connection</string>
     <string name="empty_films">No films in the watchlist</string>
     <string name="empty_tvshows">No TV shows in the watchlist</string>
+    <string name="username">Username</string>
+    <string name="read_access_token">API Read Access Token</string>
+    <string name="token_info_1">"You can get the token by registering in "</string>
+    <string name="token_info_2">\nYou will find the key inside the API area in Settings</string>
 </resources>

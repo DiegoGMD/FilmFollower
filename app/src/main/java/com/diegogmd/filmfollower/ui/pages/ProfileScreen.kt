@@ -74,7 +74,7 @@ fun ProfileScreen(modifier: Modifier, navController: NavHostController) {
                         modifier = Modifier.weight(1f)
                     )
                     StatCard(
-                        count = seenShows?.count() ?: 0,
+                        count = 0 /*seenShows?.count() ?: 0*/,
                         label = "Seen Shows",
                         modifier = Modifier.weight(1f)
                     )
@@ -88,13 +88,13 @@ fun ProfileScreen(modifier: Modifier, navController: NavHostController) {
                     ) { refreshTick++ }
                 }
             }
-            if (favouriteShows != null) {
-                item {
-                    FilmCarouselSection(
-                        "Favourite Tv Shows", favouriteShows, navController
-                    ) { refreshTick++ }
-                }
-            }
+//            if (favouriteShows != null) {
+//                item {
+//                    FilmCarouselSection(
+//                        "Favourite Tv Shows", favouriteShows, navController
+//                    ) { refreshTick++ }
+//                }
+//            }
             if (seenFilms != null) {
                 item {
                     FilmCarouselSection("Seen Films", seenFilms, navController) { refreshTick++ }
