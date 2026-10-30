@@ -1,6 +1,9 @@
 package com.diegogmd.filmfollower.ui.pages
 
+import android.net.Uri
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.BorderStroke
@@ -36,7 +39,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -74,10 +79,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavHostController
-import coil.compose.AsyncImage
 import com.diegogmd.filmfollower.R
 import com.diegogmd.filmfollower.SecureStorage
+import com.diegogmd.filmfollower.data.local.DatabaseBackupManager
 import com.diegogmd.filmfollower.seedFilms
 import com.diegogmd.filmfollower.ui.theme.Black
 import com.diegogmd.filmfollower.ui.theme.BrightGold
@@ -140,6 +144,33 @@ fun SettingsScreen(
     val selectedThemeId = ThemeManager.themeId
     val selectedTheme = themeOptions.first { it.id == selectedThemeId }
     var showPreviews by remember { mutableStateOf(false) }
+
+    val scope = rememberCoroutineScope()
+    val backupManager = remember { DatabaseBackupManager(context.applicationContext) }
+    var pendingImportUri by remember { mutableStateOf<Uri?>(null) }
+    val importLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        pendingImportUri = uri // null if the user cancelled
+    }
+
+    val exportLauncher =
+        rememberLauncherForActivityResult(
+            ActivityResultContracts.CreateDocument("application/octet-stream")
+        ) { uri: Uri? ->
+            if (uri != null) {
+                scope.launch {
+                    val success = withContext(Dispatchers.IO) {
+                        backupManager.exportDatabase(uri)
+                    }
+                    Toast.makeText(
+                        context,
+                        if (success) "Backup saved" else "Backup failed",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+        }
 
     Column(
         modifier = modifier
@@ -264,6 +295,87 @@ fun SettingsScreen(
 
         Spacer(Modifier.height(16.dp))
 
+        // ---------- Testing Data ----------
+        SettingsSection(label = "Testing Data") {
+            Button(
+                onClick = {
+                    scope.launch {
+                        val result = withContext(Dispatchers.IO) {
+                            runCatching { seedFilms(context.applicationContext) }
+                        }
+                        Toast.makeText(
+                            context,
+                            if (result.isSuccess) "Testing data loaded"
+                            else "Failed: ${result.exceptionOrNull()?.message}",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Silver,
+                    contentColor = Graphite
+                ),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Text("Load Testing Data", fontSize = 16.sp)
+            }
+        }
+
+        Spacer(Modifier.height(16.dp))
+
+        SettingsSection(label = "Import/Export Data") {
+            Text("Backup", fontSize = 20.sp, color = Silver)
+            Text(
+                text = "Save your data to a file or restore it from one",
+                fontSize = 14.sp,
+                color = Silver.copy(alpha = 0.7f)
+            )
+
+            Spacer(Modifier.height(12.dp))
+
+            Row (
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Button(
+                    onClick = {
+                        importLauncher.launch(arrayOf("*/*"))
+                    },
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(48.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Silver,
+                        contentColor = Graphite
+                    ),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Text("Import", fontSize = 16.sp)
+                }
+
+                Button(
+                    onClick = {
+                        exportLauncher.launch("FilmFollower-backup.sqlite")
+                    },
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(48.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Silver,
+                        contentColor = Graphite
+                    ),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Text("Export", fontSize = 16.sp)
+                }
+            }
+        }
+
+        Spacer(Modifier.height(16.dp))
+
         // ---------- Credits ----------
         SettingsSection(label = "Credits") {
             // Developer
@@ -307,38 +419,6 @@ fun SettingsScreen(
             )
         }
 
-        Spacer(Modifier.height(16.dp))
-
-        val scope = rememberCoroutineScope()
-        // ---------- Testing Data ----------
-        SettingsSection(label = "Testing Data") {
-            Button(
-                onClick = {
-                    scope.launch {
-                        val result = withContext(Dispatchers.IO) {
-                            runCatching { seedFilms(context.applicationContext) }
-                        }
-                        Toast.makeText(
-                            context,
-                            if (result.isSuccess) "Testing data loaded"
-                            else "Failed: ${result.exceptionOrNull()?.message}",
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Silver,
-                    contentColor = Graphite
-                ),
-                shape = RoundedCornerShape(24.dp)
-            ) {
-                Text("Load Testing Data", fontSize = 16.sp)
-            }
-        }
-
         if (showPreviews) {
             ThemePreviewSheet(
                 options = themeOptions,
@@ -350,7 +430,51 @@ fun SettingsScreen(
             )
         }
 
-        Spacer(Modifier.height(32.dp))
+        pendingImportUri?.let { uri ->
+            AlertDialog(
+                modifier = Modifier.border(1.dp, Gunmetal, RoundedCornerShape(12.dp)),
+                shape = RoundedCornerShape(12.dp),
+                onDismissRequest = { pendingImportUri = null },
+                containerColor = Graphite,
+                titleContentColor = Silver,
+                textContentColor = Silver.copy(alpha = 0.7f),
+                title = { Text("Replace all data?") },
+                text = { Text("Importing replaces everything in the app (films, shows, lists and ratings) with the contents of the backup. This can't be undone.")
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            pendingImportUri = null
+                            scope.launch {
+                                val success = withContext(Dispatchers.IO) {
+                                    backupManager.importDatabase(uri)
+                                }
+                                Toast.makeText(
+                                    context,
+                                    if (success) "Backup restored" else "Import failed: not a valid backup",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Silver,
+                            contentColor = Graphite
+                        ), modifier = Modifier.height(48.dp), shape = RoundedCornerShape(16.dp)
+                    ) { Text("Replace", color = Graphite) }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = { pendingImportUri = null },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Silver,
+                            contentColor = Graphite
+                        ), modifier = Modifier.height(48.dp), shape = RoundedCornerShape(16.dp)
+                    ) {
+                        Text("Cancel", color = Graphite)
+                    }
+                }
+            )
+        }
     }
 }
 

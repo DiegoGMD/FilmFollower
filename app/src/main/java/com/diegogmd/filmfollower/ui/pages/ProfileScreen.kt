@@ -272,36 +272,6 @@ private fun ContentCarousel(
     }
 }
 
-//@Composable
-//private fun ContentCarousel(
-//    modifier: Modifier = Modifier,
-//    tvShows: List<TvShow>,
-//    navController: NavHostController,
-//    onChanged: () -> Unit
-//) {
-//    val listState = rememberLazyListState()
-//
-//    LazyRow(
-//        state = listState,
-//        flingBehavior = rememberSnapFlingBehavior(lazyListState = listState),
-//        contentPadding = PaddingValues(horizontal = 24.dp),
-//        horizontalArrangement = Arrangement.spacedBy(16.dp),
-//        modifier = Modifier
-//            .fillMaxWidth()
-//            .padding(top = 8.dp, bottom = 8.dp)
-//    ) {
-//        items(tvShows, key = { it.showId }) { tvShow ->
-//            ContentCard(
-//                content = tvShow,
-//                orientation = true,
-//                cardType = 0,
-//                onClick = { id -> navController.navigate("show/$id") },
-//                onChanged = onChanged
-//            )
-//        }
-//    }
-//}
-
 @Composable
 @Preview(showBackground = true)
 fun ProfileScreenPreview() {
