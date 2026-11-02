@@ -11,6 +11,7 @@ import com.diegogmd.filmfollower.data.local.remote.tmdbApi
 import com.diegogmd.filmfollower.data.repository.SearchRepository
 import com.diegogmd.filmfollower.model.Film
 import com.diegogmd.filmfollower.model.Genre
+import com.diegogmd.filmfollower.model.MultiSearchResult
 import com.diegogmd.filmfollower.model.getFilm
 import com.diegogmd.filmfollower.model.getFilmGenreNames
 import com.diegogmd.filmfollower.model.syncFilm
@@ -36,13 +37,16 @@ class FilmViewModel(private val repository: SearchRepository) : ViewModel() {
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
-    fun loadFilm(context: Context, id: Int) {
+    private val _recommendations = MutableStateFlow<List<MultiSearchResult>>(emptyList())
+    val recommendations: StateFlow<List<MultiSearchResult>> = _recommendations.asStateFlow()
+
+    fun loadFilm(context: Context, id: Int, force: Boolean = false) {
         val appContext = context.applicationContext
         viewModelScope.launch {
             _isLoading.value = true
             try {
                 _film.value = if (isOnline(appContext)) {
-                    syncFilm(appContext, id, repository) // updates DB
+                    syncFilm(appContext, id, repository, force) // updates DB
                     getLocalFilm(appContext, id)
                         ?: repository.getFilm(id).also { f -> // not stored: show TMDB data
                             _genres.value = f.genres.map { it.name }
@@ -95,6 +99,19 @@ class FilmViewModel(private val repository: SearchRepository) : ViewModel() {
                 throw e
             } catch (e: Exception) {
                 null // offline / API error: button stays disabled
+            }
+        }
+    }
+
+    fun loadRecommendations(filmId: Int) {
+        viewModelScope.launch {
+            _recommendations.value = emptyList() // don't show the previous film's recommendations
+            _recommendations.value = try {
+                repository.getFilmRecommendations(filmId)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                emptyList() // offline / API error: carousel stays disabled
             }
         }
     }

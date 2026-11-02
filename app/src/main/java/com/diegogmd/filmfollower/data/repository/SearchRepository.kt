@@ -42,8 +42,16 @@ class SearchRepository(private val api: TmdbApiService) {
         return api.getFilm(filmId = id).toFilm()
     }
 
+    suspend fun getFilmRecommendations(id: Int, limit: Int = 5): List<MultiSearchResult> {
+        return api.getFilmRecommendations(filmId = id).results.take(limit)
+    }
+
     suspend fun getTvShow(id: Int): TvShow {
         return api.getTvShow(showId = id).toTvShow()
+    }
+
+    suspend fun getTvShowRecommendations(id: Int, limit: Int = 5): List<MultiSearchResult> {
+        return api.getTvShowRecommendations(showId = id).results.take(limit)
     }
 
     suspend fun getFilmTrailerKey(filmId: Int): String? =

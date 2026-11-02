@@ -28,10 +28,20 @@ interface TmdbApiService {
         @Path("film_id") filmId: Int,
     ): FilmDetailsResponse
 
+    @GET("movie/{film_id}/recommendations")
+    suspend fun getFilmRecommendations(
+        @Path("film_id") filmId: Int,
+    ): MultiSearchResponse
+
     @GET("tv/{tvshow_id}")
     suspend fun getTvShow(
         @Path("tvshow_id") showId: Int,
     ): TvShowDetailsResponse
+
+    @GET("tv/{tvshow_id}/recommendations")
+    suspend fun getTvShowRecommendations(
+        @Path("tvshow_id") showId: Int,
+    ): MultiSearchResponse
 
     @GET("movie/{id}/videos")
     suspend fun getFilmVideos(

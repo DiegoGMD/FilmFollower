@@ -314,9 +314,9 @@ fun setFilmStatus(context: Context, id: Int, status: String) {
     }
 }
 
-suspend fun syncFilm(context: Context, id: Int, repository: SearchRepository): Boolean {
+suspend fun syncFilm(context: Context, id: Int, repository: SearchRepository, force: Boolean = false): Boolean {
     val local = withContext(Dispatchers.IO) { getFilm(context, id) } ?: return false
-    if (!local.needsSync) return false
+    if (!local.needsSync && !force) return false
 
     val fresh = try {
         repository.getFilm(id)

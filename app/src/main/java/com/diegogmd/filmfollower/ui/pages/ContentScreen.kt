@@ -9,9 +9,11 @@ import androidx.annotation.DrawableRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,9 +21,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -50,6 +57,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.diegogmd.filmfollower.R
 import com.diegogmd.filmfollower.viewmodels.FilmViewModel
@@ -63,6 +71,7 @@ import com.diegogmd.filmfollower.model.isFilmStatus
 import com.diegogmd.filmfollower.model.setFavouriteFilm
 import com.diegogmd.filmfollower.model.setFilmStatus
 import com.diegogmd.filmfollower.model.unsetFavouriteFilm
+import com.diegogmd.filmfollower.ui.components.ContentCard
 import com.diegogmd.filmfollower.ui.theme.FilmTypography
 import com.diegogmd.filmfollower.ui.theme.placeholders
 import com.diegogmd.filmfollower.viewmodels.FilmViewModelFactory
@@ -89,9 +98,11 @@ fun ContentScreenFilm(
     val context = LocalContext.current
     val film by viewModel.film.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
+    val recommendations by viewModel.recommendations.collectAsState()
 
     LaunchedEffect(filmId) {
         viewModel.loadFilm(context, filmId)
+        viewModel.loadRecommendations(filmId)
     }
 
     when {
@@ -118,6 +129,7 @@ fun ContentScreenTvShow(
         isLoading -> CircularProgressIndicator()
         tvShow != null -> TvShowContentUI(onBackClick, viewModel, tvShow!!)
         else -> Text("TV Shows implementation coming soon")
+        // TODO: TV Shows implementation
     }
 }
 
@@ -144,6 +156,7 @@ private fun FilmContentUI(
     ) {
         ContentHeader(
             onBackClick = onBackClick,
+            onReloadClick = { viewModel.loadFilm(context, film.filmId, true) },
             film.title,
             film.originalTitle,
             film.releaseDate,
@@ -296,6 +309,7 @@ private fun TvShowContentUI(
     ) {
         ContentHeader(
             onBackClick = onBackClick,
+            onReloadClick = { null },
             //onReloadClick = { viewModel.loadFilm(film.filmId) }, // Online content
             tvShow.title,
             tvShow.originalTitle,
@@ -442,14 +456,13 @@ private fun ButtonArea(
 @Composable
 private fun ContentHeader(
     onBackClick: () -> Unit,
-    //onReloadClick: () -> Unit,
+    onReloadClick: () -> Unit,
     title: String,
     originalTitle: String? = null,
     releaseDate: LocalDate,
     runtime: Int,
     rating: Double?,
-    posterPath: String?
-
+    posterPath: String?,
 ) {
     val showOriginal = !originalTitle.isNullOrBlank() &&
             !originalTitle.equals(title, ignoreCase = true)
@@ -507,20 +520,20 @@ private fun ContentHeader(
                         .clickable(onClick = onBackClick)
                 )
 
-//                Box(
-//                    modifier = Modifier
-//                        .align(Alignment.CenterEnd)
-//                        .size(52.dp)
-//                        .clip(CircleShape),
-//                        //.clickable(onClick = onReloadClick),
-//                    contentAlignment = Alignment.Center
-//                ) {
-//                    Icon(
-//                        imageVector = Icons.Default.Refresh,
-//                        contentDescription = "Sync/Reload",
-//                        modifier = Modifier.size(24.dp)
-//                    )
-//                }
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.CenterEnd)
+                        .size(52.dp)
+                        .clip(CircleShape)
+                        .clickable(onClick = onReloadClick),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Refresh,
+                        contentDescription = "Sync/Reload",
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
             }
 
             Spacer(Modifier.height(10.dp))
@@ -630,8 +643,38 @@ private fun ActionIconButton(
     }
 }
 
-@Preview(showBackground = true)
 @Composable
+private fun ContentCarousel(
+    modifier: Modifier = Modifier,
+    films: List<Film>,
+    navController: NavHostController,
+    onChanged: () -> Unit
+) {
+    val listState = rememberLazyListState()
+
+    LazyRow(
+        state = listState,
+        flingBehavior = rememberSnapFlingBehavior(lazyListState = listState),
+        contentPadding = PaddingValues(horizontal = 24.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 8.dp, bottom = 8.dp)
+    ) {
+        items(films, key = { it.filmId }) { film ->
+            ContentCard(
+                content = film,
+                orientation = true,
+                cardType = 0,
+                onClick = { id -> navController.navigate("film/$id") },
+                onChanged = onChanged
+            )
+        }
+    }
+}
+
+@Composable
+@Preview(showBackground = true)
 fun FilmDetailScreenPreview() {
     ContentScreenFilm(filmId = 11)
 }
