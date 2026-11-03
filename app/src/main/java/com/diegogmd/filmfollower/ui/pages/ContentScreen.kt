@@ -71,6 +71,7 @@ import com.diegogmd.filmfollower.model.isFilmStatus
 import com.diegogmd.filmfollower.model.setFavouriteFilm
 import com.diegogmd.filmfollower.model.setFilmStatus
 import com.diegogmd.filmfollower.model.unsetFavouriteFilm
+import com.diegogmd.filmfollower.ui.components.CardType
 import com.diegogmd.filmfollower.ui.components.ContentCard
 import com.diegogmd.filmfollower.ui.theme.FilmTypography
 import com.diegogmd.filmfollower.ui.theme.placeholders
@@ -665,7 +666,7 @@ private fun ContentCarousel(
             ContentCard(
                 content = film,
                 orientation = true,
-                cardType = 0,
+                cardType = CardType.NONE,
                 onClick = { id -> navController.navigate("film/$id") },
                 onChanged = onChanged
             )

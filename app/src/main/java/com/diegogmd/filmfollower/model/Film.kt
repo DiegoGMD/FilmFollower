@@ -29,35 +29,6 @@ class Film(
     val addedAt: LocalDate,
     val genres: List<Genre> = emptyList()
 ) {
-    fun insertInto(db: SQLiteDatabase): Boolean {
-        val contentValues = ContentValues().apply {
-            put("film_id", filmId)
-            put("title", title)
-            put("original_title", originalTitle)
-            put("overview", overview)
-            put("release_date", releaseDate.toString())
-            put("runtime", runtime)
-            put("poster_path", posterPath)
-            put("tmdb_status", tmdbStatus)
-            put("tmdb_last_synced", tmdbLastSynced.toString())
-            if (rating != null) put("rating", Math.round(rating * 10) / 10.0) else putNull("rating")
-            put("watch_status", watchStatus)
-            if (watchedDate != null) put("watched_date", watchedDate.toString()) else putNull("watched_date")
-            put("times_watched", timesWatched)
-            put("added_at", addedAt.toString())
-        }
-        if (db.insert("Film", null, contentValues) == -1L) return false
-
-        genres.forEach { g ->
-            val fg = ContentValues().apply {
-                put("film_id", filmId)
-                put("genre_id", g.genreId)
-            }
-            db.insertWithOnConflict("FilmGenre", null, fg, SQLiteDatabase.CONFLICT_IGNORE)
-        }
-        return true
-    }
-
     @SuppressLint("DefaultLocale")
     fun insertNewFilm(context: Context): Boolean {
         val dbHelper = FilmFillowerDatabase(context)
@@ -93,12 +64,12 @@ class Film(
             try {
                 val rowId = db.insert("Film", null, contentValues)
                 if (rowId == -1L) throw IllegalStateException("Film insert returned -1")
-                genres.forEach { g ->
-                    val fg = ContentValues().apply {
+                genres.forEach { genre ->
+                    val filmGenre = ContentValues().apply {
                         put("film_id", filmId)
-                        put("genre_id", g.genreId)
+                        put("genre_id", genre.genreId)
                     }
-                    db.insertWithOnConflict("FilmGenre", null, fg, SQLiteDatabase.CONFLICT_IGNORE)
+                    db.insertWithOnConflict("FilmGenre", null, filmGenre, SQLiteDatabase.CONFLICT_IGNORE)
                 }
                 db.setTransactionSuccessful()
                 ok = true
@@ -117,6 +88,7 @@ class Film(
         val db = FilmFillowerDatabase(context).writableDatabase
         try {
             val values = ContentValues().apply {
+                put("film_id", filmId)
                 put("title", title)
                 put("original_title", originalTitle)
                 put("overview", overview)
@@ -125,7 +97,12 @@ class Film(
                 put("poster_path", posterPath)
                 put("tmdb_status", tmdbStatus)
                 put("tmdb_last_synced", LocalDate.now().toString())
-                // NOT touched: rating, watch_status, watched_date, times_watched, added_at
+                if (rating != null) {
+                    put("rating", Math.round(rating * 10) / 10.0)
+                } else {
+                    putNull("rating")
+                }
+                // NOT touched: watch_status, watched_date, times_watched, added_at
             }
             db.beginTransaction()
             try {
@@ -207,10 +184,7 @@ fun getFilm(context: Context, filmId: Int): Film? {
     return theFilm
 }
 
-fun eraseFilm(
-    context: Context,
-    filmId: Int,
-): Int? {
+fun eraseFilm(context: Context, filmId: Int): Int? {
     val watchlistedFilm: Film? = getFilm(context, filmId)
     if (watchlistedFilm == null) {
         Log.e("Database", "Error getting film")
@@ -230,6 +204,7 @@ fun eraseFilm(
         } finally {
             db.close()
         }
+
         return 1
     }
 }
@@ -314,7 +289,9 @@ fun setFilmStatus(context: Context, id: Int, status: String) {
     }
 }
 
-suspend fun syncFilm(context: Context, id: Int, repository: SearchRepository, force: Boolean = false): Boolean {
+suspend fun syncFilm(
+    context: Context, id: Int, repository: SearchRepository, force: Boolean = false
+): Boolean {
     val local = withContext(Dispatchers.IO) { getFilm(context, id) } ?: return false
     if (!local.needsSync && !force) return false
 
@@ -330,7 +307,7 @@ suspend fun syncFilm(context: Context, id: Int, repository: SearchRepository, fo
     return true
 }
 
-fun isFavouriteFilm(context: Context, filmId: Int):Boolean {
+fun isFavouriteFilm(context: Context, filmId: Int): Boolean {
     val dbHelper = FilmFillowerDatabase(context)
     val db = dbHelper.readableDatabase
     var isFavourite = false
@@ -339,15 +316,15 @@ fun isFavouriteFilm(context: Context, filmId: Int):Boolean {
         SELECT 1 FROM ListItem
         WHERE list_id = ? AND film_id = ?
         LIMIT 1
-    """
-    var selectionArgs = arrayOf("0", filmId.toString())
+    """.trimIndent()
+    val selectionArgs = arrayOf("0", filmId.toString())
 
     try {
         db.rawQuery(query, selectionArgs).use { cursor ->
             isFavourite = cursor.moveToFirst()
         }
     } catch (e: Exception) {
-        Log.e("Database", "Error getting favourite films", e)
+        Log.e("Database", "Error if is a favourite film", e)
     } finally {
         db.close()
     }
@@ -370,11 +347,11 @@ fun getAllFavouriteFilms(context: Context): List<Film>? {
     val theFilms = mutableListOf<Film>()
 
     val query = """
-    SELECT Film.* FROM Film
-    INNER JOIN ListItem ON Film.film_id = ListItem.film_id
-    WHERE ListItem.list_id = ?
-    ORDER BY ListItem.position
-    """
+        SELECT Film.* FROM Film
+        INNER JOIN ListItem ON Film.film_id = ListItem.film_id
+        WHERE ListItem.list_id = ?
+        ORDER BY ListItem.position
+    """.trimIndent()
 
     try {
         db.rawQuery(query, arrayOf("0")).use { cursor ->

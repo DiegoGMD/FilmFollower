@@ -22,6 +22,7 @@ import androidx.navigation.NavHostController
 import com.diegogmd.filmfollower.R
 import com.diegogmd.filmfollower.model.Film
 import com.diegogmd.filmfollower.model.getAllFilmStatus
+import com.diegogmd.filmfollower.ui.components.CardType
 import com.diegogmd.filmfollower.ui.components.ContentCard
 import com.diegogmd.filmfollower.ui.components.EmptyContentCard
 import com.diegogmd.filmfollower.ui.theme.FilmTypography
@@ -103,7 +104,7 @@ private fun FilmList(
         items(films, key = { it.filmId }) { film ->
             ContentCard(
                 content = film,
-                cardType = 1,
+                cardType = CardType.SEEN_TOGGLE,
                 onClick = { id -> navController.navigate("film/$id") },
                 onChanged = onChanged
             )

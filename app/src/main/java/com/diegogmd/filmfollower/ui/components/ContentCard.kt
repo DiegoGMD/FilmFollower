@@ -2,7 +2,6 @@ package com.diegogmd.filmfollower.ui.components
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -16,7 +15,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -25,13 +23,15 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import org.threeten.bp.LocalDate
@@ -50,6 +50,7 @@ import com.diegogmd.filmfollower.R
 import com.diegogmd.filmfollower.model.Episode
 import com.diegogmd.filmfollower.model.MultiSearchResult
 import com.diegogmd.filmfollower.model.Film
+import com.diegogmd.filmfollower.model.TvShow
 import com.diegogmd.filmfollower.model.eraseFilm
 import com.diegogmd.filmfollower.model.getFilm
 import com.diegogmd.filmfollower.model.getTvShow
@@ -59,205 +60,146 @@ import com.diegogmd.filmfollower.ui.theme.FilmTypography
 import com.diegogmd.filmfollower.ui.theme.placeholders
 import com.diegogmd.filmfollower.viewmodels.FilmViewModel
 import com.diegogmd.filmfollower.viewmodels.FilmViewModelFactory
-import com.diegogmd.filmfollower.viewmodels.TvShowViewModel
-import com.diegogmd.filmfollower.viewmodels.TvShowViewModelFactory
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
-@Composable
-fun ContentCard(
-    modifier: Modifier = Modifier,
-    content: MultiSearchResult,
-    orientation: Boolean = false, // false = horizontal row, true = vertical poster
-    cardType: Int = 0,
-    onClick: (Int) -> Unit = {},
-    onChanged: () -> Unit = {}
-) {
-    val context = LocalContext.current
-    val title = content.displayTitle
-    val posterUrl = content.poster_path?.let { "https://image.tmdb.org/t/p/w342$it" }
-    val date = when (content.media_type) {
-        "movie" -> content.release_date.toLocalDateOrNull()
-        "tv" -> content.first_air_date.toLocalDateOrNull()
-        else -> null // "person" and anything unexpected
-    }
-    val rating =
-        if (content.vote_average != null) Math.round(content.vote_average * 10) / 10.0 else null
-
-
-    if (orientation) {
-        // Vertical layout: image on top, text below
-        VerticalContentCard(
-            modifier,
-            content.media_type,
-            content.id,
-            posterUrl,
-            title,
-            date,
-            rating,
-            cardType,
-            onClick,
-            onChanged
-        )
-    } else {
-        // Horizontal layout: image left, text right
-        HorizontalContentCard(
-            modifier,
-            content.media_type,
-            content.id,
-            posterUrl,
-            title,
-            date,
-            rating,
-            cardType,
-            onClick,
-            onChanged
-        )
-    }
+enum class MediaType(label: String) {
+    Film("movie"),
+    TvShow("tv")
 }
 
+@Immutable
+data class ContentCardUi(
+    val id: Int,
+    val mediaType: MediaType,
+    val title: String,
+    val posterUrl: String?,
+    val date: LocalDate?,
+    val rating: Double?
+)
+
+enum class CardType { NONE, SEEN_TOGGLE, WATCHLIST_TOGGLE }
+
+private const val TMDB_POSTER_BASE = "https://image.tmdb.org/t/p/w342"
+
+private fun tmdbPosterUrl(path: String?): String? =
+    path?.takeIf { it.isNotBlank() }?.let { TMDB_POSTER_BASE + it }
+
+private fun LocalDate.orNullIfPlaceholder(): LocalDate? = takeUnless { it.year >= 9999 }
+
+private fun Double?.orNullIfUnrated(): Double? =
+    this?.takeIf { it > 0.0 }?.let { Math.round(it * 10) / 10.0 }
+
+fun Film.toCardUi() = ContentCardUi(
+    id = filmId,
+    mediaType = MediaType.Film,
+    title = title,
+    posterUrl = tmdbPosterUrl(posterPath),
+    date = releaseDate.orNullIfPlaceholder(),
+    rating = rating.orNullIfUnrated()
+)
+
+fun TvShow.toCardUi() = ContentCardUi(
+    id = showId,
+    mediaType = MediaType.TvShow,
+    title = title,
+    posterUrl = tmdbPosterUrl(posterPath),
+    date = firstAirDate.orNullIfPlaceholder(),
+    rating = rating.orNullIfUnrated()
+)
+
+fun MultiSearchResult.toCardUi(): ContentCardUi? {
+    val type = when (media_type) {
+        "movie" -> MediaType.Film
+        "tv" -> MediaType.TvShow
+        else -> return null
+    }
+    val rawDate = when (type) {
+        MediaType.Film -> release_date
+        MediaType.TvShow -> first_air_date
+    }
+    return ContentCardUi(
+        id = id,
+        mediaType = type,
+        title = displayTitle,
+        posterUrl = tmdbPosterUrl(poster_path),
+        date = rawDate.toLocalDateOrNull(),
+        rating = vote_average.orNullIfUnrated()
+    )
+}
+
+data class CardAction(
+    val active: Boolean,
+    @DrawableRes val activeIcon: Int,
+    @DrawableRes val inactiveIcon: Int,
+    val activeDescription: String,
+    val inactiveDescription: String,
+    val onClick: () -> Unit
+)
+
 @Composable
 fun ContentCard(
+    content: ContentCardUi,
     modifier: Modifier = Modifier,
-    content: Film,
-    orientation: Boolean = false, // false = horizontal row, true = vertical poster
-    cardType: Int = 0,
-    onClick: (Int) -> Unit = {},
-    onChanged: () -> Unit = {}
-) {
-    val posterUrl = content.posterPath?.let { "https://image.tmdb.org/t/p/w342$it" }
-
+    orientation: Boolean = false, // false = horizontal / true = vertical
+    action: CardAction? = null,
+    onClick: (ContentCardUi) -> Unit = {}
+){
     if (orientation) {
-        // Vertical layout: image on top, text below
-        VerticalContentCard(
-            modifier,
-            "movie",
-            content.filmId,
-            posterUrl,
-            content.title,
-            content.releaseDate,
-            content.rating,
-            cardType,
-            onClick,
-            onChanged
-        )
+        VerticalContentCard(content, modifier, action, onClick)
     } else {
-        // Horizontal layout: image left, text right
-        HorizontalContentCard(
-            modifier,
-            "movie",
-            content.filmId,
-            posterUrl,
-            content.title,
-            content.releaseDate,
-            content.rating,
-            cardType,
-            onClick,
-            onChanged
-        )
+        HorizontalContentCard(content, modifier, action, onClick)
     }
 }
 
 @Composable
 private fun VerticalContentCard(
+    content: ContentCardUi,
     modifier: Modifier,
-    mediaType: String,
-    contentId: Int,
-    posterUrl: String?,
-    title: String,
-    date: LocalDate?,
-    rating: Double?,
-    cardType: Int = 0,
-    onClick: (Int) -> Unit = {},
-    onChanged: () -> Unit = {}
+    action: CardAction?,
+    onClick: (ContentCardUi) -> Unit
 ) {
-    val context = LocalContext.current
-    val filmViewModel: FilmViewModel = viewModel(factory = FilmViewModelFactory())
-    val tvShowViewModel: TvShowViewModel = viewModel(factory = TvShowViewModelFactory())
-    var watchlisted by remember(contentId) { mutableStateOf(getFilm(context, contentId) != null) }
-    var seen by remember(contentId) { mutableStateOf(isFilmStatus(context, contentId, "seen")) }
-
-    Card (
-        modifier = modifier
-            .width(100.dp)
-            .wrapContentHeight()
-            .clickable { onClick(contentId) },
+    Card(
+        onClick = { onClick(content) },
+        modifier = modifier.width(100.dp)/*.wrapContentHeight()*/,
         shape = RoundedCornerShape(12.dp),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.surfaceContainer)
     ) {
         Column {
-            AsyncImage(
-                model = posterUrl,
-                contentDescription = "poster",
-                contentScale = ContentScale.Crop,
-                placeholder = painterResource(MaterialTheme.placeholders.poster),
-                error = painterResource(MaterialTheme.placeholders.poster),
-                modifier = Modifier
+            Poster(
+                content = content, modifier = Modifier
                     .fillMaxWidth()
                     .aspectRatio(2f / 3f)
             )
-            HorizontalDivider(
-                color = MaterialTheme.colorScheme.onPrimary,
-                thickness = 1.dp,
-            )
-            Surface(
-                onClick = { onClick(contentId) },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(8.dp)
+            HorizontalDivider(color = MaterialTheme.colorScheme.onPrimary, thickness = 1.dp)
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(10.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(10.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
+                Text(
+                    text = content.title,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center
+                )
+                content.date?.let {
                     Text(
-                        text = title,
+                        text = content.date.toString(),
                         fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center
                     )
-                    if (date != null) {
-                        Text(
-                            text = date.toString(),
-                            fontSize = 14.sp,
-                            textAlign = TextAlign.Center
-                        )
-                    }
                 }
             }
-            when (cardType) {
-                0 -> {}
-                1 -> ButtonType(
-                    seen,
-                    R.drawable.ic_visibility_off_24px,
-                    R.drawable.ic_visibility_24px,
-                    "Seen",
-                    "Not seen"
-                ) {
-                    setFilmStatus(context, contentId, if (seen) "watchlist" else "seen")
-                    seen = !seen
-                    onChanged()
-                }
-
-                2 -> ButtonType(
-                    watchlisted,
-                    R.drawable.ic_check_24px,
-                    R.drawable.ic_add_24px,
-                    "Watchlisted",
-                    "Not watchlisted"
-                ) {
-                    if (watchlisted) {
-                        eraseFilm(context, contentId)
-                        watchlisted = false
-                        onChanged()
-                    } else {
-                        filmViewModel.addFilmToWatchlist(context, contentId) { ok ->
-                            if (ok) {
-                                watchlisted = true
-                                onChanged()
-                            }
-                        }
-                    }
-                }
+            action?.let {
+                CardActionButton(
+                    action = it,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(40.dp)
+                )
             }
         }
     }
@@ -265,26 +207,19 @@ private fun VerticalContentCard(
 
 @Composable
 private fun HorizontalContentCard(
+    content: ContentCardUi,
     modifier: Modifier,
-    mediaType: String,
-    contentId: Int,
-    posterUrl: String?,
-    title: String,
-    date: LocalDate?,
-    rating: Double?,
-    cardType: Int = 0,
-    onClick: (Int) -> Unit = {},
-    onChanged: () -> Unit = {}
+    action: CardAction?,
+    onClick: (ContentCardUi) -> Unit
 ) {
-    val context = LocalContext.current
-    val filmViewModel: FilmViewModel = viewModel(factory = FilmViewModelFactory())
-    val tvShowViewModel: TvShowViewModel = viewModel(factory = TvShowViewModelFactory())
-    var watchlisted by remember(contentId) { mutableStateOf(getFilm(context, contentId) != null) }
-    var seen by remember(contentId) { mutableStateOf(isFilmStatus(context, contentId, "seen")) }
+    val dateText = (content.date?.toString() ?: "????-??-??")
+    val ratingText = (content.rating?.toString() ?: "?") + " ★"
 
-    Card (modifier = modifier
-        .fillMaxWidth()
-        .padding(8.dp),
+    Card(
+        onClick = { onClick(content) },
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(8.dp),
         shape = RoundedCornerShape(12.dp),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.surfaceContainer)
     ) {
@@ -294,119 +229,253 @@ private fun HorizontalContentCard(
                 .height(100.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            AsyncImage(
-                model = posterUrl,
-                contentDescription = "poster",
-                contentScale = ContentScale.Crop,
-                placeholder = painterResource(MaterialTheme.placeholders.poster),
-                error = painterResource(MaterialTheme.placeholders.poster),
-                modifier = Modifier.size(100.dp)
-            )
-            VerticalDivider(
-                color = MaterialTheme.colorScheme.onPrimary,
-                thickness = 1.dp,
-            )
-            Surface(
-                onClick = { onClick(contentId) },
-                modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(8.dp)
-            ) {
-                Column(modifier = modifier.padding(10.dp)) {
-                    Text(
-                        text = title,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = (if (date != null) "${date} · " else "")
-                                + (if (rating != null) "${rating} ★" else "? ★"),
-                        fontSize = 14.sp
-                    )
-                }
+            Poster(content = content, modifier = Modifier.size(100.dp))
+            VerticalDivider(color = MaterialTheme.colorScheme.onPrimary, thickness = 1.dp)
+            Column(modifier = modifier.weight(1f).padding(10.dp)) {
+                Text(
+                    text = content.title, fontSize = 14.sp, fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = dateText + " · " + ratingText, fontSize = 14.sp
+                )
             }
-            when (cardType) {
-                0 -> {}
-                1 -> ButtonType(
-                    seen,
-                    R.drawable.ic_visibility_off_24px,
-                    R.drawable.ic_visibility_24px,
-                    "Seen",
-                    "Not seen"
-                ) {
-                    setFilmStatus(context, contentId, if (seen) "watchlist" else "seen")
-                    seen = !seen
-                    onChanged()
-                }
-
-                2 -> ButtonType(
-                    watchlisted,
-                    R.drawable.ic_check_24px,
-                    R.drawable.ic_add_24px,
-                    "Watchlisted",
-                    "Not watchlisted"
-                ) {
-                    if (watchlisted) {
-                        eraseFilm(context, contentId)
-                        watchlisted = false
-                        onChanged()
-                    } else {
-                        filmViewModel.addFilmToWatchlist(context, contentId) { ok ->
-                            if (ok) {
-                                watchlisted = true
-                                onChanged()
-                            }
-                        }
-                    }
-                }
+            action?.let {
+                CardActionButton(
+                    action = it,
+                    modifier = Modifier
+                        .width(56.dp)
+                        .fillMaxHeight()
+                )
             }
         }
     }
 }
 
 @Composable
-private fun CardActionButton(
-    active: Boolean,
-    @DrawableRes activeIcon: Int,
-    @DrawableRes inactiveIcon: Int,
-    activeDescription: String,
-    inactiveDescription: String,
-    onClick: () -> Unit
+private fun Poster(
+    content: ContentCardUi,
+    modifier: Modifier
 ) {
+    AsyncImage(
+        model = content.posterUrl,
+        contentDescription = content.title,
+        contentScale = ContentScale.Crop,
+        placeholder = painterResource(MaterialTheme.placeholders.poster),
+        error = painterResource(MaterialTheme.placeholders.poster),
+        modifier = modifier
+    )
+}
+
+@Composable
+private fun CardActionButton(action: CardAction, modifier: Modifier) {
     Button(
-        onClick = onClick,
-        modifier = Modifier
-            .width(56.dp)
-            .fillMaxHeight(),
+        onClick = action.onClick,
+        modifier = modifier,
         contentPadding = PaddingValues(0.dp),
         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.onPrimary),
-        shape = RoundedCornerShape(topStart = 0.dp, bottomStart = 0.dp, topEnd = 12.dp, bottomEnd = 12.dp)
+        shape = RoundedCornerShape(
+            topStart = 0.dp,
+            bottomStart = 0.dp,
+            topEnd = 12.dp,
+            bottomEnd = 12.dp
+        )
     ) {
         Icon(
-            painter = painterResource(if (active) activeIcon else inactiveIcon),
-            contentDescription = if (active) activeDescription else inactiveDescription,
+            painter = painterResource(if (action.active) action.activeIcon else action.inactiveIcon),
+            contentDescription = if (action.active) action.activeDescription else action.inactiveDescription,
             tint = MaterialTheme.colorScheme.primary
         )
     }
 }
 
 @Composable
-private fun ButtonType(
-    boolean: Boolean,
-    @DrawableRes activeIcon: Int,
-    @DrawableRes inactiveIcon: Int,
-    activeDescription: String,
-    inactiveDescription: String,
-    onAction: () -> Unit = {}
-) {
-    CardActionButton(
-        active = boolean,
-        activeIcon = activeIcon,
-        inactiveIcon = inactiveIcon,
-        activeDescription = activeDescription,
-        inactiveDescription = inactiveDescription,
-        onClick = { onAction() }
-    )
+fun rememberCardAction(
+    content: ContentCardUi,
+    cardType: CardType,
+    onChanged: () -> Unit = {}
+): CardAction? {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val filmViewModel: FilmViewModel = viewModel(factory = FilmViewModelFactory())
+
+    var watchlisted by remember(content.id, content.mediaType) { mutableStateOf(false) }
+    var seen by remember(content.id, content.mediaType) { mutableStateOf(false) }
+
+    LaunchedEffect(content.id, content.mediaType, cardType) {
+        if (cardType == CardType.NONE) return@LaunchedEffect
+        val (isWatchlisted, isSeen) = withContext(Dispatchers.IO) {
+            when (content.mediaType) {
+                MediaType.Film -> (getFilm(context, content.id) != null) to isFilmStatus(context, content.id, "seen")
+                MediaType.TvShow -> (getTvShow(context, content.id) != null) to false
+            }
+        }
+        watchlisted = isWatchlisted
+        seen = isSeen
+    }
+
+    return when (cardType) {
+        CardType.NONE -> null
+
+        CardType.SEEN_TOGGLE -> when (content.mediaType) {
+            MediaType.Film -> CardAction(
+                active = seen,
+                activeIcon = R.drawable.ic_visibility_off_24px,
+                inactiveIcon = R.drawable.ic_visibility_24px,
+                activeDescription = "Seen",
+                inactiveDescription = "Not seen"
+            ) {
+                val newSeen = !seen
+                scope.launch {
+                    withContext(Dispatchers.IO) {
+                        setFilmStatus(context, content.id, if (newSeen) "seen" else "watchlist")
+                    }
+                    seen = newSeen
+                    onChanged()
+                }
+            }
+
+            MediaType.TvShow -> null
+        }
+
+        CardType.WATCHLIST_TOGGLE -> when (content.mediaType) {
+            MediaType.Film -> CardAction(
+                active = watchlisted,
+                activeIcon = R.drawable.ic_check_24px,
+                inactiveIcon = R.drawable.ic_add_24px,
+                activeDescription = "Watchlisted",
+                inactiveDescription = "Not watchlisted"
+            ) {
+                if (watchlisted) {
+                    scope.launch {
+                        withContext(Dispatchers.IO) {
+                            eraseFilm(context, content.id)
+                            watchlisted = false
+                            onChanged
+                        }
+                    }
+                } else {
+                    filmViewModel.addFilmToWatchlist(context, content.id) { ok ->
+                        if (ok) {
+                            watchlisted = true
+                            onChanged()
+                        }
+                    }
+                }
+            }
+
+            MediaType.TvShow -> null
+        }
+    }
 }
+
+@Composable
+fun ContentCard(
+    content: Film,
+    modifier: Modifier = Modifier,
+    orientation: Boolean = false,
+    cardType: CardType = CardType.NONE,
+    onClick: (ContentCardUi) -> Unit = {},
+    onChanged: () -> Unit = {}
+) {
+    val ui = remember(content) { content.toCardUi() }
+    ContentCard(ui, modifier, orientation, rememberCardAction(ui, cardType, onChanged), onClick)
+}
+
+@Composable
+fun ContentCard(
+    content: TvShow,
+    modifier: Modifier = Modifier,
+    orientation: Boolean = false,
+    cardType: CardType = CardType.NONE,
+    onClick: (ContentCardUi) -> Unit = {},
+    onChanged: () -> Unit = {}
+) {
+    val ui = remember(content) { content.toCardUi() }
+    ContentCard(ui, modifier, orientation, rememberCardAction(ui, cardType, onChanged), onClick)
+}
+
+@Composable
+fun ContentCard(
+    content: MultiSearchResult,
+    modifier: Modifier = Modifier,
+    orientation: Boolean = false,
+    cardType: CardType = CardType.NONE,
+    onClick: (ContentCardUi) -> Unit = {},
+    onChanged: () -> Unit = {}
+) {
+    val ui = remember(content) { content.toCardUi() } ?: return
+    ContentCard(ui, modifier, orientation, rememberCardAction(ui, cardType, onChanged), onClick)
+}
+
+@Composable
+fun EmptyContentCard(modifier: Modifier = Modifier, isFilm: Boolean) {
+    Card(
+        modifier = modifier.padding(8.dp),
+        shape = RoundedCornerShape(12.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.surfaceContainer)
+    ) {
+        val message = if (isFilm) stringResource(R.string.empty_films) else stringResource(R.string.empty_tvshows)
+
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_info_24px),
+                contentDescription = message,
+                modifier = Modifier.size(50.dp)
+            )
+            Text(
+                text = message,
+                fontSize = 20.sp,
+                textAlign = TextAlign.Center,
+                style = FilmTypography.titleMedium,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 10.dp)
+            )
+        }
+    }
+}
+
+@Composable
+fun NoInternetCard(modifier: Modifier = Modifier) {
+    Card(
+        modifier = modifier.padding(8.dp),
+        shape = RoundedCornerShape(12.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.surfaceContainer)
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_wifi_off_24px),
+                contentDescription = "No internet",
+                modifier = Modifier.size(50.dp)
+            )
+            Text(
+                text = stringResource(R.string.no_internet),
+                fontSize = 20.sp,
+                textAlign = TextAlign.Center,
+                style = FilmTypography.titleMedium,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 10.dp)
+            )
+        }
+    }
+}
+
+fun String?.toLocalDateOrNull(): LocalDate? {
+    if (this.isNullOrBlank()) return null
+    return runCatching { LocalDate.parse(this) }.getOrNull()
+}
+
+
+// EpisodeContentCard (May be upgraded)
 
 @Composable
 fun EpisodeContentCard(
@@ -497,71 +566,4 @@ fun EpisodeContentCardText(
             fontSize = 14.sp
         )
     }
-}
-
-@Composable
-fun EmptyContentCard(modifier: Modifier = Modifier, isFilm: Boolean) {
-    Card(
-        modifier = modifier.padding(8.dp),
-        shape = RoundedCornerShape(12.dp),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.surfaceContainer)
-    ) {
-        val message = if (isFilm) stringResource(R.string.empty_films) else stringResource(R.string.empty_tvshows)
-
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.ic_info_24px),
-                contentDescription = message,
-                modifier = Modifier.size(50.dp)
-            )
-            Text(
-                text = message,
-                fontSize = 20.sp,
-                textAlign = TextAlign.Center,
-                style = FilmTypography.titleMedium,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 10.dp)
-            )
-        }
-    }
-}
-
-@Composable
-fun NoInternetCard(modifier: Modifier = Modifier) {
-    Card(
-        modifier = modifier.padding(8.dp),
-        shape = RoundedCornerShape(12.dp),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.surfaceContainer)
-    ) {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.ic_wifi_off_24px),
-                contentDescription = "No internet",
-                modifier = Modifier.size(50.dp)
-            )
-            Text(
-                text = stringResource(R.string.no_internet),
-                fontSize = 20.sp,
-                textAlign = TextAlign.Center,
-                style = FilmTypography.titleMedium,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 10.dp)
-            )
-        }
-    }
-}
-
-fun String?.toLocalDateOrNull(): LocalDate? {
-    if (this.isNullOrBlank()) return null
-    return runCatching { LocalDate.parse(this) }.getOrNull()
 }

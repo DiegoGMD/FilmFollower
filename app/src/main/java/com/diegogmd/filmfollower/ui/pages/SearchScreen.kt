@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.diegogmd.filmfollower.R
+import com.diegogmd.filmfollower.ui.components.CardType
 import com.diegogmd.filmfollower.viewmodels.SearchViewModel
 import com.diegogmd.filmfollower.ui.components.ContentCard
 import com.diegogmd.filmfollower.ui.components.NoInternetCard
@@ -119,7 +120,7 @@ fun SearchScreen(
                     items(listToShow) { item ->
                         ContentCard(
                             content = item,
-                            cardType = 2,
+                            cardType = CardType.WATCHLIST_TOGGLE,
                             onClick = {
                                 if (item.media_type == "movie") {
                                     navController.navigate("film/${item.id}")

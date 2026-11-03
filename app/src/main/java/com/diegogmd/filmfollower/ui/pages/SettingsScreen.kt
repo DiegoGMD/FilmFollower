@@ -41,7 +41,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -82,7 +81,6 @@ import androidx.compose.ui.unit.sp
 import com.diegogmd.filmfollower.R
 import com.diegogmd.filmfollower.SecureStorage
 import com.diegogmd.filmfollower.data.local.DatabaseBackupManager
-import com.diegogmd.filmfollower.seedFilms
 import com.diegogmd.filmfollower.ui.theme.Black
 import com.diegogmd.filmfollower.ui.theme.BrightGold
 import com.diegogmd.filmfollower.ui.theme.CarbonBlack
@@ -290,37 +288,6 @@ fun SettingsScreen(
                 ) {
                     Text(stringResource(id = R.string.choose), fontSize = 16.sp)
                 }
-            }
-        }
-
-        Spacer(Modifier.height(16.dp))
-
-        // ---------- Testing Data ----------
-        SettingsSection(label = "Testing Data") {
-            Button(
-                onClick = {
-                    scope.launch {
-                        val result = withContext(Dispatchers.IO) {
-                            runCatching { seedFilms(context.applicationContext) }
-                        }
-                        Toast.makeText(
-                            context,
-                            if (result.isSuccess) "Testing data loaded"
-                            else "Failed: ${result.exceptionOrNull()?.message}",
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Silver,
-                    contentColor = Graphite
-                ),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Text("Load Testing Data", fontSize = 16.sp)
             }
         }
 
