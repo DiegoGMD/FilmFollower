@@ -83,11 +83,6 @@ fun FilmsScreen(modifier: Modifier, navController: NavHostController) {
                 EmptyContentCard(modifier, true)
             }
         }
-
-//        when (selectedTab) {
-//            0 -> FilmList(Modifier.weight(1f), films = samplePlaceholderFilms(), navController)
-//            1 -> FilmList(Modifier.weight(1f), films = samplePlaceholderUpcomingFilms(), navController)
-//        }
     }
 }
 
@@ -105,7 +100,7 @@ private fun FilmList(
             ContentCard(
                 content = film,
                 cardType = CardType.SEEN_TOGGLE,
-                onClick = { id -> navController.navigate("film/$id") },
+                onClick = { item -> navController.navigate("film/${film.filmId}") },
                 onChanged = onChanged
             )
         }

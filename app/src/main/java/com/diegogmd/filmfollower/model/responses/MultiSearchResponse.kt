@@ -1,5 +1,8 @@
-package com.diegogmd.filmfollower.model
+package com.diegogmd.filmfollower.model.responses
 
+import com.diegogmd.filmfollower.model.Film
+import com.diegogmd.filmfollower.model.Genre
+import com.diegogmd.filmfollower.model.TvShow
 import org.threeten.bp.LocalDate
 
 data class MultiSearchResponse(
@@ -61,22 +64,22 @@ data class FilmDetailsResponse(
 }
 
 data class TvShowDetailsResponse(
-    val show_id: Int = 0,
-    val title: String = "",
-    val original_title: String? = "",
+    val id: Int = 0,
+    val name: String = "",
+    val original_name: String? = "",
     val overview: String = "",
     val first_air_date: String? = null,
     val number_of_seasons: Int,
     val number_of_episodes: Int,
-    var rating: Double = 0.0, // from 0 to 10, default is 0
+    var vote_average: Double = 0.0, // from 0 to 10, default is 0
     var poster_path:  String? = null,
     var status: String = ""
 ) {
     fun toTvShow(): TvShow {
         return TvShow(
-            showId = show_id,
-            title = title,
-            originalTitle = original_title,
+            showId = id,
+            title = name,
+            originalTitle = original_name,
             overview = overview,
             firstAirDate = if (first_air_date != null) {
                 LocalDate.parse(first_air_date)
@@ -85,7 +88,7 @@ data class TvShowDetailsResponse(
             },
             numberOfSeasons = number_of_seasons ?: 0,
             numberOfEpisodes = number_of_episodes ?: 0,
-            rating = Math.round(rating * 10) / 10.0, // from 0 to 10, default is 0
+            rating = Math.round(vote_average * 10) / 10.0, // from 0 to 10, default is 0
             posterPath = poster_path ?: "",
             tmdbStatus = status,
             tmdbLastSynced = LocalDate.now(),
@@ -132,3 +135,51 @@ data class GenreDetailsResponse(
 //    var posterPath:  String? = null,
 //    var tmdbStatus: String = "",
 //)
+
+data class VideoResponse(
+    val id: Int,
+    val results: List<Video>
+)
+
+data class Video(
+    val key: String,
+    val name: String,
+    val site: String,
+    val type: String,
+    val official: Boolean,
+    val published_at: String?
+)
+
+fun List<Video>.bestTrailer(): Video? {
+    val youtube = filter { it.site == "YouTube" }
+    return youtube.firstOrNull { it.type == "Trailer" && it.official }
+        ?: youtube.firstOrNull { it.type == "Trailer" }
+        ?: youtube.firstOrNull { it.type == "Teaser" }
+}
+
+data class CastMember(
+    val id: Int,
+    val name: String,
+    val role: String,
+    val photoUrl: String? = null
+)
+
+data class CreditsResponse(
+    val id: Int,
+    val cast: List<CastDto> = emptyList()
+)
+
+data class CastDto(
+    val id: Int,
+    val name: String,
+    val character: String?,
+    val profile_path: String?,
+    val order: Int = 0
+)
+
+fun CastDto.toCastMember() = CastMember(
+    id = id,
+    name = name,
+    role = character ?: "",
+    photoUrl = profile_path
+)

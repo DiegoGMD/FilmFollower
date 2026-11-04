@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -62,17 +63,20 @@ import coil.compose.AsyncImage
 import com.diegogmd.filmfollower.R
 import com.diegogmd.filmfollower.viewmodels.FilmViewModel
 import com.diegogmd.filmfollower.model.Film
+import com.diegogmd.filmfollower.model.responses.MultiSearchResult
 import com.diegogmd.filmfollower.model.TvShow
 import com.diegogmd.filmfollower.model.eraseFilm
 import com.diegogmd.filmfollower.model.getFilm
-import com.diegogmd.filmfollower.model.getFilmGenre
+import com.diegogmd.filmfollower.model.getTvShow
 import com.diegogmd.filmfollower.model.isFavouriteFilm
+import com.diegogmd.filmfollower.model.isFavouriteTvShow
 import com.diegogmd.filmfollower.model.isFilmStatus
+import com.diegogmd.filmfollower.model.isTvShowStatus
 import com.diegogmd.filmfollower.model.setFavouriteFilm
 import com.diegogmd.filmfollower.model.setFilmStatus
 import com.diegogmd.filmfollower.model.unsetFavouriteFilm
-import com.diegogmd.filmfollower.ui.components.CardType
 import com.diegogmd.filmfollower.ui.components.ContentCard
+import com.diegogmd.filmfollower.ui.components.MediaType
 import com.diegogmd.filmfollower.ui.theme.FilmTypography
 import com.diegogmd.filmfollower.ui.theme.placeholders
 import com.diegogmd.filmfollower.viewmodels.FilmViewModelFactory
@@ -94,12 +98,12 @@ private fun openTrailer(context: Context, key: String) {
 fun ContentScreenFilm(
     filmId: Int,
     onBackClick: () -> Unit = {},
+    navController: NavHostController,
     viewModel: FilmViewModel = viewModel(factory = FilmViewModelFactory())
 ) {
     val context = LocalContext.current
     val film by viewModel.film.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
-    val recommendations by viewModel.recommendations.collectAsState()
 
     LaunchedEffect(filmId) {
         viewModel.loadFilm(context, filmId)
@@ -108,13 +112,14 @@ fun ContentScreenFilm(
 
     when {
         isLoading -> CircularProgressIndicator()
-        film != null -> FilmContentUI(onBackClick, viewModel, film!!)
+        film != null -> FilmContentUI(onBackClick, navController, viewModel, film!!)
     }
 }
 
 @Composable
 fun ContentScreenTvShow(
     showId: Int,
+    navController: NavHostController,
     onBackClick: () -> Unit = {},
     viewModel: TvShowViewModel = viewModel(factory = TvShowViewModelFactory())
 ) {
@@ -123,25 +128,26 @@ fun ContentScreenTvShow(
     val isLoading by viewModel.isLoading.collectAsState()
 
     LaunchedEffect(showId) {
-        viewModel.loadFilm(context, showId)
+        viewModel.loadTvShow(context, showId)
+        viewModel.loadRecommendations(showId)
     }
 
     when {
         isLoading -> CircularProgressIndicator()
-        tvShow != null -> TvShowContentUI(onBackClick, viewModel, tvShow!!)
-        else -> Text("TV Shows implementation coming soon")
-        // TODO: TV Shows implementation
+        tvShow != null -> TvShowContentUI(onBackClick, navController, viewModel, tvShow!!)
     }
 }
 
 @Composable
 private fun FilmContentUI(
     onBackClick: () -> Unit,
+    navController: NavHostController,
     viewModel: FilmViewModel,
     film: Film
 ) {
     val context = LocalContext.current
     val genres by viewModel.genres.collectAsState()
+    val recommendations by viewModel.recommendations.collectAsState()
     var watchlisted by remember(film.filmId) { mutableStateOf(getFilm(context, film.filmId) != null) }
     var seen by remember(film.filmId) { mutableStateOf(isFilmStatus(context, film.filmId, "seen")) }
     var archived by remember(film.filmId) { mutableStateOf(isFilmStatus(context, film.filmId, "archived")) }
@@ -166,127 +172,143 @@ private fun FilmContentUI(
             film.posterPath
         )
 
-        ButtonArea(
-            seen = seen,
-            favourite = favourite,
-            archived = archived,
-            watchlisted = watchlisted,
-            trailerAvailable = trailerKey != null,
-            onSeenClick = {
-                if (!seen && !watchlisted) {
-                    viewModel.addFilmToWatchlist(context, film.filmId) { ok ->
-                        if (ok) {
-                            setFilmStatus(context, film.filmId, "seen")
-                            watchlisted = true
-                            seen = true
+        LazyColumn(modifier = Modifier.weight(1f)) {
+            item {
+                ButtonArea(
+                    seen = seen,
+                    favourite = favourite,
+                    archived = archived,
+                    watchlisted = watchlisted,
+                    trailerAvailable = trailerKey != null,
+                    onSeenClick = {
+                        if (!seen && !watchlisted) {
+                            viewModel.addFilmToWatchlist(context, film.filmId) { ok ->
+                                if (ok) {
+                                    setFilmStatus(context, film.filmId, "seen")
+                                    watchlisted = true
+                                    seen = true
+                                    archived = false
+                                }
+                            }
+                        } else {
+                            val newStatus = if (!seen) "seen" else "watchlist"
+                            setFilmStatus(context, film.filmId, newStatus)
+                            seen = newStatus == "seen"
                             archived = false
                         }
-                    }
-                } else {
-                    val newStatus = if (!seen) "seen" else "watchlist"
-                    setFilmStatus(context, film.filmId, newStatus)
-                    seen = newStatus == "seen"
-                    archived = false
-                }
-            },
-            onFavouriteClick = {
-                if (!seen && !watchlisted) {
-                    Toast.makeText(context, "You should see it before setting it favourite", Toast.LENGTH_LONG).show()
-                } else if (favourite) {
-                    if (unsetFavouriteFilm(context, film.filmId)) favourite = false
-                } else {
-                    if (setFavouriteFilm(context, film.filmId)) favourite = true
-                }
-            },
-            onArchiveClick = {
-                val newStatus = if (!archived) "archived" else "watchlist"
-                setFilmStatus(context, film.filmId, newStatus)
-                archived = newStatus == "archived"
-                seen = false
-            },
-            onWatchlistClick = {
-                if (watchlisted) {
-                    eraseFilm(context, film.filmId)
-                    watchlisted = false
-                    seen = false
-                    archived = false
-                } else {
-                    viewModel.addFilmToWatchlist(context, film.filmId) { ok ->
-                        if (ok) {
-                            watchlisted = true
+                    },
+                    onFavouriteClick = {
+                        if (!seen && !watchlisted) {
+                            Toast.makeText(
+                                context,
+                                "You should see it before setting it favourite",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        } else if (favourite) {
+                            if (unsetFavouriteFilm(context, film.filmId)) favourite = false
+                        } else {
+                            if (setFavouriteFilm(context, film.filmId)) favourite = true
+                        }
+                    },
+                    onArchiveClick = {
+                        val newStatus = if (!archived) "archived" else "watchlist"
+                        setFilmStatus(context, film.filmId, newStatus)
+                        archived = newStatus == "archived"
+                        seen = false
+                    },
+                    onWatchlistClick = {
+                        if (watchlisted) {
+                            eraseFilm(context, film.filmId)
+                            watchlisted = false
                             seen = false
                             archived = false
+                        } else {
+                            viewModel.addFilmToWatchlist(context, film.filmId) { ok ->
+                                if (ok) {
+                                    watchlisted = true
+                                    seen = false
+                                    archived = false
+                                }
+                            }
                         }
-                    }
-                }
-            },
-            onTrailerClick = { trailerKey?.let { openTrailer(context, it) } }
-        )
-
-        if (genres.isNotEmpty()) {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface)
-            ) {
-                Text(
-                    text = "Genres",
-                    fontSize = 20.sp,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.align(Alignment.CenterHorizontally),
-                    style = FilmTypography.titleMedium
-                )
-                Text(
-                    text = genres.joinToString(", "),
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(vertical = 10.dp, horizontal = 20.dp)
+                    },
+                    onTrailerClick = { trailerKey?.let { openTrailer(context, it) } }
                 )
             }
-        }
 
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface)
-        ) {
-            Text(
-                text = "Overview",
-                fontSize = 20.sp,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.align(Alignment.CenterHorizontally),
-                style = FilmTypography.titleMedium
-            )
-            Text(
-                text = film.overview,
-                modifier = Modifier.padding(vertical = 10.dp, horizontal = 20.dp)
-            )
-        }
+            if (genres.isNotEmpty()) {
+                item {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface)
+                    ) {
+                        Text(
+                            text = "Genres",
+                            fontSize = 20.sp,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.align(Alignment.CenterHorizontally),
+                            style = FilmTypography.titleMedium
+                        )
+                        Text(
+                            text = genres.joinToString(", "),
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(vertical = 10.dp, horizontal = 20.dp)
+                        )
+                    }
+                }
+            }
 
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface)
-        ) {
-            Text(
-                text = "Similar",
-                fontSize = 20.sp,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.align(Alignment.CenterHorizontally),
-                style = FilmTypography.titleMedium
-            )
-            Text(
-                text = "HorizontalFilmCards Carousel, that slides horizontally with 5 options that re-appear in cycle",
-                modifier = Modifier.padding(vertical = 10.dp, horizontal = 20.dp)
-            )
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface)
+                ) {
+                    Text(
+                        text = "Overview",
+                        fontSize = 20.sp,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.align(Alignment.CenterHorizontally),
+                        style = FilmTypography.titleMedium
+                    )
+                    Text(
+                        text = film.overview,
+                        modifier = Modifier.padding(vertical = 10.dp, horizontal = 20.dp)
+                    )
+                }
+            }
+
+            if (recommendations.isNotEmpty()) {
+                item {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface)
+                    ) {
+                        Text(
+                            text = "Recommendations",
+                            fontSize = 20.sp,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.align(Alignment.CenterHorizontally),
+                            style = FilmTypography.titleMedium
+                        )
+                        ContentCarousel(
+                            content = recommendations.take(5),
+                            navController = navController
+                        )
+                    }
+                }
+            }
         }
     }
 }
@@ -294,14 +316,20 @@ private fun FilmContentUI(
 @Composable
 private fun TvShowContentUI(
     onBackClick: () -> Unit,
+    navController: NavHostController,
     viewModel: TvShowViewModel,
     tvShow: TvShow
 ) {
     val context = LocalContext.current
-//    val genres by viewModel.genres.collectAsState()
-//    var watchlisted by remember(film.filmId) { mutableStateOf(getFilm(context, film.filmId) != null) }
-//    var seen by remember(film.filmId) { mutableStateOf(isStatus(context, film.filmId, "seen")) }
-//    var archived by remember(film.filmId) { mutableStateOf(isStatus(context, film.filmId, "archived")) }
+    val genres by viewModel.genres.collectAsState()
+    val recommendations by viewModel.recommendations.collectAsState()
+    var watchlisted by remember(tvShow.showId) { mutableStateOf(getTvShow(context, tvShow.showId) != null) }
+    var seen by remember(tvShow.showId) { mutableStateOf(isTvShowStatus(context, tvShow.showId, "completed")) }
+    var archived by remember(tvShow.showId) { mutableStateOf(isTvShowStatus(context, tvShow.showId, "archived")) }
+    var favourite by remember(tvShow.showId) { mutableStateOf(isFavouriteTvShow(context, tvShow.showId)) }
+    val trailerKey by viewModel.trailerKey.collectAsState()
+
+    LaunchedEffect(tvShow.showId) { viewModel.loadTrailer(tvShow.showId) }
 
     Column(
         modifier = Modifier
@@ -310,80 +338,157 @@ private fun TvShowContentUI(
     ) {
         ContentHeader(
             onBackClick = onBackClick,
-            onReloadClick = { null },
-            //onReloadClick = { viewModel.loadFilm(film.filmId) }, // Online content
+            onReloadClick = { viewModel.loadTvShow(context, tvShow.showId, true) },
             tvShow.title,
             tvShow.originalTitle,
             tvShow.firstAirDate,
-            0,
+            null,
             tvShow.rating,
             tvShow.posterPath
         )
 
-        //ButtonArea(context = context)
+        LazyColumn(modifier = Modifier.weight(1f)) {
 
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface)
-        ) {
-            Text(
-                text = "Genres",
-                fontSize = 20.sp,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.align(Alignment.CenterHorizontally),
-                style = FilmTypography.titleMedium
-            )
-            Text(
-                text = getFilmGenre(LocalContext.current, tvShow.showId),
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(vertical = 10.dp, horizontal = 20.dp)
-            )
-        }
+            // Tab 1 (Info)
+            item {
+                ButtonArea(
+                    seen = seen,
+                    favourite = favourite,
+                    archived = archived,
+                    watchlisted = watchlisted,
+                    trailerAvailable = trailerKey != null,
+                    onSeenClick = {
+                        if (!seen && !watchlisted) {
+                            viewModel.addTvShowToWatchlist(context, tvShow.showId) { ok ->
+                                if (ok) {
+                                    setFilmStatus(context, tvShow.showId, "completed")
+                                    watchlisted = true
+                                    seen = true
+                                    archived = false
+                                }
+                            }
+                        } else {
+                            val newStatus = if (!seen) "completed" else "watchlist"
+                            setFilmStatus(context, tvShow.showId, newStatus)
+                            seen = newStatus == "completed"
+                            archived = false
+                        }
+                    },
+                    onFavouriteClick = {
+                        if (!seen && !watchlisted) {
+                            Toast.makeText(
+                                context,
+                                "You should see it before setting it favourite",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        } else if (favourite) {
+                            if (unsetFavouriteFilm(context, tvShow.showId)) favourite = false
+                        } else {
+                            if (setFavouriteFilm(context, tvShow.showId)) favourite = true
+                        }
+                    },
+                    onArchiveClick = {
+                        val newStatus = if (!archived) "archived" else "watchlist"
+                        setFilmStatus(context, tvShow.showId, newStatus)
+                        archived = newStatus == "archived"
+                        seen = false
+                    },
+                    onWatchlistClick = {
+                        if (watchlisted) {
+                            eraseFilm(context, tvShow.showId)
+                            watchlisted = false
+                            seen = false
+                            archived = false
+                        } else {
+                            viewModel.addTvShowToWatchlist(context, tvShow.showId) { ok ->
+                                if (ok) {
+                                    watchlisted = true
+                                    seen = false
+                                    archived = false
+                                }
+                            }
+                        }
+                    },
+                    onTrailerClick = { trailerKey?.let { openTrailer(context, it) } }
+                )
+            }
 
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface)
-        ) {
-            Text(
-                text = "Overview",
-                fontSize = 20.sp,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.align(Alignment.CenterHorizontally),
-                style = FilmTypography.titleMedium
-            )
-            Text(
-                text = tvShow.overview,
-                modifier = Modifier.padding(vertical = 10.dp, horizontal = 20.dp)
-            )
-        }
+            if (genres.isNotEmpty()) {
+                item {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface)
+                    ) {
+                        Text(
+                            text = "Genres",
+                            fontSize = 20.sp,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.align(Alignment.CenterHorizontally),
+                            style = FilmTypography.titleMedium
+                        )
+                        Text(
+                            text = genres.joinToString(", "),
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(vertical = 10.dp, horizontal = 20.dp)
+                        )
+                    }
+                }
+            }
 
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface)
-        ) {
-            Text(
-                text = "Similar",
-                fontSize = 20.sp,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.align(Alignment.CenterHorizontally),
-                style = FilmTypography.titleMedium
-            )
-            Text(
-                text = "HorizontalFilmCards Carousel, that slides horizontally with 5 options that re-appear in cycle",
-                modifier = Modifier.padding(vertical = 10.dp, horizontal = 20.dp)
-            )
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface)
+                ) {
+                    Text(
+                        text = "Overview",
+                        fontSize = 20.sp,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.align(Alignment.CenterHorizontally),
+                        style = FilmTypography.titleMedium
+                    )
+                    Text(
+                        text = tvShow.overview,
+                        modifier = Modifier.padding(vertical = 10.dp, horizontal = 20.dp)
+                    )
+                }
+            }
+
+            if (recommendations.isNotEmpty()) {
+                item {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface)
+                    ) {
+                        Text(
+                            text = "Recommendations",
+                            fontSize = 20.sp,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.align(Alignment.CenterHorizontally),
+                            style = FilmTypography.titleMedium
+                        )
+                        ContentCarousel(
+                            content = recommendations.take(5),
+                            navController = navController
+                        )
+                    }
+                }
+            }
+
+            // Tab 2 (Episodes)
+            // For every season a dropdown of horizontal episode cards
         }
     }
 }
@@ -422,8 +527,8 @@ private fun ButtonArea(
             seen,
             R.drawable.ic_visibility_24px,
             R.drawable.ic_visibility_off_24px,
-            "Seen",
-            "Not seen",
+            "Completed",
+            "Not completed",
             onAction = onSeenClick
         )
         ActionIconButton(
@@ -461,7 +566,7 @@ private fun ContentHeader(
     title: String,
     originalTitle: String? = null,
     releaseDate: LocalDate,
-    runtime: Int,
+    runtime: Int?,
     rating: Double?,
     posterPath: String?,
 ) {
@@ -577,17 +682,19 @@ private fun ContentHeader(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "${runtime} min",
-                    fontSize = 16.sp,
-                    textAlign = TextAlign.Center,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    style = FilmTypography.titleSmall,
-                    modifier = Modifier
-                        .padding(horizontal = 4.dp)
-                        .weight(1f)
-                )
+                if (runtime != null) {
+                    Text(
+                        text = "${runtime} min",
+                        fontSize = 16.sp,
+                        textAlign = TextAlign.Center,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        style = FilmTypography.titleSmall,
+                        modifier = Modifier
+                            .padding(horizontal = 4.dp)
+                            .weight(1f)
+                    )
+                }
                 Text(
                     text = releaseDate.toString(),
                     fontSize = 16.sp,
@@ -646,10 +753,8 @@ private fun ActionIconButton(
 
 @Composable
 private fun ContentCarousel(
-    modifier: Modifier = Modifier,
-    films: List<Film>,
+    content: List<MultiSearchResult>,
     navController: NavHostController,
-    onChanged: () -> Unit
 ) {
     val listState = rememberLazyListState()
 
@@ -662,13 +767,17 @@ private fun ContentCarousel(
             .fillMaxWidth()
             .padding(top = 8.dp, bottom = 8.dp)
     ) {
-        items(films, key = { it.filmId }) { film ->
+        items(content, key = { "${it.media_type}-${it.id}" }) { item ->
             ContentCard(
-                content = film,
+                content = item,
                 orientation = true,
-                cardType = CardType.NONE,
-                onClick = { id -> navController.navigate("film/$id") },
-                onChanged = onChanged
+                onClick = { ui ->
+                    val route = when (ui.mediaType) {
+                        MediaType.Film -> "film/${ui.id}"
+                        MediaType.TvShow -> "show/${ui.id}"
+                    }
+                    navController.navigate(route)
+                }
             )
         }
     }
@@ -677,5 +786,6 @@ private fun ContentCarousel(
 @Composable
 @Preview(showBackground = true)
 fun FilmDetailScreenPreview() {
-    ContentScreenFilm(filmId = 11)
+//    val navController =
+//    ContentScreenFilm(filmId = 11)
 }

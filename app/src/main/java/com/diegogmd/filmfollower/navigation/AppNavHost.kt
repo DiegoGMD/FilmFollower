@@ -34,18 +34,13 @@ fun AppNavHost(
             FilmsScreen(Modifier.fillMaxSize(), navController)
         }
         composable("SearchScreen") {
-            SearchScreen(
-                modifier = Modifier.fillMaxSize(),
-                navController = navController)
+            SearchScreen(Modifier.fillMaxSize(), navController)
         }
         composable("ProfileScreen") {
-            ProfileScreen(
-                modifier = Modifier.fillMaxSize(),
-                navController = navController)
+            ProfileScreen(Modifier.fillMaxSize(), navController)
         }
         composable("SettingsScreen") {
-            SettingsScreen(
-                modifier = Modifier.fillMaxSize(),
+            SettingsScreen(Modifier.fillMaxSize(),
                 onBackClick = { navController.popBackStack() }
             )
         }
@@ -56,6 +51,7 @@ fun AppNavHost(
             val filmId = backStackEntry.arguments?.getInt("filmId") ?: return@composable
             ContentScreenFilm(
                 filmId = filmId,
+                navController = navController,
                 onBackClick = { navController.popBackStack() }
             )
         }
@@ -66,6 +62,7 @@ fun AppNavHost(
             val showId = backStackEntry.arguments?.getInt("showId") ?: return@composable
             ContentScreenTvShow(
                 showId = showId,
+                navController = navController,
                 onBackClick = { navController.popBackStack() }
             )
         }

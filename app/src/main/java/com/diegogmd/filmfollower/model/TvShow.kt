@@ -22,7 +22,7 @@ class TvShow (
     val numberOfEpisodes: Int,
     val rating: Double?, // from 0 to 10, default is 0
     val posterPath: String? = "",
-    val tmdbStatus: String = "",
+    val tmdbStatus: String = "", // watchlist/completed/archived
     val tmdbLastSynced: LocalDate,
     val watchStatus: String = "",
     val addedAt: LocalDate,

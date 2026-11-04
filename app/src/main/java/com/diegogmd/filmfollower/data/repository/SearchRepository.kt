@@ -1,10 +1,12 @@
 package com.diegogmd.filmfollower.data.repository
 
-import com.diegogmd.filmfollower.model.MultiSearchResult
+import com.diegogmd.filmfollower.model.responses.MultiSearchResult
 import com.diegogmd.filmfollower.model.Film
 import com.diegogmd.filmfollower.data.local.remote.TmdbApiService
+import com.diegogmd.filmfollower.model.responses.MultiSearchResponse
 import com.diegogmd.filmfollower.model.TvShow
-import com.diegogmd.filmfollower.viewmodels.bestTrailer
+import com.diegogmd.filmfollower.model.responses.CreditsResponse
+import com.diegogmd.filmfollower.model.responses.bestTrailer
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 
@@ -42,21 +44,29 @@ class SearchRepository(private val api: TmdbApiService) {
         return api.getFilm(filmId = id).toFilm()
     }
 
-    suspend fun getFilmRecommendations(id: Int, limit: Int = 5): List<MultiSearchResult> {
-        return api.getFilmRecommendations(filmId = id).results.take(limit)
-    }
-
     suspend fun getTvShow(id: Int): TvShow {
         return api.getTvShow(showId = id).toTvShow()
+    }
+
+    suspend fun getFilmTrailerKey(filmId: Int): String? =
+        api.getFilmVideos(filmId).results.bestTrailer()?.key
+
+    suspend fun getTvShowTrailerKey(showId: Int): String? =
+        api.getTvSeriesVideos(showId).results.bestTrailer()?.key
+
+    suspend fun getFilmRecommendations(id: Int, limit: Int = 5): List<MultiSearchResult> {
+        return api.getFilmRecommendations(filmId = id).results.take(limit)
     }
 
     suspend fun getTvShowRecommendations(id: Int, limit: Int = 5): List<MultiSearchResult> {
         return api.getTvShowRecommendations(showId = id).results.take(limit)
     }
 
-    suspend fun getFilmTrailerKey(filmId: Int): String? =
-        api.getFilmVideos(filmId).results.bestTrailer()?.key
+    suspend fun getFilmCast(id: Int): CreditsResponse {
+        return api.getFilmCast(id)
+    }
 
-    suspend fun getTvSeriesTrailerKey(showId: Int): String? =
-        api.getTvSeriesVideos(showId).results.bestTrailer()?.key
+    suspend fun getTvShowCast(id: Int): CreditsResponse {
+        return api.getTvShowCast(id)
+    }
 }

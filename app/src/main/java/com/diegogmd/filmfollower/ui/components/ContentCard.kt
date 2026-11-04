@@ -48,18 +48,23 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.diegogmd.filmfollower.R
 import com.diegogmd.filmfollower.model.Episode
-import com.diegogmd.filmfollower.model.MultiSearchResult
+import com.diegogmd.filmfollower.model.responses.MultiSearchResult
 import com.diegogmd.filmfollower.model.Film
 import com.diegogmd.filmfollower.model.TvShow
 import com.diegogmd.filmfollower.model.eraseFilm
+import com.diegogmd.filmfollower.model.eraseTvShow
 import com.diegogmd.filmfollower.model.getFilm
 import com.diegogmd.filmfollower.model.getTvShow
 import com.diegogmd.filmfollower.model.isFilmStatus
+import com.diegogmd.filmfollower.model.isTvShowStatus
 import com.diegogmd.filmfollower.model.setFilmStatus
+import com.diegogmd.filmfollower.model.setTvShowStatus
 import com.diegogmd.filmfollower.ui.theme.FilmTypography
 import com.diegogmd.filmfollower.ui.theme.placeholders
 import com.diegogmd.filmfollower.viewmodels.FilmViewModel
 import com.diegogmd.filmfollower.viewmodels.FilmViewModelFactory
+import com.diegogmd.filmfollower.viewmodels.TvShowViewModel
+import com.diegogmd.filmfollower.viewmodels.TvShowViewModelFactory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -297,6 +302,7 @@ fun rememberCardAction(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val filmViewModel: FilmViewModel = viewModel(factory = FilmViewModelFactory())
+    val tvShowViewModel: TvShowViewModel = viewModel(factory = TvShowViewModelFactory())
 
     var watchlisted by remember(content.id, content.mediaType) { mutableStateOf(false) }
     var seen by remember(content.id, content.mediaType) { mutableStateOf(false) }
@@ -306,7 +312,7 @@ fun rememberCardAction(
         val (isWatchlisted, isSeen) = withContext(Dispatchers.IO) {
             when (content.mediaType) {
                 MediaType.Film -> (getFilm(context, content.id) != null) to isFilmStatus(context, content.id, "seen")
-                MediaType.TvShow -> (getTvShow(context, content.id) != null) to false
+                MediaType.TvShow -> (getTvShow(context, content.id) != null) to isTvShowStatus(context, content.id, "seen")
             }
         }
         watchlisted = isWatchlisted
@@ -334,7 +340,22 @@ fun rememberCardAction(
                 }
             }
 
-            MediaType.TvShow -> null
+            MediaType.TvShow -> CardAction(
+                active = seen,
+                activeIcon = R.drawable.ic_visibility_off_24px,
+                inactiveIcon = R.drawable.ic_visibility_24px,
+                activeDescription = "Seen",
+                inactiveDescription = "Not seen"
+            ) {
+                val newSeen = !seen
+                scope.launch {
+                    withContext(Dispatchers.IO) {
+                        setTvShowStatus(context, content.id, if (newSeen) "seen" else "watchlist")
+                    }
+                    seen = newSeen
+                    onChanged()
+                }
+            }
         }
 
         CardType.WATCHLIST_TOGGLE -> when (content.mediaType) {
@@ -363,7 +384,30 @@ fun rememberCardAction(
                 }
             }
 
-            MediaType.TvShow -> null
+            MediaType.TvShow -> CardAction(
+                active = watchlisted,
+                activeIcon = R.drawable.ic_check_24px,
+                inactiveIcon = R.drawable.ic_add_24px,
+                activeDescription = "Watchlisted",
+                inactiveDescription = "Not watchlisted"
+            ) {
+                if (watchlisted) {
+                    scope.launch {
+                        withContext(Dispatchers.IO) {
+                            eraseTvShow(context, content.id)
+                            watchlisted = false
+                            onChanged
+                        }
+                    }
+                } else {
+                    tvShowViewModel.addTvShowToWatchlist(context, content.id) { ok ->
+                        if (ok) {
+                            watchlisted = true
+                            onChanged()
+                        }
+                    }
+                }
+            }
         }
     }
 }

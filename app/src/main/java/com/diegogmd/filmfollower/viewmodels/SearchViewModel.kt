@@ -5,9 +5,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.diegogmd.filmfollower.data.local.remote.tmdbApi
-import com.diegogmd.filmfollower.model.MultiSearchResult
+import com.diegogmd.filmfollower.model.responses.MultiSearchResult
 import com.diegogmd.filmfollower.data.repository.SearchRepository
-import com.diegogmd.filmfollower.model.Film
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow

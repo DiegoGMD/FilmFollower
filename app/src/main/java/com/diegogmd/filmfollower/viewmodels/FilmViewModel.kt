@@ -1,8 +1,6 @@
 package com.diegogmd.filmfollower.viewmodels
 
 import android.content.Context
-import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -10,8 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.diegogmd.filmfollower.data.local.remote.tmdbApi
 import com.diegogmd.filmfollower.data.repository.SearchRepository
 import com.diegogmd.filmfollower.model.Film
-import com.diegogmd.filmfollower.model.Genre
-import com.diegogmd.filmfollower.model.MultiSearchResult
+import com.diegogmd.filmfollower.model.responses.MultiSearchResult
 import com.diegogmd.filmfollower.model.getFilm
 import com.diegogmd.filmfollower.model.getFilmGenreNames
 import com.diegogmd.filmfollower.model.syncFilm
@@ -28,14 +25,14 @@ class FilmViewModel(private val repository: SearchRepository) : ViewModel() {
     private val _film = MutableStateFlow<Film?>(null)
     val film: StateFlow<Film?> = _film.asStateFlow()
 
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
     private val _genres = MutableStateFlow<List<String>>(emptyList())
     val genres: StateFlow<List<String>> = _genres.asStateFlow()
 
     private val _trailerKey = MutableStateFlow<String?>(null)
     val trailerKey = _trailerKey.asStateFlow()
-
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
     private val _recommendations = MutableStateFlow<List<MultiSearchResult>>(emptyList())
     val recommendations: StateFlow<List<MultiSearchResult>> = _recommendations.asStateFlow()

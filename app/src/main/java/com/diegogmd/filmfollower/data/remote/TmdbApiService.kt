@@ -1,9 +1,10 @@
 package com.diegogmd.filmfollower.data.local.remote
 
-import com.diegogmd.filmfollower.model.FilmDetailsResponse
-import com.diegogmd.filmfollower.model.MultiSearchResponse
-import com.diegogmd.filmfollower.model.TvShowDetailsResponse
-import com.diegogmd.filmfollower.viewmodels.VideoResponse
+import com.diegogmd.filmfollower.model.responses.CreditsResponse
+import com.diegogmd.filmfollower.model.responses.FilmDetailsResponse
+import com.diegogmd.filmfollower.model.responses.MultiSearchResponse
+import com.diegogmd.filmfollower.model.responses.TvShowDetailsResponse
+import com.diegogmd.filmfollower.model.responses.VideoResponse
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query
@@ -28,20 +29,10 @@ interface TmdbApiService {
         @Path("film_id") filmId: Int,
     ): FilmDetailsResponse
 
-    @GET("movie/{film_id}/recommendations")
-    suspend fun getFilmRecommendations(
-        @Path("film_id") filmId: Int,
-    ): MultiSearchResponse
-
     @GET("tv/{tvshow_id}")
     suspend fun getTvShow(
         @Path("tvshow_id") showId: Int,
     ): TvShowDetailsResponse
-
-    @GET("tv/{tvshow_id}/recommendations")
-    suspend fun getTvShowRecommendations(
-        @Path("tvshow_id") showId: Int,
-    ): MultiSearchResponse
 
     @GET("movie/{id}/videos")
     suspend fun getFilmVideos(
@@ -54,4 +45,24 @@ interface TmdbApiService {
         @Path("id") id: Int,
         @Query("include_video_language") languages: String = "en,null"
     ): VideoResponse
+
+    @GET("movie/{film_id}/recommendations")
+    suspend fun getFilmRecommendations(
+        @Path("film_id") filmId: Int,
+    ): MultiSearchResponse
+
+    @GET("tv/{tvshow_id}/recommendations")
+    suspend fun getTvShowRecommendations(
+        @Path("tvshow_id") showId: Int,
+    ): MultiSearchResponse
+
+    @GET("movie/{film_id}/credits")
+    suspend fun getFilmCast(
+        @Path("film_id") filmId: Int,
+    ): CreditsResponse
+
+    @GET("tv/{tvshow_id}/credits")
+    suspend fun getTvShowCast(
+        @Path("tvshow_id") showId: Int,
+    ): CreditsResponse
 }

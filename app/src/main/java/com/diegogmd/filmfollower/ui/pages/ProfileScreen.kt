@@ -46,22 +46,25 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.diegogmd.filmfollower.SecureStorage
-import com.diegogmd.filmfollower.model.Film
-import com.diegogmd.filmfollower.model.TvShow
 import com.diegogmd.filmfollower.model.getAllFavouriteFilms
+import com.diegogmd.filmfollower.model.getAllFavouriteTvShows
 import com.diegogmd.filmfollower.model.getAllFilmStatus
+import com.diegogmd.filmfollower.model.getAllTvShowStatus
 import com.diegogmd.filmfollower.ui.components.CardType
 import com.diegogmd.filmfollower.ui.components.ContentCard
+import com.diegogmd.filmfollower.ui.components.ContentCardUi
+import com.diegogmd.filmfollower.ui.components.MediaType
+import com.diegogmd.filmfollower.ui.components.toCardUi
 import com.diegogmd.filmfollower.ui.theme.FilmTypography
 
 @Composable
 fun ProfileScreen(modifier: Modifier, navController: NavHostController) {
     var context = LocalContext.current
     var refreshTick by remember { mutableIntStateOf(0) }
-    val favouriteFilms = remember(refreshTick) { getAllFavouriteFilms(context) }
-    val favouriteShows = remember(refreshTick) { getAllFavouriteFilms(context) }
-    val seenFilms = remember(refreshTick) { getAllFilmStatus(context, "seen") }
-    val seenShows = remember(refreshTick) { getAllFilmStatus(context, "seen") }
+    val favouriteFilms = remember(refreshTick) { getAllFavouriteFilms(context)?.map {it.toCardUi()} }
+    val favouriteShows = remember(refreshTick) { getAllFavouriteTvShows(context)?.map {it.toCardUi()} }
+    val seenFilms = remember(refreshTick) { getAllFilmStatus(context, "seen")?.map {it.toCardUi()} }
+    val seenShows = remember(refreshTick) { getAllTvShowStatus(context, "completed")?.map {it.toCardUi()} }
 
     Column {
         SecureStorage.getUsername(context)?.let { ProfileHeader(it, navController) }
@@ -75,8 +78,8 @@ fun ProfileScreen(modifier: Modifier, navController: NavHostController) {
                         modifier = Modifier.weight(1f)
                     )
                     StatCard(
-                        count = 0 /*seenShows?.count() ?: 0*/,
-                        label = "Seen Shows",
+                        count = seenShows?.count() ?: 0,
+                        label = "Seen Tv Shows",
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -84,21 +87,26 @@ fun ProfileScreen(modifier: Modifier, navController: NavHostController) {
 
             if (favouriteFilms != null) {
                 item {
-                    FilmCarouselSection(
+                    CarouselSection(
                         "Favourite Films", favouriteFilms, navController
                     ) { refreshTick++ }
                 }
             }
-//            if (favouriteShows != null) {
-//                item {
-//                    FilmCarouselSection(
-//                        "Favourite Tv Shows", favouriteShows, navController
-//                    ) { refreshTick++ }
-//                }
-//            }
+            if (favouriteShows != null) {
+                item {
+                    CarouselSection(
+                        "Favourite Tv Shows", favouriteShows, navController
+                    ) { refreshTick++ }
+                }
+            }
             if (seenFilms != null) {
                 item {
-                    FilmCarouselSection("Seen Films", seenFilms, navController) { refreshTick++ }
+                    CarouselSection("Seen Films", seenFilms, navController) { refreshTick++ }
+                }
+            }
+            if (seenShows != null) {
+                item {
+                    CarouselSection("Seen Tv Shows", seenShows, navController) { refreshTick++ }
                 }
             }
         }
@@ -122,52 +130,6 @@ fun StatCard(count: Int, label: String, modifier: Modifier) {
             Text(text = count.toString(), style = FilmTypography.titleMedium, fontSize = 32.sp)
             Text(text = label, style = FilmTypography.titleMedium, fontSize = 14.sp)
         }
-    }
-}
-
-@Composable
-fun FilmCarouselSection(
-    title: String, films: List<Film>, navController: NavHostController, onChanged: () -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface)
-    ) {
-        Text(
-            text = title,
-            fontSize = 20.sp,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.align(Alignment.CenterHorizontally),
-            style = FilmTypography.titleMedium
-        )
-        ContentCarousel(films = films, navController = navController, onChanged = onChanged)
-    }
-}
-
-@Composable
-fun TvShowCarouselSection(
-    title: String, tvShows: List<TvShow>, navController: NavHostController, onChanged: () -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface)
-    ) {
-        Text(
-            text = title,
-            fontSize = 20.sp,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.align(Alignment.CenterHorizontally),
-            style = FilmTypography.titleMedium
-        )
-        //ContentCarousel(tvShows = tvShows, navController = navController, onChanged = onChanged)
     }
 }
 
@@ -244,31 +206,53 @@ private fun ProfileHeader(
 }
 
 @Composable
-private fun ContentCarousel(
-    modifier: Modifier = Modifier,
-    films: List<Film>,
+fun CarouselSection(
+    title: String,
+    content: List<ContentCardUi?>,
     navController: NavHostController,
-    onChanged: () -> Unit
+    onChanged: () -> Unit = {}
 ) {
-    val listState = rememberLazyListState()
-
-    LazyRow(
-        state = listState,
-        flingBehavior = rememberSnapFlingBehavior(lazyListState = listState),
-        contentPadding = PaddingValues(horizontal = 24.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
+    Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 8.dp, bottom = 8.dp)
+            .padding(8.dp),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface)
     ) {
-        items(films, key = { it.filmId }) { film ->
-            ContentCard(
-                content = film,
-                orientation = true,
-                cardType = CardType.NONE,
-                onClick = { id -> navController.navigate("film/$id") },
-                onChanged = onChanged
-            )
+        val listState = rememberLazyListState()
+
+        Text(
+            text = title,
+            fontSize = 20.sp,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.align(Alignment.CenterHorizontally),
+            style = FilmTypography.titleMedium
+        )
+        LazyRow(
+            state = listState,
+            flingBehavior = rememberSnapFlingBehavior(lazyListState = listState),
+            contentPadding = PaddingValues(horizontal = 24.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 8.dp, bottom = 8.dp)
+        ) {
+            items(content, key = { "${it?.mediaType}-${it?.id}" }) { item ->
+                if (item != null) {
+                    ContentCard(
+                        content = item,
+                        orientation = true,
+                        onClick = { ui ->
+                            val route = when (ui.mediaType) {
+                                MediaType.Film -> "film/${ui.id}"
+                                MediaType.TvShow -> "show/${ui.id}"
+                            }
+                            navController.navigate(route)
+                        }
+                    )
+                }
+            }
         }
     }
 }
