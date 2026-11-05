@@ -23,4 +23,6 @@
     <string name="read_access_token">Token d\'accés de lectura a l\'API</string>
     <string name="token_info_1">Pots obtindre el token registrant-te a </string>
     <string name="token_info_2">\nTrobareu el token dins l\àrea d\'API a Configuració</string>
+    <string name="about">About</string>
+    <string name="episodes">Episodis</string>
 </resources>

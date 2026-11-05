@@ -73,7 +73,8 @@ data class TvShowDetailsResponse(
     val number_of_episodes: Int,
     var vote_average: Double = 0.0, // from 0 to 10, default is 0
     var poster_path:  String? = null,
-    var status: String = ""
+    var status: String = "",
+    val genres: List<GenreDetailsResponse>? = null
 ) {
     fun toTvShow(): TvShow {
         return TvShow(
@@ -93,7 +94,8 @@ data class TvShowDetailsResponse(
             tmdbStatus = status,
             tmdbLastSynced = LocalDate.now(),
             watchStatus = "watchlist",// default value
-            addedAt = LocalDate.now()
+            addedAt = LocalDate.now(),
+            genres = genres.orEmpty().map { it.toGenre() }
         )
     }
 }

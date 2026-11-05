@@ -257,7 +257,7 @@ fun getTvShowGenreNames(context: Context, showId: Int): List<String> {
     val query = """
         SELECT g.name
         FROM TvShowGenre sg
-        INNER JOIN Genre g ON sg.show_id = g.show_id
+        INNER JOIN Genre g ON sg.genre_id = g.genre_id
         WHERE sg.show_id = ?
         ORDER BY g.name
     """.trimIndent()
@@ -277,4 +277,4 @@ fun getTvShowGenreNames(context: Context, showId: Int): List<String> {
 }
 
 fun getTvShowGenre(context: Context, showId: Int): String =
-    getTvShowGenreNames(context, showId).ifEmpty { listOf("Unknown") }.joinToString { ", " }
+    getTvShowGenreNames(context, showId).ifEmpty { listOf("Unknown") }.joinToString( ", " )

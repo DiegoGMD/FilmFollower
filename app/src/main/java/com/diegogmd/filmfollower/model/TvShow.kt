@@ -96,8 +96,6 @@ class TvShow (
                 put("poster_path", posterPath)
                 put("tmdb_status", tmdbStatus)
                 put("tmdb_last_synced", LocalDate.now().toString())
-                put("watch_status", watchStatus)
-                put("added_at", addedAt.toString())
                 // NOT touched: watch_status, watched_date, times_watched, added_at
             }
             db.beginTransaction()
