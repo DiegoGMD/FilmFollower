@@ -3,6 +3,7 @@ package com.diegogmd.filmfollower.data.local.remote
 import com.diegogmd.filmfollower.model.responses.CreditsResponse
 import com.diegogmd.filmfollower.model.responses.FilmDetailsResponse
 import com.diegogmd.filmfollower.model.responses.MultiSearchResponse
+import com.diegogmd.filmfollower.model.responses.SeasonDetailsResponse
 import com.diegogmd.filmfollower.model.responses.TvShowDetailsResponse
 import com.diegogmd.filmfollower.model.responses.VideoResponse
 import retrofit2.http.GET
@@ -33,6 +34,12 @@ interface TmdbApiService {
     suspend fun getTvShow(
         @Path("tvshow_id") showId: Int,
     ): TvShowDetailsResponse
+
+    @GET("tv/{tvshow_id}/season/{season_number}")
+    suspend fun getTvShowSeason(
+        @Path("tvshow_id") showId: Int,
+        @Path("season_number") seasonNumber: Int,
+    ): SeasonDetailsResponse
 
     @GET("movie/{id}/videos")
     suspend fun getFilmVideos(

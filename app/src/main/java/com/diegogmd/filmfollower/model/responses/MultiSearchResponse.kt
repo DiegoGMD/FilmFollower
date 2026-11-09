@@ -1,7 +1,9 @@
 package com.diegogmd.filmfollower.model.responses
 
+import com.diegogmd.filmfollower.model.Episode
 import com.diegogmd.filmfollower.model.Film
 import com.diegogmd.filmfollower.model.Genre
+import com.diegogmd.filmfollower.model.Season
 import com.diegogmd.filmfollower.model.TvShow
 import org.threeten.bp.LocalDate
 
@@ -44,7 +46,7 @@ data class FilmDetailsResponse(
             title = title,
             originalTitle = original_title,
             overview = overview,
-            releaseDate = if (release_date != null) {
+            releaseDate = if (!release_date.isNullOrBlank()) {
                 LocalDate.parse(release_date)
             } else {
                 LocalDate.of(9999, 12, 31)
@@ -74,7 +76,8 @@ data class TvShowDetailsResponse(
     var vote_average: Double = 0.0, // from 0 to 10, default is 0
     var poster_path:  String? = null,
     var status: String = "",
-    val genres: List<GenreDetailsResponse>? = null
+    val genres: List<GenreDetailsResponse>? = null,
+    val seasons: List<SeasonSummaryResponse>? = null
 ) {
     fun toTvShow(): TvShow {
         return TvShow(
@@ -82,7 +85,7 @@ data class TvShowDetailsResponse(
             title = name,
             originalTitle = original_name,
             overview = overview,
-            firstAirDate = if (first_air_date != null) {
+            firstAirDate = if (!first_air_date.isNullOrBlank()) {
                 LocalDate.parse(first_air_date)
             } else {
                 LocalDate.of(9999, 12, 31)
@@ -100,6 +103,60 @@ data class TvShowDetailsResponse(
     }
 }
 
+data class SeasonSummaryResponse(
+    val id: Int,
+    val season_number: Int,
+    val name: String? = null,
+    val overview: String? = null,
+    val air_date: String? = null,
+    val episode_count:Int? = null,
+    val poster_path: String? = null
+) {
+    fun toSeason(showId: Int) = Season(
+        showId = showId,
+        seasonNumber = season_number,
+        tmdbSeasonId = id,
+        name = name ?: "Season $season_number",
+        overview = overview ?: "",
+        airDate = air_date.toLocalDateOrNull(),
+        episodeCount = episode_count ?: 0,
+        posterPath = poster_path
+    )
+}
+
+data class SeasonDetailsResponse(
+    val id: Int,
+    val season_number: Int,
+    val name: String? = null,
+    val overview: String? = null,
+    val air_date: String? = null,
+    val poster_path: String? = null,
+    val episodes: List<EpisodeDetailsResponse>? = null
+) {
+
+}
+
+data class EpisodeDetailsResponse(
+    val id: Int,
+    val episode_number: Int,
+    val season_number: Int,
+    val name: String? = null,
+    val overview: String? = null,
+    val air_date: String? = null,
+    val runtime:Int? = null
+) {
+    fun toEpisode(showId: Int) = Episode(
+        showId = showId,
+        seasonNumber = season_number,
+        episodeNumber = episode_number,
+        tmdbEpisodeId = id,
+        title = name ?: "Episode $episode_number",
+        overview = overview ?: "",
+        airDate = air_date.toLocalDateOrNull(),
+        runtime = runtime
+    )
+}
+
 data class GenreDetailsResponse(
     val id: Int,
     val name: String
@@ -111,32 +168,6 @@ data class GenreDetailsResponse(
         )
     }
 }
-
-//data class SeasonDetailsResponse(
-//    val showId: Int = 0,
-//    val title: String = "",
-//    val originalTitle: String? = "",
-//    val overview: String? = "",
-//    val firstAirDate: String? = null,
-//    val numberOfSeasons: Int,
-//    val numberOfEpisodes: Int,
-//    var rating: Double = 0.0, // from 0 to 10, default is 0
-//    var posterPath:  String? = null,
-//    var tmdbStatus: String = "",
-//)
-
-//data class EpisodeDetailsResponse(
-//    val showId: Int = 0,
-//    val title: String = "",
-//    val originalTitle: String? = "",
-//    val overview: String? = "",
-//    val firstAirDate: String? = null,
-//    val numberOfSeasons: Int,
-//    val numberOfEpisodes: Int,
-//    var rating: Double = 0.0, // from 0 to 10, default is 0
-//    var posterPath:  String? = null,
-//    var tmdbStatus: String = "",
-//)
 
 data class VideoResponse(
     val id: Int,
@@ -185,3 +216,8 @@ fun CastDto.toCastMember() = CastMember(
     role = character ?: "",
     photoUrl = profile_path
 )
+
+fun String?.toLocalDateOrNull(): LocalDate? {
+    if (this.isNullOrBlank()) return null
+    return runCatching { LocalDate.parse(this) }.getOrNull()
+}

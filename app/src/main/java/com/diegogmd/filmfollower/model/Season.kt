@@ -2,63 +2,174 @@ package com.diegogmd.filmfollower.model
 
 import android.content.ContentValues
 import android.content.Context
+import android.database.Cursor
+import android.database.sqlite.SQLiteDatabase
 import android.util.Log
 import com.diegogmd.filmfollower.data.local.FilmFillowerDatabase
+import com.diegogmd.filmfollower.model.responses.toLocalDateOrNull
 import org.threeten.bp.LocalDate
 
 class Season (
-    val show_id: Int,
-    val season_number: Int,
-    val tmdb_season_id: Int,
+    val showId: Int,
+    val seasonNumber: Int,
+    val tmdbSeasonId: Int,
     val name: String,
     val overview: String,
-    val air_date: LocalDate,
-    val episode_count: Int,
-    val poster_path: String,
+    val airDate: LocalDate? = null,
+    val episodeCount: Int,
+    val posterPath: String? = null,
 ) {
-    fun insertNewSeason(context: Context) {
+    fun insertNewSeason(context: Context): Boolean {
         val dbHelper = FilmFillowerDatabase(context)
         val db = dbHelper.writableDatabase
+        var ok = false
 
         try {
             val contentValues = ContentValues().apply {
-                put("show_id", show_id)
-                put("season_number", season_number)
-                put("tmdb_season_id", tmdb_season_id)
+                put("show_id", showId)
+                put("season_number", seasonNumber)
+                put("tmdb_season_id", tmdbSeasonId)
                 put("name", name)
                 put("overview", overview)
-                put("air_date", air_date.toString())
-                put("episode_count", episode_count)
-                put("poster_path", poster_path)
+                if (airDate != null) {
+                    put("air_date", airDate.toString())
+                } else {
+                    putNull("air_date")
+                }
+                put("episode_count", episodeCount)
+                if (posterPath != null) {
+                    put("poster_path", posterPath)
+                } else {
+                    putNull("poster_path")
+                }
             }
-            db.insert("Season", null, contentValues)
-
+            db.beginTransaction()
+            try {
+                val rowId = db.insert("Season", null, contentValues)
+                if (rowId == -1L) throw throw IllegalStateException("Season insert returned -1")
+                db.setTransactionSuccessful()
+                ok = true
+            } finally {
+                db.endTransaction()
+            }
         } catch (e: Exception) {
             Log.e("Database", "Error inserting new season", e)
         } finally {
             db.close()
         }
+        return ok
+    }
+
+    fun updateFromTmdb(context: Context) {
+        val dbHelper = FilmFillowerDatabase(context)
+        val db = dbHelper.writableDatabase
+
+        try {
+            val values = ContentValues().apply {
+                put("show_id", showId)
+                put("season_number", seasonNumber)
+                put("tmdb_season_id", tmdbSeasonId)
+                put("name", name)
+                put("overview", overview)
+                if (airDate != null) {
+                    put("air_date", airDate.toString())
+                } else {
+                    putNull("air_date")
+                }
+                put("episode_count", episodeCount)
+                if (posterPath != null) {
+                    put("poster_path", posterPath)
+                } else {
+                    putNull("poster_path")
+                }
+            }
+            db.beginTransaction()
+            try {
+                db.update("Season", values, "show_id = ? AND season_number = ?", arrayOf(showId.toString(), seasonNumber.toString()))
+                db.setTransactionSuccessful()
+            } finally {
+                db.endTransaction()
+            }
+        } catch (e: Exception) {
+            Log.e("Database", "Error syncing season", e)
+        } finally {
+            db.close()
+        }
+    }
+
+    internal fun upsertInto(db: SQLiteDatabase) {
+        val insertValues = ContentValues().apply {
+            put("show_id", showId)
+            put("season_number", seasonNumber)
+        }
+        // Only TMDB fields: watched_date is NOT touched
+        val tmdbValues = ContentValues().apply {
+            put("tmdb_season_id", tmdbSeasonId)
+            put("name", name)
+            put("overview", overview)
+            put("air_date", airDate?.toString())
+            put("episode_count", episodeCount)
+            put("poster_path", posterPath)
+        }
+        db.insertWithOnConflict("Season", null, insertValues, SQLiteDatabase.CONFLICT_IGNORE)
+        db.update(
+            "Season",
+            tmdbValues,
+            "show_id = ? AND season_number = ?",
+            arrayOf(showId.toString(), seasonNumber.toString())
+        )
     }
 }
+
+fun insertSeasons(context: Context, seasons: List<Season>): Boolean {
+    if (seasons.isEmpty()) return true
+    val dbHelper = FilmFillowerDatabase(context)
+    val db = dbHelper.writableDatabase
+    var ok = false
+
+    try {
+        db.beginTransaction()
+        try {
+            seasons.forEach { it.upsertInto(db) }
+            db.setTransactionSuccessful()
+            ok = true
+        } finally {
+            db.endTransaction()
+        }
+    } catch (e: Exception) {
+        Log.e("Database", "Error inserting seasons", e)
+    } finally {
+        db.close()
+    }
+    return ok
+}
+
+private fun Cursor.toSeason() = Season(
+    showId = getInt(getColumnIndexOrThrow("show_id")),
+    seasonNumber = getInt(getColumnIndexOrThrow("season_number")),
+    tmdbSeasonId = getInt(getColumnIndexOrThrow("tmdb_season_id")),
+    name = getString(getColumnIndexOrThrow("name")) ?: "",
+    overview = getString(getColumnIndexOrThrow("overview")) ?: "",
+    airDate = getString(getColumnIndexOrThrow("air_date")).toLocalDateOrNull(),
+    episodeCount = getInt(getColumnIndexOrThrow("episode_count")),
+    posterPath = getString(getColumnIndexOrThrow("poster_path"))
+)
 
 fun getSeason(context: Context, showId: Int, seasonNumber: Int): Season? {
     val dbHelper = FilmFillowerDatabase(context)
     val db = dbHelper.readableDatabase
     var theSeason: Season? = null
 
-    if(showId == 0){
-        Log.e("Database", "Error getting season info: showId is null or 0")
+    if (showId == 0){
+        Log.e("Database", "Error getting season info: showId is 0")
         return null
     }
 
     val query = """
         SELECT * FROM Season
-        WHERE show_id = ? and season_number = ?
-    """
-    val selectionArgs = arrayOf(
-        showId.toString(),
-        seasonNumber.toString()
-    )
+        WHERE show_id = ? AND season_number = ?
+    """.trimIndent()
+    val selectionArgs = arrayOf(showId.toString(), seasonNumber.toString())
 
     try {
         val cursor = db.rawQuery(query, selectionArgs)
@@ -66,14 +177,14 @@ fun getSeason(context: Context, showId: Int, seasonNumber: Int): Season? {
             val dateStr1 = cursor.getString(cursor.getColumnIndexOrThrow("air_date"))
 
             theSeason = Season(
-                show_id = cursor.getInt(cursor.getColumnIndexOrThrow("show_id")),
-                season_number = cursor.getInt(cursor.getColumnIndexOrThrow("season_number")),
-                tmdb_season_id = cursor.getInt(cursor.getColumnIndexOrThrow("tmdb_season_id")),
+                showId = cursor.getInt(cursor.getColumnIndexOrThrow("show_id")),
+                seasonNumber = cursor.getInt(cursor.getColumnIndexOrThrow("season_number")),
+                tmdbSeasonId = cursor.getInt(cursor.getColumnIndexOrThrow("tmdb_season_id")),
                 name = cursor.getString(cursor.getColumnIndexOrThrow("name")),
                 overview = cursor.getString(cursor.getColumnIndexOrThrow("overview")),
-                air_date = LocalDate.parse(dateStr1),
-                episode_count = cursor.getInt(cursor.getColumnIndexOrThrow("episode_count")),
-                poster_path = cursor.getString(cursor.getColumnIndexOrThrow("poster_path"))
+                airDate = LocalDate.parse(dateStr1),
+                episodeCount = cursor.getInt(cursor.getColumnIndexOrThrow("episode_count")),
+                posterPath = cursor.getString(cursor.getColumnIndexOrThrow("poster_path"))
             )
         }
         cursor.close()
@@ -84,4 +195,83 @@ fun getSeason(context: Context, showId: Int, seasonNumber: Int): Season? {
         db.close()
     }
     return theSeason
+}
+
+fun getAllSeasons(context: Context, showId: Int): List<Season> {
+    val dbHelper = FilmFillowerDatabase(context)
+    val db = dbHelper.readableDatabase
+    val seasons = mutableListOf<Season>()
+
+    val query = """
+        SELECT * FROM Season
+        WHERE show_id = ?
+        ORDER BY season_number
+    """.trimIndent()
+    val selectionArgs = arrayOf(showId.toString())
+
+    try {
+        db.rawQuery(query, selectionArgs).use { cursor ->
+            while (cursor.moveToNext()) seasons.add(cursor.toSeason())
+        }
+    } catch (e: Exception) {
+        Log.e("Database", "Error getting seasons of show", e)
+    } finally {
+        db.close()
+    }
+    return seasons
+}
+
+fun eraseSeason(context: Context, showId: Int, seasonNumber: Int): Int? {
+    val season: Season? = getSeason(context, showId, seasonNumber)
+    if (season == null) {
+        Log.e("Database", "Error getting season")
+        return null
+    } else {
+        val dbHelper = FilmFillowerDatabase(context)
+        val db = dbHelper.writableDatabase
+
+        try {
+            db.execSQL(
+                "DELETE FROM Season WHERE show_id = ? AND season_number = ?",
+                arrayOf(showId.toString(), seasonNumber.toString())
+            )
+            Log.d(
+                "Database",
+                "Season from tv show $showId and number $seasonNumber deleted successfully"
+            )
+        } catch (e: Exception) {
+            Log.e("Database", "Error deleting season", e)
+            return 0
+        } finally {
+            db.close()
+        }
+
+        return 1
+    }
+}
+
+fun eraseAllSeasons(context: Context, showId: Int): Int? {
+    val tvShow: TvShow? = getTvShow(context, showId)
+    if (tvShow == null || showId == 0) {
+        Log.e("Database", "Error getting tv show to delete its seasons")
+        return null
+    } else {
+        val dbHelper = FilmFillowerDatabase(context)
+        val db = dbHelper.writableDatabase
+
+        try {
+            db.execSQL(
+                "DELETE FROM Season WHERE show_id = ?",
+                arrayOf(showId.toString())
+            )
+            Log.d("Database", "Seasons from tv show $showId deleted successfully")
+        } catch (e: Exception) {
+            Log.e("Database", "Error deleting all seasons", e)
+            return 0
+        } finally {
+            db.close()
+        }
+
+        return 1
+    }
 }

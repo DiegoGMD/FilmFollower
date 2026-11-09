@@ -78,7 +78,8 @@ class TvShow (
     }
 
     fun updateFromTmdb(context: Context) {
-        val db = FilmFillowerDatabase(context).writableDatabase
+        val dbHelper = FilmFillowerDatabase(context)
+        val db = dbHelper.writableDatabase
         try {
             val values = ContentValues().apply {
                 put("show_id", showId)
@@ -131,18 +132,16 @@ fun getTvShow(context: Context, showId: Int): TvShow? {
     val db = dbHelper.readableDatabase
     var theTvShow: TvShow? = null
 
-    if(showId == 0){
-        Log.e("Database", "Error getting tvshow info: showId is null or 0")
+    if (showId == 0) {
+        Log.e("Database", "Error getting tvshow info: showId is 0")
         return null
     }
 
     val query = """
         SELECT * FROM TvShow
         WHERE show_id = ?
-    """
-    val selectionArgs = arrayOf(
-        showId.toString()
-    )
+    """.trimIndent()
+    val selectionArgs = arrayOf(showId.toString())
 
     try {
         val cursor = db.rawQuery(query, selectionArgs)

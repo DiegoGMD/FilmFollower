@@ -57,6 +57,7 @@ import com.diegogmd.filmfollower.model.getFilm
 import com.diegogmd.filmfollower.model.getTvShow
 import com.diegogmd.filmfollower.model.isFilmStatus
 import com.diegogmd.filmfollower.model.isTvShowStatus
+import com.diegogmd.filmfollower.model.responses.toLocalDateOrNull
 import com.diegogmd.filmfollower.model.setFilmStatus
 import com.diegogmd.filmfollower.model.setTvShowStatus
 import com.diegogmd.filmfollower.ui.theme.FilmTypography
@@ -512,12 +513,6 @@ fun NoInternetCard(modifier: Modifier = Modifier) {
         }
     }
 }
-
-fun String?.toLocalDateOrNull(): LocalDate? {
-    if (this.isNullOrBlank()) return null
-    return runCatching { LocalDate.parse(this) }.getOrNull()
-}
-
 
 // EpisodeContentCard (May be upgraded)
 
