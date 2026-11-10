@@ -132,22 +132,19 @@ data class SeasonDetailsResponse(
     val air_date: String? = null,
     val poster_path: String? = null,
     val episodes: List<EpisodeDetailsResponse>? = null
-) {
-
-}
+)
 
 data class EpisodeDetailsResponse(
     val id: Int,
     val episode_number: Int,
-    val season_number: Int,
     val name: String? = null,
     val overview: String? = null,
     val air_date: String? = null,
     val runtime:Int? = null
 ) {
-    fun toEpisode(showId: Int) = Episode(
+    fun toEpisode(showId: Int, seasonNumber: Int) = Episode(
         showId = showId,
-        seasonNumber = season_number,
+        seasonNumber = seasonNumber,
         episodeNumber = episode_number,
         tmdbEpisodeId = id,
         title = name ?: "Episode $episode_number",

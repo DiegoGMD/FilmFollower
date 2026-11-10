@@ -190,6 +190,7 @@ fun eraseTvShow(context: Context, showId: Int): Int? {
             db.execSQL(
                 "DELETE FROM TvShow WHERE show_id = ?", arrayOf(showId.toString())
             )
+            eraseAllSeasons(context, showId)
             Log.d("Database", "TvShow with ID $showId deleted successfully")
         } catch (e: Exception) {
             Log.e("Database", "Error deleting tv show", e)
@@ -216,12 +217,12 @@ fun getAllTvShowStatus(context: Context, status: String, released: Int? = null):
 
     when (released) {
         0 -> {
-            query = """ SELECT * FROM TvShow WHERE watch_status = ? AND release_date > ?"""
+            query = """ SELECT * FROM TvShow WHERE watch_status = ? AND first_air_date > ?"""
             selectionArgs = arrayOf(status, LocalDate.now().toString())
         }
 
         1 -> {
-            query = """ SELECT * FROM TvShow WHERE watch_status = ? AND release_date <= ?"""
+            query = """ SELECT * FROM TvShow WHERE watch_status = ? AND first_air_date <= ?"""
             selectionArgs = arrayOf(status, LocalDate.now().toString())
         }
 
@@ -281,7 +282,10 @@ fun setTvShowStatus(context: Context, id: Int, status: String) {
 }
 
 suspend fun syncTvShow(
-    context: Context, id: Int, repository: SearchRepository, force: Boolean = false
+    context: Context,
+    id: Int,
+    repository: SearchRepository,
+    force: Boolean = false
 ): Boolean {
     val local = withContext(Dispatchers.IO) { getTvShow(context, id) } ?: return false
     if (!local.needsSync && !force) return false

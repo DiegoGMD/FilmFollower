@@ -3,10 +3,10 @@ package com.diegogmd.filmfollower.ui.pages
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
-import android.media.tv.TvContract.Programs.Genres
 import android.net.Uri
 import android.widget.Toast
 import androidx.annotation.DrawableRes
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -31,12 +31,16 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
@@ -46,8 +50,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -68,18 +74,24 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import com.diegogmd.filmfollower.R
+import com.diegogmd.filmfollower.model.Episode
 import com.diegogmd.filmfollower.viewmodels.FilmViewModel
 import com.diegogmd.filmfollower.model.Film
+import com.diegogmd.filmfollower.model.Season
 import com.diegogmd.filmfollower.model.responses.MultiSearchResult
 import com.diegogmd.filmfollower.model.TvShow
 import com.diegogmd.filmfollower.model.eraseFilm
 import com.diegogmd.filmfollower.model.eraseTvShow
+import com.diegogmd.filmfollower.model.getAllSeasons
+import com.diegogmd.filmfollower.model.getEpisodesOfSeason
 import com.diegogmd.filmfollower.model.getFilm
 import com.diegogmd.filmfollower.model.getTvShow
 import com.diegogmd.filmfollower.model.isFavouriteFilm
 import com.diegogmd.filmfollower.model.isFavouriteTvShow
 import com.diegogmd.filmfollower.model.isFilmStatus
 import com.diegogmd.filmfollower.model.isTvShowStatus
+import com.diegogmd.filmfollower.model.setEpisodeUnwatched
+import com.diegogmd.filmfollower.model.setEpisodeWatched
 import com.diegogmd.filmfollower.model.setFavouriteFilm
 import com.diegogmd.filmfollower.model.setFavouriteTvShow
 import com.diegogmd.filmfollower.model.setFilmStatus
@@ -87,13 +99,15 @@ import com.diegogmd.filmfollower.model.setTvShowStatus
 import com.diegogmd.filmfollower.model.unsetFavouriteFilm
 import com.diegogmd.filmfollower.model.unsetFavouriteTvShow
 import com.diegogmd.filmfollower.ui.components.ContentCard
-import com.diegogmd.filmfollower.ui.components.EmptyContentCard
 import com.diegogmd.filmfollower.ui.components.MediaType
 import com.diegogmd.filmfollower.ui.theme.FilmTypography
 import com.diegogmd.filmfollower.ui.theme.placeholders
 import com.diegogmd.filmfollower.viewmodels.FilmViewModelFactory
 import com.diegogmd.filmfollower.viewmodels.TvShowViewModel
 import com.diegogmd.filmfollower.viewmodels.TvShowViewModelFactory
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.threeten.bp.LocalDate
 
 private fun openTrailer(context: Context, key: String) {
@@ -138,10 +152,16 @@ fun ContentScreenTvShow(
     val context = LocalContext.current
     val tvShow by viewModel.tvShow.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
+    val seasons by viewModel.seasons.collectAsState()
 
     LaunchedEffect(showId) {
         viewModel.loadTvShow(context, showId)
         viewModel.loadRecommendations(showId)
+        viewModel.loadSeasons(context, showId)
+    }
+
+    LaunchedEffect(seasons) {
+        seasons.forEach { viewModel.loadEpisodes(context, showId, it.seasonNumber) }
     }
 
     when {
@@ -266,6 +286,9 @@ private fun TvShowContentUI(
     val context = LocalContext.current
     val genres by viewModel.genres.collectAsState()
     val recommendations by viewModel.recommendations.collectAsState()
+    val seasons by viewModel.seasons.collectAsState()
+    val isLoadingSeasons by viewModel.isLoadingSeasons.collectAsState()
+    val episodesBySeason by viewModel.episodesBySeason.collectAsState()
     var watchlisted by remember(tvShow.showId) {
         mutableStateOf(
             getTvShow(
@@ -400,7 +423,19 @@ private fun TvShowContentUI(
                         onTrailerClick = { trailerKey?.let { openTrailer(context, it) } })
                 })
 
-            1 -> Text("Episodes")
+            1 -> EpisodesTab(
+                seasons = seasons,
+                isLoadingSeasons = isLoadingSeasons,
+                episodesBySeason = episodesBySeason,
+                onEpisodeClick = { ep ->
+                    if (!watchlisted) {
+                        Toast.makeText(context, "Add the show to your watchlist first", Toast.LENGTH_SHORT).show()
+                    } else {
+                        viewModel.toggleEpisodeWatched(context, tvShow.showId, ep)
+                    }
+                },
+                modifier = Modifier.weight(1f)
+            )
         }
     }
 }
@@ -764,6 +799,148 @@ private fun ContentCarousel(
                 }
             )
         }
+    }
+}
+
+@Composable
+private fun EpisodesTab(
+    seasons: List<Season>,
+    isLoadingSeasons: Boolean,
+    episodesBySeason: Map<Int, List<Episode>>,
+    onEpisodeClick: (Episode) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var expandedSeasons by remember { mutableStateOf<Set<Int>>(emptySet()) }
+
+    when {
+        isLoadingSeasons -> Box(
+            modifier.fillMaxWidth().padding(24.dp),
+            contentAlignment = Alignment.Center
+        ) { CircularProgressIndicator() }
+
+        seasons.isEmpty() -> Box(
+            modifier.fillMaxWidth().padding(24.dp),
+            contentAlignment = Alignment.Center
+        ) { Text("No seasons available", textAlign = TextAlign.Center) }
+
+        else -> LazyColumn(modifier = modifier.fillMaxWidth()) {
+            items(seasons, key = { it.seasonNumber }) { season ->
+                val n = season.seasonNumber
+                val isExpanded = n in expandedSeasons
+                episodesBySeason[n]?.let {
+                    SeasonDropdown(
+                        season = season,
+                        episodes = it,
+                        expanded = isExpanded,
+                        onHeaderClick = {
+                            expandedSeasons =
+                                if (isExpanded) expandedSeasons - n else expandedSeasons + n
+                        },
+                        onEpisodeClick = onEpisodeClick
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SeasonDropdown(
+    season: Season,
+    episodes: List<Episode>,
+    expanded: Boolean,
+    onHeaderClick: () -> Unit,
+    onEpisodeClick: (Episode) -> Unit
+) {
+    val total = episodes?.size ?: season.episodeCount
+    val watched = episodes?.count { it.isWatched } ?: 0
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onHeaderClick)
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = season.name,
+                    fontSize = 18.sp,
+                    style = FilmTypography.titleMedium
+                )
+                Text(
+                    text = "$watched / $total watched",
+                    fontSize = 12.sp,
+                    color = LocalContentColor.current.copy(alpha = 0.7f)
+                )
+            }
+            Icon(
+                imageVector = if (expanded) Icons.Default.KeyboardArrowUp
+                else Icons.Default.KeyboardArrowDown,
+                contentDescription = if (expanded) "Collapse season" else "Expand season"
+            )
+        }
+
+        AnimatedVisibility(visible = expanded) {
+            Column {
+                HorizontalDivider()
+                when {
+                    episodes == null -> Box(
+                        Modifier.fillMaxWidth().padding(16.dp),
+                        contentAlignment = Alignment.Center
+                    ) { CircularProgressIndicator() }
+
+                    episodes.isEmpty() -> Text(
+                        text = "No episodes available for this season",
+                        modifier = Modifier.padding(16.dp)
+                    )
+
+                    else -> episodes.forEach { episode ->
+                        EpisodeRow(episode = episode, onToggleWatched = { onEpisodeClick(episode) })
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun EpisodeRow(episode: Episode, onToggleWatched: () -> Unit) {
+    val details = listOfNotNull(
+        episode.airDate?.toString(),
+        episode.runtime?.let { "$it min" }
+    ).joinToString(" · ")
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onToggleWatched)
+            .padding(start = 16.dp, end = 8.dp, top = 4.dp, bottom = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = "${episode.episodeNumber}. ${episode.title}",
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+            if (details.isNotEmpty()) {
+                Text(
+                    text = details,
+                    fontSize = 12.sp,
+                    color = LocalContentColor.current.copy(alpha = 0.7f)
+                )
+            }
+        }
+        Checkbox(checked = episode.isWatched, onCheckedChange = { onToggleWatched() })
     }
 }
 

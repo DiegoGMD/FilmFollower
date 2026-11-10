@@ -7,16 +7,26 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.diegogmd.filmfollower.data.local.remote.tmdbApi
 import com.diegogmd.filmfollower.data.repository.SearchRepository
+import com.diegogmd.filmfollower.model.Episode
+import com.diegogmd.filmfollower.model.Season
 import com.diegogmd.filmfollower.model.responses.MultiSearchResult
 import com.diegogmd.filmfollower.model.TvShow
+import com.diegogmd.filmfollower.model.getAllSeasons
+import com.diegogmd.filmfollower.model.getEpisodesOfSeason
+import com.diegogmd.filmfollower.model.getSeason
 import com.diegogmd.filmfollower.model.getTvShow
 import com.diegogmd.filmfollower.model.getTvShowGenreNames
+import com.diegogmd.filmfollower.model.setEpisodeUnwatched
+import com.diegogmd.filmfollower.model.setEpisodeWatched
+import com.diegogmd.filmfollower.model.syncSeasonEpisodes
+import com.diegogmd.filmfollower.model.syncSeasons
 import com.diegogmd.filmfollower.model.syncTvShow
 import com.diegogmd.filmfollower.util.isOnline
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.cancellation.CancellationException
@@ -27,6 +37,18 @@ class TvShowViewModel(private val repository: SearchRepository) : ViewModel() {
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    private val _seasons = MutableStateFlow<List<Season>>(emptyList())
+    val seasons: StateFlow<List<Season>> = _seasons.asStateFlow()
+
+    private val _isLoadingSeasons = MutableStateFlow(false)
+    val isLoadingSeasons: StateFlow<Boolean> = _isLoadingSeasons.asStateFlow()
+
+    private val _loadingSeasons = MutableStateFlow<Set<Int>>(emptySet())
+    val loadingSeasons: StateFlow<Set<Int>> = _loadingSeasons.asStateFlow()
+
+    private val _episodesBySeason = MutableStateFlow<Map<Int, List<Episode>>>(emptyMap())
+    val episodesBySeason: StateFlow<Map<Int, List<Episode>>> = _episodesBySeason.asStateFlow()
 
     private val _genres = MutableStateFlow<List<String>>(emptyList())
     val genres: StateFlow<List<String>> = _genres.asStateFlow()
@@ -61,10 +83,77 @@ class TvShowViewModel(private val repository: SearchRepository) : ViewModel() {
         }
     }
 
-    private suspend fun getLocalTvShow(context: Context, id: Int): TvShow? = withContext(Dispatchers.IO) {
-        _genres.value = getTvShowGenreNames(context, id)
-        getTvShow(context, id)
+    fun loadSeasons(context: Context, showId: Int) {
+        val appContext = context.applicationContext
+        viewModelScope.launch {
+            _isLoadingSeasons.value = true
+            _seasons.value = emptyList()
+            _episodesBySeason.value = emptyMap()
+
+            try {
+                if (isOnline(appContext)) {
+                    val saved = withContext(Dispatchers.IO) { getTvShow(context, showId) } != null
+                    if (saved) {
+                        syncSeasons(context, showId, repository)
+                        _seasons.value = getLocalSeasons(context, showId)
+                    } else {
+                        _seasons.value = repository.getSeasons(showId)
+                    }
+                } else {
+                    _seasons.value = getLocalSeasons(appContext, showId)
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.e("TvShowViewModel", "Error loading seasons", e)
+            } finally {
+                _isLoadingSeasons.value = false
+            }
+        }
     }
+
+    fun loadEpisodes(context: Context, showId: Int, seasonNumber: Int) {
+        val appContext = context.applicationContext
+        viewModelScope.launch {
+            _loadingSeasons.update { it + seasonNumber }
+            try {
+                val result = if (isOnline(appContext)) {
+                    val saved = withContext(Dispatchers.IO) { getTvShow(appContext, showId) } != null
+                    if (saved) {
+                        val savedSeason = withContext(Dispatchers.IO) {
+                            getSeason(appContext, showId, seasonNumber)
+                        } != null
+                        if (!savedSeason) syncSeasons(appContext, showId, repository)
+                        syncSeasonEpisodes(appContext, showId, seasonNumber, repository)
+                        getLocalEpisodes(appContext, showId, seasonNumber)
+                    } else {
+                        repository.getSeasonEpisodes(showId, seasonNumber)
+                    }
+                } else {
+                    getLocalEpisodes(appContext, showId, seasonNumber)
+                }
+                _episodesBySeason.update { it + (seasonNumber to result) }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.e("TvShowViewModel", "Error loading episodes", e)
+            } finally {
+                _loadingSeasons.update { it - seasonNumber }
+            }
+        }
+    }
+
+    private suspend fun getLocalTvShow(context: Context, id: Int): TvShow? =
+        withContext(Dispatchers.IO) {
+            _genres.value = getTvShowGenreNames(context, id)
+            getTvShow(context, id)
+        }
+
+    private suspend fun getLocalSeasons(context: Context, showId: Int): List<Season> =
+    withContext(Dispatchers.IO) { getAllSeasons(context, showId) }
+
+    private suspend fun getLocalEpisodes(context: Context, showId: Int, seasonNumber: Int): List<Episode> =
+    withContext(Dispatchers.IO) { getEpisodesOfSeason(context, showId, seasonNumber) }
 
     private suspend fun getLocalGenres(context: Context, id: Int): List<String> =
         withContext(Dispatchers.IO) { getTvShowGenreNames(context, id) }
@@ -82,6 +171,21 @@ class TvShowViewModel(private val repository: SearchRepository) : ViewModel() {
                 false
             }
             onResult(ok)
+        }
+    }
+
+    fun toggleEpisodeWatched(context: Context, showId: Int, episode: Episode) {
+        val appContext = context.applicationContext
+        viewModelScope.launch {
+            val updated = withContext(Dispatchers.IO) {
+                if (episode.isWatched) {
+                    setEpisodeUnwatched(appContext, showId, episode.seasonNumber, episode.episodeNumber)
+                } else {
+                    setEpisodeWatched(appContext, showId, episode.seasonNumber, episode.episodeNumber)
+                }
+                getEpisodesOfSeason(appContext, showId, episode.seasonNumber)
+            }
+            _episodesBySeason.update { it + (episode.seasonNumber to updated) }
         }
     }
 

@@ -6,8 +6,12 @@ import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.util.Log
 import com.diegogmd.filmfollower.data.local.FilmFillowerDatabase
+import com.diegogmd.filmfollower.data.repository.SearchRepository
 import com.diegogmd.filmfollower.model.responses.toLocalDateOrNull
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.threeten.bp.LocalDate
+import kotlin.coroutines.cancellation.CancellationException
 
 class Episode(
     val showId: Int,
@@ -251,9 +255,7 @@ fun getEpisodesOfSeason(context: Context, showId: Int, seasonNumber: Int): List<
     return episodes
 }
 
-fun setEpisodeWatched(
-    context: Context, showId: Int, seasonNumber: Int, episodeNumber: Int
-): Boolean {
+fun setEpisodeWatched(context: Context, showId: Int, seasonNumber: Int, episodeNumber: Int): Boolean {
     val dbHelper = FilmFillowerDatabase(context)
     val db = dbHelper.writableDatabase
     var ok = false
@@ -275,9 +277,7 @@ fun setEpisodeWatched(
     return ok
 }
 
-fun setEpisodeUnwatched(
-    context: Context, showId: Int, seasonNumber: Int, episodeNumber: Int
-): Boolean {
+fun setEpisodeUnwatched(context: Context, showId: Int, seasonNumber: Int, episodeNumber: Int): Boolean {
     val dbHelper = FilmFillowerDatabase(context)
     val db = dbHelper.writableDatabase
     var ok = false
@@ -362,4 +362,81 @@ fun countWatchedEpisodes(context: Context, showId: Int, seasonNumber: Int? = nul
         db.close()
     }
     return count
+}
+
+fun eraseEpisode(context: Context, showId: Int, seasonNumber: Int, episodeNumber: Int): Int? {
+    val episode: Episode? = getEpisode(context, showId, seasonNumber, episodeNumber)
+    if (episode == null) {
+        Log.e("Database", "Error getting episode")
+        return null
+    } else {
+        val dbHelper = FilmFillowerDatabase(context)
+        val db = dbHelper.writableDatabase
+
+        try {
+            db.execSQL(
+                "DELETE FROM Episode WHERE show_id = ? AND season_number = ? AND episode_number = ?",
+                arrayOf(showId.toString(), seasonNumber.toString(), episodeNumber.toString())
+            )
+            Log.d(
+                "Database",
+                "Episode from tv show $showId season $seasonNumber number $episodeNumber deleted successfully"
+            )
+        } catch (e: Exception) {
+            Log.e("Database", "Error deleting episode", e)
+            return 0
+        } finally {
+            db.close()
+        }
+
+        return 1
+    }
+}
+
+fun eraseAllEpisodes(context: Context, showId: Int): Int? {
+    val tvShow: TvShow? = getTvShow(context, showId)
+    if (tvShow == null || showId == 0) {
+        Log.e("Database", "Error getting tv show to delete its seasons")
+        return null
+    } else {
+        val dbHelper = FilmFillowerDatabase(context)
+        val db = dbHelper.writableDatabase
+
+        try {
+            db.execSQL(
+                "DELETE FROM Episode WHERE show_id = ?",
+                arrayOf(showId.toString())
+            )
+            Log.d(
+                "Database",
+                "Episodes from tv show $showId deleted successfully"
+            )
+        } catch (e: Exception) {
+            Log.e("Database", "Error deleting episodes", e)
+            return 0
+        } finally {
+            db.close()
+        }
+
+        return 1
+    }
+}
+
+suspend fun syncSeasonEpisodes(
+    context: Context,
+    showId: Int,
+    seasonNumber: Int,
+    repository: SearchRepository,
+    force: Boolean = false
+): Boolean {
+    val fresh = try {
+        repository.getSeasonEpisodes(showId, seasonNumber)
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        return false // offline/API error: keep old data and it retries next time
+    }
+
+    withContext(Dispatchers.IO) { insertEpisodes(context, fresh) }
+    return true
 }

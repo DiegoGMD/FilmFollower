@@ -3,6 +3,8 @@ package com.diegogmd.filmfollower.data.repository
 import com.diegogmd.filmfollower.model.responses.MultiSearchResult
 import com.diegogmd.filmfollower.model.Film
 import com.diegogmd.filmfollower.data.local.remote.TmdbApiService
+import com.diegogmd.filmfollower.model.Episode
+import com.diegogmd.filmfollower.model.Season
 import com.diegogmd.filmfollower.model.responses.MultiSearchResponse
 import com.diegogmd.filmfollower.model.TvShow
 import com.diegogmd.filmfollower.model.responses.CreditsResponse
@@ -49,8 +51,16 @@ class SearchRepository(private val api: TmdbApiService) {
         return api.getTvShow(showId = id).toTvShow()
     }
 
-    suspend fun getTvShowSeason(id: Int, seasonNumber: Int): SeasonDetailsResponse {
-        return api.getTvShowSeason(showId = id, seasonNumber = seasonNumber)
+    suspend fun getSeasons(showId: Int): List<Season> {
+        return api.getTvShow(showId = showId).seasons.orEmpty()
+            // .filter { it.season_number > 0 }   // uncomment to hide "Specials" (season 0)
+            .map { it.toSeason(showId) }
+    }
+
+    suspend fun getSeasonEpisodes(showId: Int, seasonNumber: Int): List<Episode> {
+        return api.getTvShowSeason(showId = showId, seasonNumber = seasonNumber)
+            .episodes.orEmpty()
+            .map { it.toEpisode(showId, seasonNumber) }
     }
 
     suspend fun getFilmTrailerKey(filmId: Int): String? =
