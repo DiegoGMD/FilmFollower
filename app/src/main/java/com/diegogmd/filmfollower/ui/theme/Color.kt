@@ -28,8 +28,19 @@ val SlateGrey = Color(0xFF5A7A95)
 val CarbonBlack = Color(0xFF202020)
 //val Graphite = Color(0xFF2E2E2E)
 val BrightGold = Color(0xFFF7D533)
-
 var Gunmetal = Color(0xFF353839)
+
+// MegaDark Palette
+//val Black = Color(0xFF000000)
+//val CarbonBlack = Color(0xFF202020)
+//val Graphite = Color(0xFF2E2E2E)
+//var Gunmetal = Color(0xFF353839)
+
+// RedHacker Palette
+//val Black = Color(0xFF000000)
+//val CarbonBlack = Color(0xFF202020)
+//val Graphite = Color(0xFF2E2E2E)
+val ScarletRush = Color(0xFFDC343B)
 
 // Android Studio Default
 val Purple80 = Color(0xFFD0BCFF)

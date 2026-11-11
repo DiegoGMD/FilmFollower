@@ -50,10 +50,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -64,6 +62,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -82,16 +81,12 @@ import com.diegogmd.filmfollower.model.responses.MultiSearchResult
 import com.diegogmd.filmfollower.model.TvShow
 import com.diegogmd.filmfollower.model.eraseFilm
 import com.diegogmd.filmfollower.model.eraseTvShow
-import com.diegogmd.filmfollower.model.getAllSeasons
-import com.diegogmd.filmfollower.model.getEpisodesOfSeason
 import com.diegogmd.filmfollower.model.getFilm
 import com.diegogmd.filmfollower.model.getTvShow
 import com.diegogmd.filmfollower.model.isFavouriteFilm
 import com.diegogmd.filmfollower.model.isFavouriteTvShow
 import com.diegogmd.filmfollower.model.isFilmStatus
 import com.diegogmd.filmfollower.model.isTvShowStatus
-import com.diegogmd.filmfollower.model.setEpisodeUnwatched
-import com.diegogmd.filmfollower.model.setEpisodeWatched
 import com.diegogmd.filmfollower.model.setFavouriteFilm
 import com.diegogmd.filmfollower.model.setFavouriteTvShow
 import com.diegogmd.filmfollower.model.setFilmStatus
@@ -99,15 +94,13 @@ import com.diegogmd.filmfollower.model.setTvShowStatus
 import com.diegogmd.filmfollower.model.unsetFavouriteFilm
 import com.diegogmd.filmfollower.model.unsetFavouriteTvShow
 import com.diegogmd.filmfollower.ui.components.ContentCard
+import com.diegogmd.filmfollower.ui.components.EpisodeContentCard
 import com.diegogmd.filmfollower.ui.components.MediaType
 import com.diegogmd.filmfollower.ui.theme.FilmTypography
 import com.diegogmd.filmfollower.ui.theme.placeholders
 import com.diegogmd.filmfollower.viewmodels.FilmViewModelFactory
 import com.diegogmd.filmfollower.viewmodels.TvShowViewModel
 import com.diegogmd.filmfollower.viewmodels.TvShowViewModelFactory
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.threeten.bp.LocalDate
 
 private fun openTrailer(context: Context, key: String) {
@@ -666,7 +659,7 @@ private fun ContentHeader(
                 )
             }
 
-            HorizontalDivider(color = MaterialTheme.colorScheme.surface, thickness = 3.dp)
+            HorizontalDivider(color = MaterialTheme.colorScheme.primary, thickness = 3.dp)
         }
     }
 }
@@ -814,12 +807,16 @@ private fun EpisodesTab(
 
     when {
         isLoadingSeasons -> Box(
-            modifier.fillMaxWidth().padding(24.dp),
+            modifier
+                .fillMaxWidth()
+                .padding(24.dp),
             contentAlignment = Alignment.Center
         ) { CircularProgressIndicator() }
 
         seasons.isEmpty() -> Box(
-            modifier.fillMaxWidth().padding(24.dp),
+            modifier
+                .fillMaxWidth()
+                .padding(24.dp),
             contentAlignment = Alignment.Center
         ) { Text("No seasons available", textAlign = TextAlign.Center) }
 
@@ -852,16 +849,15 @@ private fun SeasonDropdown(
     onHeaderClick: () -> Unit,
     onEpisodeClick: (Episode) -> Unit
 ) {
-    val total = episodes?.size ?: season.episodeCount
-    val watched = episodes?.count { it.isWatched } ?: 0
+    val total = episodes.size
+    val watched = episodes.count { it.isWatched }
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface)
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.surfaceContainer)
     ) {
         Row(
             modifier = Modifier
@@ -873,13 +869,12 @@ private fun SeasonDropdown(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = season.name,
-                    fontSize = 18.sp,
-                    style = FilmTypography.titleMedium
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold
                 )
                 Text(
                     text = "$watched / $total watched",
-                    fontSize = 12.sp,
-                    color = LocalContentColor.current.copy(alpha = 0.7f)
+                    fontSize = 14.sp,
                 )
             }
             Icon(
@@ -892,55 +887,30 @@ private fun SeasonDropdown(
         AnimatedVisibility(visible = expanded) {
             Column {
                 HorizontalDivider()
-                when {
+                when { // Dropdown area a but darker than the Season title area
                     episodes == null -> Box(
-                        Modifier.fillMaxWidth().padding(16.dp),
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
                         contentAlignment = Alignment.Center
                     ) { CircularProgressIndicator() }
 
                     episodes.isEmpty() -> Text(
                         text = "No episodes available for this season",
-                        modifier = Modifier.padding(16.dp)
+                        fontSize = 20.sp,
+                        textAlign = TextAlign.Center,
+                        style = FilmTypography.titleMedium,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 10.dp)
                     )
 
                     else -> episodes.forEach { episode ->
-                        EpisodeRow(episode = episode, onToggleWatched = { onEpisodeClick(episode) })
+                        EpisodeContentCard(episode = episode, isShowScreen = false)
                     }
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun EpisodeRow(episode: Episode, onToggleWatched: () -> Unit) {
-    val details = listOfNotNull(
-        episode.airDate?.toString(),
-        episode.runtime?.let { "$it min" }
-    ).joinToString(" · ")
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onToggleWatched)
-            .padding(start = 16.dp, end = 8.dp, top = 4.dp, bottom = 4.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = "${episode.episodeNumber}. ${episode.title}",
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
-            if (details.isNotEmpty()) {
-                Text(
-                    text = details,
-                    fontSize = 12.sp,
-                    color = LocalContentColor.current.copy(alpha = 0.7f)
-                )
-            }
-        }
-        Checkbox(checked = episode.isWatched, onCheckedChange = { onToggleWatched() })
     }
 }
 

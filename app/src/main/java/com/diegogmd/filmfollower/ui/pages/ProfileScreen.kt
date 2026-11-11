@@ -200,7 +200,7 @@ private fun ProfileHeader(
                     .padding(horizontal = 20.dp)
             )
 
-            HorizontalDivider(color = MaterialTheme.colorScheme.surface, thickness = 3.dp)
+            HorizontalDivider(color = MaterialTheme.colorScheme.primary, thickness = 3.dp)
         }
     }
 }

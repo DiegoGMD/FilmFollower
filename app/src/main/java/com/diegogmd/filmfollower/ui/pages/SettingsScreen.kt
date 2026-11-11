@@ -91,6 +91,7 @@ import com.diegogmd.filmfollower.ui.theme.Graphite
 import com.diegogmd.filmfollower.ui.theme.Gunmetal
 import com.diegogmd.filmfollower.ui.theme.JetBlack
 import com.diegogmd.filmfollower.ui.theme.LightCaramel
+import com.diegogmd.filmfollower.ui.theme.ScarletRush
 import com.diegogmd.filmfollower.ui.theme.Silver
 import com.diegogmd.filmfollower.ui.theme.ThemeManager
 import kotlinx.coroutines.Dispatchers
@@ -117,11 +118,11 @@ data class ThemeOption(
 // I don't have them yet and considering not doing it, looks good and shows an approximation
 private val themeOptions = listOf(
     ThemeOption(0, "OldFilm", previewRes = null, DarkCoffee, LightCaramel),
-    ThemeOption(1, "OldFilm B&W", previewRes = null,
-        Graphite, Silver
-    ),
-    ThemeOption(2, "Cold Blue", previewRes = null, JetBlack, SlateGrey),
-    ThemeOption(3, "Movie Time", previewRes = null, Black, BrightGold),
+    ThemeOption(1, "OldFilm B&W", previewRes = null, Graphite, Silver),
+    ThemeOption(2, "Movie Time", previewRes = null, Black, BrightGold),
+    ThemeOption(3, "Cold Blue", previewRes = null, JetBlack, SlateGrey),
+    ThemeOption(4, "Mega Dark", previewRes = null, Black, Gunmetal),
+    ThemeOption(5, "Red Hacker", previewRes = null, Black, ScarletRush),
 )
 
 @Composable

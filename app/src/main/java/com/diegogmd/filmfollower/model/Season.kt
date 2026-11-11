@@ -263,7 +263,6 @@ fun eraseAllSeasons(context: Context, showId: Int): Int? {
             arrayOf(showId.toString())
         )
         Log.d("Database", "Seasons from tv show $showId deleted successfully")
-        eraseAllEpisodes(context, showId)
     } catch (e: Exception) {
         Log.e("Database", "Error deleting all seasons", e)
         return 0

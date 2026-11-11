@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,7 +18,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -58,6 +56,8 @@ import com.diegogmd.filmfollower.model.getTvShow
 import com.diegogmd.filmfollower.model.isFilmStatus
 import com.diegogmd.filmfollower.model.isTvShowStatus
 import com.diegogmd.filmfollower.model.responses.toLocalDateOrNull
+import com.diegogmd.filmfollower.model.setEpisodeUnwatched
+import com.diegogmd.filmfollower.model.setEpisodeWatched
 import com.diegogmd.filmfollower.model.setFilmStatus
 import com.diegogmd.filmfollower.model.setTvShowStatus
 import com.diegogmd.filmfollower.ui.theme.FilmTypography
@@ -237,7 +237,9 @@ private fun HorizontalContentCard(
         ) {
             Poster(content = content, modifier = Modifier.size(100.dp))
             VerticalDivider(color = MaterialTheme.colorScheme.onPrimary, thickness = 1.dp)
-            Column(modifier = modifier.weight(1f).padding(10.dp)) {
+            Column(modifier = modifier
+                .weight(1f)
+                .padding(10.dp)) {
                 Text(
                     text = content.title, fontSize = 14.sp, fontWeight = FontWeight.Bold
                 )
@@ -265,6 +267,22 @@ private fun Poster(
     AsyncImage(
         model = content.posterUrl,
         contentDescription = content.title,
+        contentScale = ContentScale.Crop,
+        placeholder = painterResource(MaterialTheme.placeholders.poster),
+        error = painterResource(MaterialTheme.placeholders.poster),
+        modifier = modifier
+    )
+}
+
+@Composable
+private fun Poster(
+    content: String,
+    contentDescription: String,
+    modifier: Modifier
+) {
+    AsyncImage(
+        model = content,
+        contentDescription = contentDescription,
         contentScale = ContentScale.Crop,
         placeholder = painterResource(MaterialTheme.placeholders.poster),
         error = painterResource(MaterialTheme.placeholders.poster),
@@ -514,72 +532,76 @@ fun NoInternetCard(modifier: Modifier = Modifier) {
     }
 }
 
-// EpisodeContentCard (May be upgraded)
+// EpisodeContentCard
 
 @Composable
 fun EpisodeContentCard(
     episode: Episode,
-    orientation: Boolean = false // false = horizontal row, true = vertical poster
-) {
-    var showName: String
-    var posterUrl: String? = null
-    val context = LocalContext.current
-    val tvShow = getTvShow(context, episode.showId)
-    if (tvShow != null) {
-        showName = tvShow.title
-        posterUrl = tvShow.posterPath
+    modifier: Modifier = Modifier,
+    isShowScreen: Boolean = true,
+    onClick: (Episode) -> Unit = {},
+    onChanged: () -> Unit = {}
+){
+    val cardAction = rememberEpisodeCardAction(episode, onChanged)
+    if (isShowScreen) {
+        EpisodeContentCardLarge(episode, modifier, cardAction, onClick)
     } else {
-        showName = "Unknown"
+        EpisodeContentCardCompacted(episode, modifier, cardAction)
+    }
+}
+
+@Composable
+private fun EpisodeContentCardLarge(
+    episode: Episode,
+    modifier: Modifier,
+    action: CardAction?,
+    onClick: (Episode) -> Unit = {},
+) {
+    val tvShow = getTvShow(LocalContext.current, episode.showId)
+    var posterUrl = ""
+    var description = "Tv Show Poster"
+    if (tvShow != null) {
+        if (tvShow.posterPath != null) {
+            posterUrl = tmdbPosterUrl(tvShow.posterPath).toString()
+        }
+        description = "${tvShow.title} Poster"
     }
 
     Card(
-        modifier = Modifier
+        onClick = { onClick(episode) },
+        modifier = modifier
             .fillMaxWidth()
             .padding(8.dp),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.surfaceContainer)
     ) {
-        if (orientation) {
-            // Vertical layout: image on top, text below
-            Column(modifier = Modifier.padding(0.dp)) {
-                AsyncImage(
-                    model = posterUrl,
-                    contentDescription = showName,
-                    contentScale = ContentScale.Crop,
-                    placeholder = painterResource(MaterialTheme.placeholders.poster),
-                    error = painterResource(MaterialTheme.placeholders.poster),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(160.dp)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(100.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Poster(content = posterUrl, contentDescription = description, modifier = Modifier.size(100.dp))
+            VerticalDivider(color = MaterialTheme.colorScheme.onPrimary, thickness = 1.dp)
+            Column(modifier = modifier
+                .weight(1f)
+                .padding(10.dp)) {
+                Text(
+                    text = episode.title,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold
                 )
-                Spacer(Modifier.height(8.dp))
-                EpisodeContentCardText(
-                    showName,
-                    episode.seasonNumber,
-                    episode.episodeNumber,
-                    episode.title
+                Text(
+                    text = "${tvShow?.title} ( S${episode.seasonNumber} E${episode.episodeNumber} )",
+                    fontSize = 14.sp
                 )
             }
-        } else {
-            // Horizontal layout: image left, text right
-            Row(
-                modifier = Modifier.padding(0.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                AsyncImage(
-                    model = posterUrl,
-                    contentDescription = showName,
-                    contentScale = ContentScale.Crop,
-                    placeholder = painterResource(MaterialTheme.placeholders.poster),
-                    error = painterResource(MaterialTheme.placeholders.poster),
-                    modifier = Modifier.size(100.dp)
-                )
-                EpisodeContentCardText(
-                    showName,
-                    episode.seasonNumber,
-                    episode.episodeNumber,
-                    episode.title
+            action?.let {
+                CardActionButton(
+                    action = it,
+                    modifier = Modifier
+                        .width(56.dp)
+                        .fillMaxHeight()
                 )
             }
         }
@@ -587,22 +609,100 @@ fun EpisodeContentCard(
 }
 
 @Composable
-fun EpisodeContentCardText(
-    showName: String,
-    seasonNumber: Int,
-    episodeNumber: Int,
-    episodeTitle: String,
-    modifier: Modifier = Modifier
+private fun EpisodeContentCardCompacted(
+    episode: Episode,
+    modifier: Modifier,
+    action: CardAction?,
 ) {
-    Column(modifier = modifier.padding(10.dp)) {
-        Text(
-            text = "$showName | S${seasonNumber}E${episodeNumber}",
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Bold
-        )
-        Text(
-            text = episodeTitle,
-            fontSize = 14.sp
-        )
+    Card(
+        onClick = {  },
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(2.dp),
+        shape = RoundedCornerShape(12.dp),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = modifier
+                .weight(1f)
+                .padding(10.dp)) {
+                Text(
+                    text = "${episode.episodeNumber}. ${episode.title}",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "${episode.airDate} · ${episode.runtime} min",
+                    fontSize = 12.sp
+                )
+            }
+            action?.let {
+                CardActionButton(
+                    action = it,
+                    modifier = Modifier
+                        .width(56.dp)
+                        .fillMaxHeight()
+                )
+            }
+        }
     }
 }
+
+@Composable
+fun rememberEpisodeCardAction(
+    episode: Episode,
+    onChanged: () -> Unit = {}
+): CardAction {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+
+    var watched by remember(episode.showId, episode.seasonNumber, episode.episodeNumber) {
+        mutableStateOf(episode.watchedDate != null)
+    }
+
+    return CardAction(
+        active = watched,
+        activeIcon = R.drawable.ic_visibility_off_24px,
+        inactiveIcon = R.drawable.ic_visibility_24px,
+        activeDescription = "Seen",
+        inactiveDescription = "Not seen"
+    ) {
+        val newWatched = !watched
+        scope.launch {
+            val ok = withContext(Dispatchers.IO) {
+                if (newWatched) {
+                    setEpisodeWatched(
+                        context,
+                        episode.showId,
+                        episode.seasonNumber,
+                        episode.episodeNumber
+                    )
+                } else {
+                    setEpisodeUnwatched(
+                        context,
+                        episode.showId,
+                        episode.seasonNumber,
+                        episode.episodeNumber
+                    )
+                }
+            }
+            if (ok) {
+                watched = newWatched
+                onChanged()
+            }
+        }
+    }
+}
+
+// Episode v1 - for ShowScreen
+// Poster | Text | Button
+// Text -> episodeTitle (14.sp)
+//         "$showName ( S${seasonNumber} E${episodeNumber} )" (14.sp)
+
+// Episode v2 - for season list
+// Text | Button
+// Text -> number. episodeTitle (14.sp)
+//         "$airDate · runtime" (12.sp)

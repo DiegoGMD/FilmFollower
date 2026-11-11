@@ -8,8 +8,10 @@ import androidx.compose.runtime.setValue
 object ThemeManager {
     const val OLD_FILM = 0
     const val OLD_FILM_BW = 1
-    const val COLD_BLUE = 2
-    const val MOVIE_TIME = 3
+    const val MOVIE_TIME = 2
+    const val COLD_BLUE = 3
+    const val MEGA_DARK = 4
+    const val RED_HACKER = 5
 
     private const val PREFS_FILE = "filmfollower_settings"
     private const val KEY_THEME_ID = "theme_id"

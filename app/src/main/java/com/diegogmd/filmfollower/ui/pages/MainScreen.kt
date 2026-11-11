@@ -44,7 +44,6 @@ fun MainScreen(modifier: Modifier = Modifier) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
     val showBottomBar = currentRoute in navItems.map { it.route }
-    var selectedDestination by rememberSaveable { mutableIntStateOf(1) }
 
     Scaffold(
         modifier = modifier,
@@ -53,7 +52,6 @@ fun MainScreen(modifier: Modifier = Modifier) {
                 NavigationBar(
                     windowInsets = NavigationBarDefaults.windowInsets,
                     modifier = Modifier,
-                    //// containerColor = DarkCoffee
                 ) {
                     navItems.forEachIndexed { index, item ->
                         NavigationBarItem(
@@ -89,7 +87,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
     ) { contentPadding ->
         AppNavHost(
             navController = navController,
-            startDestination = navItems[1].route,
+            startDestination = navItems[0].route,
             modifier = Modifier
                 .padding(contentPadding)
         )

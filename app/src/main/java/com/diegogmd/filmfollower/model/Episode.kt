@@ -440,3 +440,50 @@ suspend fun syncSeasonEpisodes(
     withContext(Dispatchers.IO) { insertEpisodes(context, fresh) }
     return true
 }
+
+fun getNextEpisodeToWatch(context: Context, showId: Int): Episode? {
+    if (showId == 0) {
+        Log.e("Database", "Error getting next episode: showId is 0")
+        return null
+    }
+    val db = FilmFillowerDatabase(context).readableDatabase
+    return try {
+        queryNextEpisodeToWatch(db, showId)
+    } catch (e: Exception) {
+        Log.e("Database", "Error getting next episode to watch", e)
+        null
+    } finally {
+        db.close()
+    }
+}
+
+fun getNextEpisodesToWatch(context: Context, showIds: List<Int>): List<Episode> {
+    if (showIds.isEmpty()) return emptyList()
+    val db = FilmFillowerDatabase(context).readableDatabase
+    return try {
+        showIds.mapNotNull { queryNextEpisodeToWatch(db, it) }
+    } catch (e: Exception) {
+        Log.e("Database", "Error getting next episodes to watch", e)
+        emptyList()
+    } finally {
+        db.close()
+    }
+}
+
+private fun queryNextEpisodeToWatch(db: SQLiteDatabase, showId: Int): Episode? {
+    val query = """
+        SELECT * FROM Episode
+        WHERE show_id = ?
+          AND season_number > 0
+          AND watched_date IS NULL
+          AND air_date IS NOT NULL
+          AND air_date <= ?
+        ORDER BY season_number, episode_number
+        LIMIT 1
+    """.trimIndent()
+    val args = arrayOf(showId.toString(), LocalDate.now().toString())
+
+    return db.rawQuery(query, args).use { cursor ->
+        if (cursor.moveToFirst()) cursor.toEpisode() else null
+    }
+}

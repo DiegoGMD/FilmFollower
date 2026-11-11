@@ -21,7 +21,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavHostController
 import com.diegogmd.filmfollower.R
 import com.diegogmd.filmfollower.model.Episode
+import com.diegogmd.filmfollower.model.getAllFilmStatus
+import com.diegogmd.filmfollower.model.getAllTvShowStatus
+import com.diegogmd.filmfollower.model.getNextEpisodesToWatch
 import com.diegogmd.filmfollower.samplePlaceholderEpisodes
+import com.diegogmd.filmfollower.ui.components.CardType
+import com.diegogmd.filmfollower.ui.components.ContentCard
+import com.diegogmd.filmfollower.ui.components.EmptyContentCard
 import com.diegogmd.filmfollower.ui.components.EpisodeContentCard
 import com.diegogmd.filmfollower.ui.theme.FilmTypography
 
@@ -52,20 +58,47 @@ fun ShowsScreen(modifier: Modifier, navController: NavHostController){
             }
         }
 
+        var refreshTick by remember { mutableIntStateOf(0) }
+        val releasedNextEpisodes = remember(refreshTick) {
+            val shows = getAllTvShowStatus(context, "watchlist", 1)
+            if (shows != null) getNextEpisodesToWatch(context, shows.map { it.showId }) else null
+        }
+
         when (selectedTab) {
-            0 -> EpisodeList(Modifier.weight(1f), samplePlaceholderEpisodes())
-            1 -> EpisodeList(Modifier.weight(1f), samplePlaceholderEpisodes())
+            0 -> if (releasedNextEpisodes != null) {
+                EpisodeList(Modifier.weight(1f),
+                    episodes = releasedNextEpisodes,
+                    navController,
+                    onChanged = { refreshTick++ })
+            } else {
+                EmptyContentCard(modifier, true)
+            }
+
+            1 -> EmptyContentCard(modifier, true)
         }
     }
 }
 
 @Composable
-private fun EpisodeList(modifier: Modifier, episodes: List<Episode>) {
+private fun EpisodeList(
+    modifier: Modifier,
+    episodes: List<Episode>,
+    navController: NavHostController,
+    onChanged: () -> Unit
+) {
     LazyColumn(
         modifier = modifier.fillMaxWidth()
     ) {
         items(episodes, key = { it.showId }) { episode ->
-            EpisodeContentCard(episode)
+            EpisodeContentCard(
+                episode = episode,
+                onClick = { item ->
+                    navController.navigate(
+                        "show/${episode.showId}"
+                    )
+                },
+                onChanged = onChanged
+            )
         }
     }
 }

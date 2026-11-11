@@ -16,6 +16,7 @@ import com.diegogmd.filmfollower.model.getEpisodesOfSeason
 import com.diegogmd.filmfollower.model.getSeason
 import com.diegogmd.filmfollower.model.getTvShow
 import com.diegogmd.filmfollower.model.getTvShowGenreNames
+import com.diegogmd.filmfollower.model.insertSeasons
 import com.diegogmd.filmfollower.model.setEpisodeUnwatched
 import com.diegogmd.filmfollower.model.setEpisodeWatched
 import com.diegogmd.filmfollower.model.syncSeasonEpisodes
@@ -170,11 +171,25 @@ class TvShowViewModel(private val repository: SearchRepository) : ViewModel() {
                 Log.e("TvShowViewModel", "Error adding tv show to watchlist", e)
                 false
             }
+
             onResult(ok)
+
+            if (ok) try {
+                val seasons = repository.getSeasons(id)
+                withContext(Dispatchers.IO) { insertSeasons(context, seasons) }
+
+                seasons.forEach { season ->
+                    syncSeasonEpisodes(context, id, season.seasonNumber, repository)
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.e("TvShowViewModel", "Error saving seasons and episodes", e)
+            }
         }
     }
 
-    fun toggleEpisodeWatched(context: Context, showId: Int, episode: Episode) {
+    fun toggleEpisodeWatched(context: Context, showId: Int, episode: Episode) { // you should not exist
         val appContext = context.applicationContext
         viewModelScope.launch {
             val updated = withContext(Dispatchers.IO) {

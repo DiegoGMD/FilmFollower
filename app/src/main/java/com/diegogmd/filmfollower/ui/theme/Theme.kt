@@ -145,7 +145,7 @@ private val OldFilmBWColorScheme = darkColorScheme(
     scrim = Black,
 )
 
-private val ColdBlueScheme = darkColorScheme(
+private val ColdBlueColorScheme = darkColorScheme(
     // Accent: caramel fills with coffee text (buttons, check marks, selected states)
     primary = SlateGrey,
     onPrimary = Black,
@@ -198,7 +198,7 @@ private val ColdBlueScheme = darkColorScheme(
     scrim = Black,
 )
 
-private val MovieTimeScheme = darkColorScheme(
+private val MovieTimeColorScheme = darkColorScheme(
     // Accent: caramel fills with coffee text (buttons, check marks, selected states)
     primary = BrightGold,
     onPrimary = Black,
@@ -251,6 +251,112 @@ private val MovieTimeScheme = darkColorScheme(
     scrim = Black,
 )
 
+private val MegaDarkColorScheme = darkColorScheme(
+    // Accent: caramel fills with coffee text (buttons, check marks, selected states)
+    primary = Gunmetal,
+    onPrimary = Black,
+    primaryContainer = Black,
+    onPrimaryContainer = Gunmetal,
+
+    // Supporting: copper for unselected nav/tab items
+    secondary = Graphite,
+    onSecondary = Black,
+    secondaryContainer = CarbonBlack, // nav-bar indicator pill (icon only, no text)
+    onSecondaryContainer = Gunmetal,
+
+    tertiary = Graphite,
+    onTertiary = Black,
+    tertiaryContainer = Black,
+    onTertiaryContainer = Gunmetal,
+
+    // Page background (as in the original scheme)
+    background = CarbonBlack,
+    onBackground = Gunmetal,
+
+    // Caramel paper: ContentCard, EpisodeContentCard, Genres/Overview cards, search field
+    surface = Gunmetal,
+    onSurface = Black,
+    surfaceTint = Gunmetal,
+
+    // Dark tonal panels: Settings sections, bottom sheet
+    surfaceVariant = Black,
+    onSurfaceVariant = Gunmetal,
+
+    // Default content color for these is onSurface (coffee), so keep them caramel.
+    // Dark components should pass their container color explicitly, as the bars already do.
+    surfaceContainerLowest = Gunmetal,
+    surfaceContainerLow = Gunmetal,
+    surfaceContainer = Black,
+    surfaceContainerHigh = Gunmetal,
+    surfaceContainerHighest = Gunmetal, // <- CARD COLOR (default for Card { })
+
+    outline = Graphite,
+    outlineVariant = CarbonBlack,
+
+    error = ErrorSoft,
+    onError = Black,
+
+    // Snackbars: dark pill with caramel text/action
+    inverseSurface = Black,
+    inverseOnSurface = Gunmetal,
+    inversePrimary = Gunmetal,
+
+    scrim = Black,
+)
+
+private val RedHackerColorScheme = darkColorScheme(
+    // Accent: caramel fills with coffee text (buttons, check marks, selected states)
+    primary = ScarletRush,
+    onPrimary = Black,
+    primaryContainer = Black,
+    onPrimaryContainer = ScarletRush,
+
+    // Supporting: copper for unselected nav/tab items
+    secondary = Graphite,
+    onSecondary = Black,
+    secondaryContainer = CarbonBlack, // nav-bar indicator pill (icon only, no text)
+    onSecondaryContainer = ScarletRush,
+
+    tertiary = Graphite,
+    onTertiary = Black,
+    tertiaryContainer = Black,
+    onTertiaryContainer = ScarletRush,
+
+    // Page background (as in the original scheme)
+    background = CarbonBlack,
+    onBackground = ScarletRush,
+
+    // Caramel paper: ContentCard, EpisodeContentCard, Genres/Overview cards, search field
+    surface = Graphite,
+    onSurface = Black,
+    surfaceTint = ScarletRush,
+
+    // Dark tonal panels: Settings sections, bottom sheet
+    surfaceVariant = Black,
+    onSurfaceVariant = ScarletRush,
+
+    // Default content color for these is onSurface (coffee), so keep them caramel.
+    // Dark components should pass their container color explicitly, as the bars already do.
+    surfaceContainerLowest = ScarletRush,
+    surfaceContainerLow = ScarletRush,
+    surfaceContainer = Black,
+    surfaceContainerHigh = ScarletRush,
+    surfaceContainerHighest = Graphite, // <- CARD COLOR (default for Card { })
+
+    outline = Graphite,
+    outlineVariant = CarbonBlack,
+
+    error = ErrorSoft,
+    onError = Black,
+
+    // Snackbars: dark pill with caramel text/action
+    inverseSurface = Black,
+    inverseOnSurface = ScarletRush,
+    inversePrimary = ScarletRush,
+
+    scrim = Black,
+)
+
 data class ThemePlaceholders(
     @DrawableRes val poster: Int,
 )
@@ -264,8 +370,10 @@ val MaterialTheme.placeholders: ThemePlaceholders
 
 private val OldFilmPlaceholders = ThemePlaceholders(R.drawable.placeholder_poster_oldfilm)
 private val OldFilmBWPlaceholders = ThemePlaceholders(R.drawable.placeholder_poster_oldfilmbw)
-private val ColdBluePlaceholders = ThemePlaceholders(R.drawable.placeholder_poster_coldblue)
 private val MovieTimePlaceholders = ThemePlaceholders(R.drawable.placeholder_poster_movietime)
+private val ColdBluePlaceholders = ThemePlaceholders(R.drawable.placeholder_poster_coldblue)
+private val MegaDarkPlaceholders = ThemePlaceholders(R.drawable.placeholder_poster_movietime)
+private val RedHackerPlaceholders = ThemePlaceholders(R.drawable.placeholder_poster_movietime)
 
 @Composable
 fun FilmFollowerTheme(
@@ -287,15 +395,19 @@ fun FilmFollowerTheme(
 
     val colorScheme = when (themeId) {
         ThemeManager.OLD_FILM_BW -> OldFilmBWColorScheme
-        ThemeManager.COLD_BLUE -> ColdBlueScheme
-        ThemeManager.MOVIE_TIME -> MovieTimeScheme
+        ThemeManager.MOVIE_TIME -> MovieTimeColorScheme
+        ThemeManager.COLD_BLUE -> ColdBlueColorScheme
+        ThemeManager.MEGA_DARK -> MegaDarkColorScheme
+        ThemeManager.RED_HACKER -> RedHackerColorScheme
         else -> OldFilmColorScheme
     }
 
     val posterPlaceholders = when (themeId) {
         ThemeManager.OLD_FILM_BW -> OldFilmBWPlaceholders
-        ThemeManager.COLD_BLUE -> ColdBluePlaceholders
         ThemeManager.MOVIE_TIME -> MovieTimePlaceholders
+        ThemeManager.COLD_BLUE -> ColdBluePlaceholders
+        ThemeManager.MEGA_DARK -> MegaDarkPlaceholders
+        ThemeManager.RED_HACKER -> RedHackerPlaceholders
         else -> OldFilmPlaceholders
     }
 

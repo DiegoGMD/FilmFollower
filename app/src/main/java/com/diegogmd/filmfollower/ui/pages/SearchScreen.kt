@@ -39,9 +39,6 @@ import com.diegogmd.filmfollower.ui.components.CardType
 import com.diegogmd.filmfollower.viewmodels.SearchViewModel
 import com.diegogmd.filmfollower.ui.components.ContentCard
 import com.diegogmd.filmfollower.ui.components.NoInternetCard
-import com.diegogmd.filmfollower.ui.theme.DarkCoffee
-import com.diegogmd.filmfollower.ui.theme.FadedCopper
-import com.diegogmd.filmfollower.ui.theme.LightCaramel
 import com.diegogmd.filmfollower.util.rememberIsOnline
 import com.diegogmd.filmfollower.viewmodels.SearchViewModelFactory
 
