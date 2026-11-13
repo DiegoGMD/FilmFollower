@@ -10,10 +10,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -103,7 +102,15 @@ fun SearchScreen(
                         contentDescription = "Search",
                         tint = MaterialTheme.colorScheme.onPrimary
                     )
-                }
+                },
+                trailingIcon = { // TODO: Filter genre so you can search for genres (I want the top Drama + Crime)
+                    Icon(
+                        imageVector = Icons.Default.Menu,
+                        contentDescription = "Filter",
+                        tint = MaterialTheme.colorScheme.onPrimary
+                    )
+                },
+                maxLines = 1
             )
         }
 

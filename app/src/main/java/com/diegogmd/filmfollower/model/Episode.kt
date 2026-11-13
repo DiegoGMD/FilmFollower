@@ -25,8 +25,7 @@ class Episode(
     val watchedDate: LocalDate? = null
 ) {
     fun insertNewEpisode(context: Context): Boolean {
-        val dbHelper = FilmFillowerDatabase(context)
-        val db = dbHelper.writableDatabase
+        val db = FilmFillowerDatabase(context).writableDatabase
         var ok = false
 
         try {
@@ -67,8 +66,7 @@ class Episode(
     }
 
     fun updateFromTmdb(context: Context) {
-        val dbHelper = FilmFillowerDatabase(context)
-        val db = dbHelper.writableDatabase
+        val db = FilmFillowerDatabase(context).writableDatabase
 
         try {
             val values = ContentValues().apply {
@@ -152,8 +150,7 @@ private fun Cursor.toEpisode() = Episode(
 
 fun insertEpisodes(context: Context, episodes: List<Episode>): Boolean {
     if (episodes.isEmpty()) return true
-    val dbHelper = FilmFillowerDatabase(context)
-    val db = dbHelper.writableDatabase
+    val db = FilmFillowerDatabase(context).writableDatabase
     var ok = false
 
     try {
@@ -174,8 +171,7 @@ fun insertEpisodes(context: Context, episodes: List<Episode>): Boolean {
 }
 
 fun getEpisode(context: Context, showId: Int, seasonNumber: Int, episodeNumber: Int): Episode? {
-    val dbHelper = FilmFillowerDatabase(context)
-    val db = dbHelper.readableDatabase
+    val db = FilmFillowerDatabase(context).readableDatabase
     var theEpisode: Episode? = null
 
     if (showId == 0) {
@@ -204,8 +200,7 @@ fun getEpisode(context: Context, showId: Int, seasonNumber: Int, episodeNumber: 
 }
 
 fun getEpisode(context: Context, tmdbEpisodeId: Int): Episode? {
-    val dbHelper = FilmFillowerDatabase(context)
-    val db = dbHelper.readableDatabase
+    val db = FilmFillowerDatabase(context).readableDatabase
     var theEpisode: Episode? = null
 
     if (tmdbEpisodeId == 0) {
@@ -232,8 +227,7 @@ fun getEpisode(context: Context, tmdbEpisodeId: Int): Episode? {
 }
 
 fun getEpisodesOfSeason(context: Context, showId: Int, seasonNumber: Int): List<Episode> {
-    val dbHelper = FilmFillowerDatabase(context)
-    val db = dbHelper.readableDatabase
+    val db = FilmFillowerDatabase(context).readableDatabase
     val episodes = mutableListOf<Episode>()
 
     val query = """
@@ -370,8 +364,7 @@ fun eraseEpisode(context: Context, showId: Int, seasonNumber: Int, episodeNumber
         Log.e("Database", "Error getting episode")
         return null
     } else {
-        val dbHelper = FilmFillowerDatabase(context)
-        val db = dbHelper.writableDatabase
+        val db = FilmFillowerDatabase(context).writableDatabase
 
         try {
             db.execSQL(
@@ -399,8 +392,7 @@ fun eraseAllEpisodes(context: Context, showId: Int): Int? {
         Log.e("Database", "Error getting tv show to delete its seasons")
         return null
     } else {
-        val dbHelper = FilmFillowerDatabase(context)
-        val db = dbHelper.writableDatabase
+        val db = FilmFillowerDatabase(context).writableDatabase
 
         try {
             db.execSQL(
@@ -446,44 +438,68 @@ fun getNextEpisodeToWatch(context: Context, showId: Int): Episode? {
         Log.e("Database", "Error getting next episode: showId is 0")
         return null
     }
+
     val db = FilmFillowerDatabase(context).readableDatabase
-    return try {
-        queryNextEpisodeToWatch(db, showId)
+    var theEpisode: Episode? = null
+
+    try {
+        val query = """
+            SELECT * FROM Episode
+            WHERE show_id = ? 
+            AND season_number > 0 
+            AND watched_date IS NULL 
+            AND air_date IS NOT NULL 
+            AND air_date <= ?
+            ORDER BY season_number, episode_number
+            LIMIT 1
+        """.trimIndent()
+        val selectionArgs = arrayOf(showId.toString(), LocalDate.now().toString())
+        db.rawQuery(query, selectionArgs).use { cursor ->
+            if (cursor.moveToFirst()) {
+                theEpisode = cursor.toEpisode()
+            }
+        }
     } catch (e: Exception) {
         Log.e("Database", "Error getting next episode to watch", e)
-        null
     } finally {
         db.close()
     }
+
+    return theEpisode
 }
 
 fun getNextEpisodesToWatch(context: Context, showIds: List<Int>): List<Episode> {
     if (showIds.isEmpty()) return emptyList()
+
     val db = FilmFillowerDatabase(context).readableDatabase
-    return try {
-        showIds.mapNotNull { queryNextEpisodeToWatch(db, it) }
+    val theEpisodes = mutableListOf<Episode>()
+
+    try {
+        val query = """
+            SELECT * FROM Episode
+            WHERE show_id = ?
+              AND season_number > 0
+              AND watched_date IS NULL
+              AND air_date IS NOT NULL
+              AND air_date <= ?
+            ORDER BY season_number, episode_number
+            LIMIT 1
+        """.trimIndent()
+
+        showIds.forEach { showId ->
+            val selectionArgs = arrayOf(showId.toString(), LocalDate.now().toString())
+
+            db.rawQuery(query, selectionArgs).use { cursor ->
+                while (cursor.moveToNext()) {
+                    theEpisodes.add(cursor.toEpisode())
+                }
+            }
+        }
     } catch (e: Exception) {
         Log.e("Database", "Error getting next episodes to watch", e)
-        emptyList()
     } finally {
         db.close()
     }
-}
 
-private fun queryNextEpisodeToWatch(db: SQLiteDatabase, showId: Int): Episode? {
-    val query = """
-        SELECT * FROM Episode
-        WHERE show_id = ?
-          AND season_number > 0
-          AND watched_date IS NULL
-          AND air_date IS NOT NULL
-          AND air_date <= ?
-        ORDER BY season_number, episode_number
-        LIMIT 1
-    """.trimIndent()
-    val args = arrayOf(showId.toString(), LocalDate.now().toString())
-
-    return db.rawQuery(query, args).use { cursor ->
-        if (cursor.moveToFirst()) cursor.toEpisode() else null
-    }
+    return theEpisodes
 }

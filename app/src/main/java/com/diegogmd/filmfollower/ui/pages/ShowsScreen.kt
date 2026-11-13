@@ -19,14 +19,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.diegogmd.filmfollower.R
 import com.diegogmd.filmfollower.model.Episode
-import com.diegogmd.filmfollower.model.getAllFilmStatus
 import com.diegogmd.filmfollower.model.getAllTvShowStatus
 import com.diegogmd.filmfollower.model.getNextEpisodesToWatch
-import com.diegogmd.filmfollower.samplePlaceholderEpisodes
-import com.diegogmd.filmfollower.ui.components.CardType
-import com.diegogmd.filmfollower.ui.components.ContentCard
 import com.diegogmd.filmfollower.ui.components.EmptyContentCard
 import com.diegogmd.filmfollower.ui.components.EpisodeContentCard
 import com.diegogmd.filmfollower.ui.theme.FilmTypography
@@ -66,10 +63,21 @@ fun ShowsScreen(modifier: Modifier, navController: NavHostController){
 
         when (selectedTab) {
             0 -> if (releasedNextEpisodes != null) {
-                EpisodeList(Modifier.weight(1f),
+                EpisodeList(
+                    Modifier.weight(1f),
                     episodes = releasedNextEpisodes,
                     navController,
                     onChanged = { refreshTick++ })
+                // TODO: If there are archived tv shows add a EpisodeList of them down below
+                // HorizontalDivider -> --- Archived Tv Shows ---
+                // if(archivedReleasedShowEpisodes) {
+                //     EpisodeList(
+                //         Modifier.weight(1f),
+                //         episodes = archivedReleasedShowEpisodes,
+                //         navController,
+                //         onChanged = { refreshTick++ }
+                //     )
+                // }
             } else {
                 EmptyContentCard(modifier, true)
             }
@@ -89,7 +97,10 @@ private fun EpisodeList(
     LazyColumn(
         modifier = modifier.fillMaxWidth()
     ) {
-        items(episodes, key = { it.showId }) { episode ->
+        items(
+            items = episodes,
+            key = { "${it.showId}-${it.seasonNumber}-${it.episodeNumber}" }
+        ) { episode ->
             EpisodeContentCard(
                 episode = episode,
                 onClick = { item ->
@@ -106,9 +117,8 @@ private fun EpisodeList(
 @Composable
 @Preview(showBackground = true)
 fun ShowsScreenPreview() {
-    val navController = NavHostController(LocalContext.current)
     ShowsScreen(
         modifier = Modifier,
-        navController = navController
+        navController = rememberNavController()
     )
 }

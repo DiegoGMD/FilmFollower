@@ -372,8 +372,8 @@ private val OldFilmPlaceholders = ThemePlaceholders(R.drawable.placeholder_poste
 private val OldFilmBWPlaceholders = ThemePlaceholders(R.drawable.placeholder_poster_oldfilmbw)
 private val MovieTimePlaceholders = ThemePlaceholders(R.drawable.placeholder_poster_movietime)
 private val ColdBluePlaceholders = ThemePlaceholders(R.drawable.placeholder_poster_coldblue)
-private val MegaDarkPlaceholders = ThemePlaceholders(R.drawable.placeholder_poster_movietime)
-private val RedHackerPlaceholders = ThemePlaceholders(R.drawable.placeholder_poster_movietime)
+private val MegaDarkPlaceholders = ThemePlaceholders(R.drawable.placeholder_poster_megadark)
+private val RedHackerPlaceholders = ThemePlaceholders(R.drawable.placeholder_poster_megadark)
 
 @Composable
 fun FilmFollowerTheme(

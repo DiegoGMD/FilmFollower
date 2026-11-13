@@ -34,12 +34,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import org.threeten.bp.LocalDate
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -71,8 +73,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 enum class MediaType(label: String) {
-    Film("movie"),
-    TvShow("tv")
+    Film("movie"), TvShow("tv")
 }
 
 @Immutable
@@ -151,7 +152,7 @@ fun ContentCard(
     orientation: Boolean = false, // false = horizontal / true = vertical
     action: CardAction? = null,
     onClick: (ContentCardUi) -> Unit = {}
-){
+) {
     if (orientation) {
         VerticalContentCard(content, modifier, action, onClick)
     } else {
@@ -189,20 +190,23 @@ private fun VerticalContentCard(
                     text = content.title,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
                 )
                 content.date?.let {
                     Text(
                         text = content.date.toString(),
                         fontSize = 14.sp,
-                        textAlign = TextAlign.Center
+                        textAlign = TextAlign.Center,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
             action?.let {
                 CardActionButton(
-                    action = it,
-                    modifier = Modifier
+                    action = it, modifier = Modifier
                         .fillMaxWidth()
                         .height(40.dp)
                 )
@@ -237,9 +241,11 @@ private fun HorizontalContentCard(
         ) {
             Poster(content = content, modifier = Modifier.size(100.dp))
             VerticalDivider(color = MaterialTheme.colorScheme.onPrimary, thickness = 1.dp)
-            Column(modifier = modifier
-                .weight(1f)
-                .padding(10.dp)) {
+            Column(
+                modifier = modifier
+                    .weight(1f)
+                    .padding(10.dp)
+            ) {
                 Text(
                     text = content.title, fontSize = 14.sp, fontWeight = FontWeight.Bold
                 )
@@ -249,8 +255,7 @@ private fun HorizontalContentCard(
             }
             action?.let {
                 CardActionButton(
-                    action = it,
-                    modifier = Modifier
+                    action = it, modifier = Modifier
                         .width(56.dp)
                         .fillMaxHeight()
                 )
@@ -261,8 +266,7 @@ private fun HorizontalContentCard(
 
 @Composable
 private fun Poster(
-    content: ContentCardUi,
-    modifier: Modifier
+    content: ContentCardUi, modifier: Modifier
 ) {
     AsyncImage(
         model = content.posterUrl,
@@ -276,9 +280,7 @@ private fun Poster(
 
 @Composable
 private fun Poster(
-    content: String,
-    contentDescription: String,
-    modifier: Modifier
+    content: String, contentDescription: String, modifier: Modifier
 ) {
     AsyncImage(
         model = content,
@@ -298,10 +300,7 @@ private fun CardActionButton(action: CardAction, modifier: Modifier) {
         contentPadding = PaddingValues(0.dp),
         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.onPrimary),
         shape = RoundedCornerShape(
-            topStart = 0.dp,
-            bottomStart = 0.dp,
-            topEnd = 12.dp,
-            bottomEnd = 12.dp
+            topStart = 0.dp, bottomStart = 0.dp, topEnd = 12.dp, bottomEnd = 12.dp
         )
     ) {
         Icon(
@@ -313,10 +312,32 @@ private fun CardActionButton(action: CardAction, modifier: Modifier) {
 }
 
 @Composable
+private fun CardActionButton(
+    action: CardAction,
+    modifier: Modifier,
+    containerColor: Color = MaterialTheme.colorScheme.onPrimary,
+    iconTint: Color = MaterialTheme.colorScheme.primary
+) {
+    Button(
+        onClick = action.onClick,
+        modifier = modifier,
+        contentPadding = PaddingValues(0.dp),
+        colors = ButtonDefaults.buttonColors(containerColor = containerColor),
+        shape = RoundedCornerShape(
+            topStart = 0.dp, bottomStart = 0.dp, topEnd = 12.dp, bottomEnd = 12.dp
+        )
+    ) {
+        Icon(
+            painter = painterResource(if (action.active) action.activeIcon else action.inactiveIcon),
+            contentDescription = if (action.active) action.activeDescription else action.inactiveDescription,
+            tint = iconTint
+        )
+    }
+}
+
+@Composable
 fun rememberCardAction(
-    content: ContentCardUi,
-    cardType: CardType,
-    onChanged: () -> Unit = {}
+    content: ContentCardUi, cardType: CardType, onChanged: () -> Unit = {}
 ): CardAction? {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -330,8 +351,13 @@ fun rememberCardAction(
         if (cardType == CardType.NONE) return@LaunchedEffect
         val (isWatchlisted, isSeen) = withContext(Dispatchers.IO) {
             when (content.mediaType) {
-                MediaType.Film -> (getFilm(context, content.id) != null) to isFilmStatus(context, content.id, "seen")
-                MediaType.TvShow -> (getTvShow(context, content.id) != null) to isTvShowStatus(context, content.id, "seen")
+                MediaType.Film -> (getFilm(context, content.id) != null) to isFilmStatus(
+                    context, content.id, "seen"
+                )
+
+                MediaType.TvShow -> (getTvShow(context, content.id) != null) to isTvShowStatus(
+                    context, content.id, "seen"
+                )
             }
         }
         watchlisted = isWatchlisted
@@ -477,7 +503,8 @@ fun EmptyContentCard(modifier: Modifier = Modifier, isFilm: Boolean) {
         shape = RoundedCornerShape(12.dp),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.surfaceContainer)
     ) {
-        val message = if (isFilm) stringResource(R.string.empty_films) else stringResource(R.string.empty_tvshows)
+        val message =
+            if (isFilm) stringResource(R.string.empty_films) else stringResource(R.string.empty_tvshows)
 
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -541,7 +568,7 @@ fun EpisodeContentCard(
     isShowScreen: Boolean = true,
     onClick: (Episode) -> Unit = {},
     onChanged: () -> Unit = {}
-){
+) {
     val cardAction = rememberEpisodeCardAction(episode, onChanged)
     if (isShowScreen) {
         EpisodeContentCardLarge(episode, modifier, cardAction, onClick)
@@ -581,25 +608,28 @@ private fun EpisodeContentCardLarge(
                 .height(100.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Poster(content = posterUrl, contentDescription = description, modifier = Modifier.size(100.dp))
+            Poster(
+                content = posterUrl,
+                contentDescription = description,
+                modifier = Modifier.size(100.dp)
+            )
             VerticalDivider(color = MaterialTheme.colorScheme.onPrimary, thickness = 1.dp)
-            Column(modifier = modifier
-                .weight(1f)
-                .padding(10.dp)) {
+            Column(
+                modifier = modifier
+                    .weight(1f)
+                    .padding(10.dp)
+            ) {
                 Text(
-                    text = episode.title,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold
+                    text = episode.title, fontSize = 14.sp, fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = "${tvShow?.title} ( S${episode.seasonNumber} E${episode.episodeNumber} )",
+                    text = "${tvShow?.title} - S${episode.seasonNumber} E${episode.episodeNumber}",
                     fontSize = 14.sp
                 )
             }
             action?.let {
                 CardActionButton(
-                    action = it,
-                    modifier = Modifier
+                    action = it, modifier = Modifier
                         .width(56.dp)
                         .fillMaxHeight()
                 )
@@ -615,28 +645,27 @@ private fun EpisodeContentCardCompacted(
     action: CardAction?,
 ) {
     Card(
-        onClick = {  },
+        onClick = { },
         modifier = modifier
             .fillMaxWidth()
             .padding(2.dp),
         shape = RoundedCornerShape(12.dp),
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
+            modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(modifier = modifier
-                .weight(1f)
-                .padding(10.dp)) {
+            Column(
+                modifier = modifier
+                    .weight(1f)
+                    .padding(10.dp)
+            ) {
                 Text(
                     text = "${episode.episodeNumber}. ${episode.title}",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = "${episode.airDate} · ${episode.runtime} min",
-                    fontSize = 12.sp
+                    text = "${episode.airDate} · ${episode.runtime} min", fontSize = 12.sp
                 )
             }
             action?.let {
@@ -644,7 +673,9 @@ private fun EpisodeContentCardCompacted(
                     action = it,
                     modifier = Modifier
                         .width(56.dp)
-                        .fillMaxHeight()
+                        .fillMaxHeight(),
+                    containerColor = Color.Transparent,
+                    iconTint = MaterialTheme.colorScheme.onSurface
                 )
             }
         }
@@ -653,8 +684,7 @@ private fun EpisodeContentCardCompacted(
 
 @Composable
 fun rememberEpisodeCardAction(
-    episode: Episode,
-    onChanged: () -> Unit = {}
+    episode: Episode, onChanged: () -> Unit = {}
 ): CardAction {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -675,17 +705,11 @@ fun rememberEpisodeCardAction(
             val ok = withContext(Dispatchers.IO) {
                 if (newWatched) {
                     setEpisodeWatched(
-                        context,
-                        episode.showId,
-                        episode.seasonNumber,
-                        episode.episodeNumber
+                        context, episode.showId, episode.seasonNumber, episode.episodeNumber
                     )
                 } else {
                     setEpisodeUnwatched(
-                        context,
-                        episode.showId,
-                        episode.seasonNumber,
-                        episode.episodeNumber
+                        context, episode.showId, episode.seasonNumber, episode.episodeNumber
                     )
                 }
             }
@@ -696,13 +720,3 @@ fun rememberEpisodeCardAction(
         }
     }
 }
-
-// Episode v1 - for ShowScreen
-// Poster | Text | Button
-// Text -> episodeTitle (14.sp)
-//         "$showName ( S${seasonNumber} E${episodeNumber} )" (14.sp)
-
-// Episode v2 - for season list
-// Text | Button
-// Text -> number. episodeTitle (14.sp)
-//         "$airDate · runtime" (12.sp)

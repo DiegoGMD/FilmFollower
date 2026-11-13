@@ -9,6 +9,7 @@ import androidx.annotation.DrawableRes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.Arrangement
@@ -34,6 +35,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
@@ -45,6 +48,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -97,10 +101,16 @@ import com.diegogmd.filmfollower.ui.components.ContentCard
 import com.diegogmd.filmfollower.ui.components.EpisodeContentCard
 import com.diegogmd.filmfollower.ui.components.MediaType
 import com.diegogmd.filmfollower.ui.theme.FilmTypography
+import com.diegogmd.filmfollower.ui.theme.Graphite
+import com.diegogmd.filmfollower.ui.theme.Gunmetal
+import com.diegogmd.filmfollower.ui.theme.Silver
 import com.diegogmd.filmfollower.ui.theme.placeholders
 import com.diegogmd.filmfollower.viewmodels.FilmViewModelFactory
 import com.diegogmd.filmfollower.viewmodels.TvShowViewModel
 import com.diegogmd.filmfollower.viewmodels.TvShowViewModelFactory
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.threeten.bp.LocalDate
 
 private fun openTrailer(context: Context, key: String) {
@@ -223,6 +233,9 @@ private fun FilmContentUI(
                         } else {
                             val newStatus = if (!seen) "seen" else "watchlist"
                             setFilmStatus(context, film.filmId, newStatus)
+                            if (favourite) {
+                                if (unsetFavouriteFilm(context, film.filmId)) favourite = false
+                            }
                             seen = newStatus == "seen"
                             archived = false
                         }
@@ -884,10 +897,13 @@ private fun SeasonDropdown(
             )
         }
 
+        // TODO:
+        //  I want to make a pop-up message when you set seen an episode
+        //  that is not the next one to the previous one seen. Do not block, make the warning
         AnimatedVisibility(visible = expanded) {
             Column {
                 HorizontalDivider()
-                when { // Dropdown area a but darker than the Season title area
+                when {
                     episodes == null -> Box(
                         Modifier
                             .fillMaxWidth()
@@ -911,6 +927,51 @@ private fun SeasonDropdown(
                 }
             }
         }
+
+        // Use this as a template for the pop-up
+//        AlertDialog(
+//            modifier = Modifier.border(1.dp, Gunmetal, RoundedCornerShape(12.dp)),
+//            shape = RoundedCornerShape(12.dp),
+//            onDismissRequest = { pendingImportUri = null },
+//            containerColor = Graphite,
+//            titleContentColor = Silver,
+//            textContentColor = Silver.copy(alpha = 0.7f),
+//            title = { Text("Replace all data?") },
+//            text = { Text("Importing replaces everything in the app (films, shows, lists and ratings) with the contents of the backup. This can't be undone.")
+//            },
+//            confirmButton = {
+//                TextButton(
+//                    onClick = {
+//                        pendingImportUri = null
+//                        scope.launch {
+//                            val success = withContext(Dispatchers.IO) {
+//                                backupManager.importDatabase(uri)
+//                            }
+//                            Toast.makeText(
+//                                context,
+//                                if (success) "Backup restored" else "Import failed: not a valid backup",
+//                                Toast.LENGTH_LONG
+//                            ).show()
+//                        }
+//                    },
+//                    colors = ButtonDefaults.buttonColors(
+//                        containerColor = Silver,
+//                        contentColor = Graphite
+//                    ), modifier = Modifier.height(48.dp), shape = RoundedCornerShape(16.dp)
+//                ) { Text("Replace", color = Graphite) }
+//            },
+//            dismissButton = {
+//                TextButton(
+//                    onClick = { pendingImportUri = null },
+//                    colors = ButtonDefaults.buttonColors(
+//                        containerColor = Silver,
+//                        contentColor = Graphite
+//                    ), modifier = Modifier.height(48.dp), shape = RoundedCornerShape(16.dp)
+//                ) {
+//                    Text("Cancel", color = Graphite)
+//                }
+//            }
+//        )
     }
 }
 

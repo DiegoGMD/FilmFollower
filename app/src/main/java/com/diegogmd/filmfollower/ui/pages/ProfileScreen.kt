@@ -21,6 +21,8 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -45,12 +47,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.diegogmd.filmfollower.SecureStorage
 import com.diegogmd.filmfollower.model.getAllFavouriteFilms
 import com.diegogmd.filmfollower.model.getAllFavouriteTvShows
 import com.diegogmd.filmfollower.model.getAllFilmStatus
 import com.diegogmd.filmfollower.model.getAllTvShowStatus
-import com.diegogmd.filmfollower.ui.components.CardType
 import com.diegogmd.filmfollower.ui.components.ContentCard
 import com.diegogmd.filmfollower.ui.components.ContentCardUi
 import com.diegogmd.filmfollower.ui.components.MediaType
@@ -59,54 +61,81 @@ import com.diegogmd.filmfollower.ui.theme.FilmTypography
 
 @Composable
 fun ProfileScreen(modifier: Modifier, navController: NavHostController) {
-    var context = LocalContext.current
+    val context = LocalContext.current
     var refreshTick by remember { mutableIntStateOf(0) }
-    val favouriteFilms = remember(refreshTick) { getAllFavouriteFilms(context)?.map {it.toCardUi()} }
-    val favouriteShows = remember(refreshTick) { getAllFavouriteTvShows(context)?.map {it.toCardUi()} }
-    val seenFilms = remember(refreshTick) { getAllFilmStatus(context, "seen")?.map {it.toCardUi()} }
-    val seenShows = remember(refreshTick) { getAllTvShowStatus(context, "completed")?.map {it.toCardUi()} }
+    val favouriteFilms =
+        remember(refreshTick) { getAllFavouriteFilms(context)?.map { it.toCardUi() } }
+    val favouriteShows =
+        remember(refreshTick) { getAllFavouriteTvShows(context)?.map { it.toCardUi() } }
+    val seenFilms =
+        remember(refreshTick) { getAllFilmStatus(context, "seen")?.map { it.toCardUi() } }
+    val seenShows =
+        remember(refreshTick) { getAllTvShowStatus(context, "completed")?.map { it.toCardUi() } }
 
     Column {
         SecureStorage.getUsername(context)?.let { ProfileHeader(it, navController) }
 
         LazyColumn(modifier = Modifier.weight(1f)) {
+            // TODO:
+            //  I want it to be a list of all the last seen content (episodes and films)
+            //  I don't want to add tv shows so there is no duplicates
+            if (favouriteFilms != null) {
+                item {
+                    CarouselSection(
+                        "Last Seen", favouriteFilms.count(), favouriteFilms, navController
+                    ) { refreshTick++ }
+                }
+            }
+
             item {
-                Row {
-                    StatCard(
-                        count = seenFilms?.count() ?: 0,
-                        label = "Seen Films",
-                        modifier = Modifier.weight(1f)
-                    )
-                    StatCard(
-                        count = seenShows?.count() ?: 0,
-                        label = "Seen Tv Shows",
-                        modifier = Modifier.weight(1f)
-                    )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp, vertical = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    NavigationCard(
+                        label = "Statistics", modifier = Modifier.weight(1f)
+                    ) { /* Go to statistics page */ }
+
+                    NavigationCard(
+                        label = "Lists", modifier = Modifier.weight(1f)
+                    ) { /* Go to lists page */ }
                 }
             }
 
             if (favouriteFilms != null) {
                 item {
                     CarouselSection(
-                        "Favourite Films", favouriteFilms, navController
+                        "Favourite Films", favouriteFilms.count(), favouriteFilms, navController
                     ) { refreshTick++ }
                 }
             }
             if (favouriteShows != null) {
                 item {
                     CarouselSection(
-                        "Favourite Tv Shows", favouriteShows, navController
+                        "Favourite Tv Shows", favouriteShows.count(), favouriteShows, navController
                     ) { refreshTick++ }
                 }
             }
             if (seenFilms != null) {
                 item {
-                    CarouselSection("Seen Films", seenFilms, navController) { refreshTick++ }
+                    CarouselSection(
+                        "Seen Films",
+                        seenFilms.count(),
+                        seenFilms,
+                        navController
+                    ) { refreshTick++ }
                 }
             }
             if (seenShows != null) {
                 item {
-                    CarouselSection("Seen Tv Shows", seenShows, navController) { refreshTick++ }
+                    CarouselSection(
+                        "Seen Tv Shows",
+                        seenShows.count(),
+                        seenShows,
+                        navController
+                    ) { refreshTick++ }
                 }
             }
         }
@@ -129,6 +158,36 @@ fun StatCard(count: Int, label: String, modifier: Modifier) {
         ) {
             Text(text = count.toString(), style = FilmTypography.titleMedium, fontSize = 32.sp)
             Text(text = label, style = FilmTypography.titleMedium, fontSize = 14.sp)
+        }
+    }
+}
+
+@Composable
+fun NavigationCard(
+    label: String,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = modifier,
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface),
+        onClick = onClick
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(text = label, fontSize = 16.sp)
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                contentDescription = "Go to $label",
+                modifier = Modifier.size(20.dp)
+            )
         }
     }
 }
@@ -208,6 +267,7 @@ private fun ProfileHeader(
 @Composable
 fun CarouselSection(
     title: String,
+    itemCount: Int?,
     content: List<ContentCardUi?>,
     navController: NavHostController,
     onChanged: () -> Unit = {}
@@ -222,13 +282,29 @@ fun CarouselSection(
     ) {
         val listState = rememberLazyListState()
 
-        Text(
-            text = title,
-            fontSize = 20.sp,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.align(Alignment.CenterHorizontally),
-            style = FilmTypography.titleMedium
-        )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+        ) {
+            Text(
+                text = title,
+                fontSize = 20.sp,
+                textAlign = TextAlign.Center,
+                style = FilmTypography.titleMedium,
+                modifier = Modifier.align(Alignment.Center)
+            )
+
+            if (itemCount != null) {
+                Text(
+                    text = "( $itemCount )",
+                    fontSize = 20.sp,
+                    style = FilmTypography.titleMedium,
+                    modifier = Modifier.align(Alignment.CenterEnd)
+                )
+            }
+        }
+
         LazyRow(
             state = listState,
             flingBehavior = rememberSnapFlingBehavior(lazyListState = listState),
@@ -260,9 +336,8 @@ fun CarouselSection(
 @Composable
 @Preview(showBackground = true)
 fun ProfileScreenPreview() {
-    val navController = NavHostController(LocalContext.current)
     ProfileScreen(
         modifier = Modifier,
-        navController = navController
+        navController = rememberNavController()
     )
 }

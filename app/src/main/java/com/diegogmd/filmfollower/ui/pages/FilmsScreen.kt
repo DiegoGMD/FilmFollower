@@ -68,6 +68,16 @@ fun FilmsScreen(modifier: Modifier, navController: NavHostController) {
                     navController,
                     onChanged = { refreshTick++ }
                 )
+                // TODO: If there are archived films add a FilmList of them down below
+                // HorizontalDivider -> --- Archived Films ---
+                // if(archivedReleasedFilms) {
+                //     FilmList(
+                //         Modifier.weight(1f),
+                //         films = archivedReleasedFilms,
+                //         navController,
+                //         onChanged = { refreshTick++ }
+                //     )
+                // }
             } else {
                 EmptyContentCard(modifier, true)
             }
