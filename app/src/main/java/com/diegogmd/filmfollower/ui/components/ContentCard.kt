@@ -695,8 +695,8 @@ fun rememberEpisodeCardAction(
 
     return CardAction(
         active = watched,
-        activeIcon = R.drawable.ic_visibility_off_24px,
-        inactiveIcon = R.drawable.ic_visibility_24px,
+        activeIcon = R.drawable.ic_visibility_24px,
+        inactiveIcon = R.drawable.ic_visibility_off_24px,
         activeDescription = "Seen",
         inactiveDescription = "Not seen"
     ) {

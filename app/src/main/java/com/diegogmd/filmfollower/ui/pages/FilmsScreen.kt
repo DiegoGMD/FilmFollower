@@ -1,10 +1,13 @@
 package com.diegogmd.filmfollower.ui.pages
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
@@ -14,10 +17,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.diegogmd.filmfollower.R
 import com.diegogmd.filmfollower.model.Film
@@ -59,25 +64,18 @@ fun FilmsScreen(modifier: Modifier, navController: NavHostController) {
             remember(refreshTick) { getAllFilmStatus(context, "watchlist", 1) }
         val watchlistedUpcomingFilms =
             remember(refreshTick) { getAllFilmStatus(context, "watchlist", 0) }
+        val archivedReleasedFilms =
+            remember(refreshTick) { getAllFilmStatus(context, "archived", 1) }
 
         when (selectedTab) {
             0 -> if (watchlistedReleasedFilms != null) {
                 FilmList(
                     Modifier.weight(1f),
                     films = watchlistedReleasedFilms,
+                    archivedFilms = archivedReleasedFilms,
                     navController,
                     onChanged = { refreshTick++ }
                 )
-                // TODO: If there are archived films add a FilmList of them down below
-                // HorizontalDivider -> --- Archived Films ---
-                // if(archivedReleasedFilms) {
-                //     FilmList(
-                //         Modifier.weight(1f),
-                //         films = archivedReleasedFilms,
-                //         navController,
-                //         onChanged = { refreshTick++ }
-                //     )
-                // }
             } else {
                 EmptyContentCard(modifier, true)
             }
@@ -86,6 +84,7 @@ fun FilmsScreen(modifier: Modifier, navController: NavHostController) {
                 FilmList(
                     Modifier.weight(1f),
                     films = watchlistedUpcomingFilms,
+                    archivedFilms = null,
                     navController,
                     onChanged = { refreshTick++ }
                 )
@@ -100,8 +99,9 @@ fun FilmsScreen(modifier: Modifier, navController: NavHostController) {
 private fun FilmList(
     modifier: Modifier,
     films: List<Film>,
+    archivedFilms: List<Film>? = null,
     navController: NavHostController,
-    onChanged: () -> Unit
+    onChanged: () -> Unit,
 ) {
     LazyColumn(
         modifier = modifier.fillMaxWidth()
@@ -113,6 +113,45 @@ private fun FilmList(
                 onClick = { item -> navController.navigate("film/${film.filmId}") },
                 onChanged = onChanged
             )
+        }
+
+        if(!archivedFilms.isNullOrEmpty()) {
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    HorizontalDivider(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(horizontal = 12.dp),
+                        thickness = 1.dp,
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                    Text(
+                        text = "Archived TV Shows",
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                    HorizontalDivider(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(horizontal = 12.dp),
+                        thickness = 1.dp,
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                }
+            }
+
+            items(archivedFilms, key = { it.filmId }) { film ->
+                ContentCard(
+                    content = film,
+                    cardType = CardType.SEEN_TOGGLE,
+                    onClick = { item -> navController.navigate("film/${film.filmId}") },
+                    onChanged = onChanged
+                )
+            }
         }
     }
 }

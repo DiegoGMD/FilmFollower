@@ -476,13 +476,23 @@ fun getNextEpisodesToWatch(context: Context, showIds: List<Int>): List<Episode> 
 
     try {
         val query = """
-            SELECT * FROM Episode
-            WHERE show_id = ?
-              AND season_number > 0
-              AND watched_date IS NULL
-              AND air_date IS NOT NULL
-              AND air_date <= ?
-            ORDER BY season_number, episode_number
+            SELECT e.* FROM Episode e
+            WHERE e.show_id = ?
+                AND e.season_number > 0
+                AND e.watched_date IS NULL
+                AND e.air_date IS NOT NULL
+                AND e.air_date <= ?
+                AND NOT EXISTS (
+                    SELECT 1 FROM Episode w
+                        WHERE w.show_id = e.show_id
+                            AND w.season_number > 0
+                            AND w.watched_date IS NOT NULL
+                            AND (
+                                w.season_number > e.season_number
+                                OR (w.season_number = e.season_number AND w.episode_number > e.episode_number)
+                            )
+              )
+            ORDER BY e.season_number, e.episode_number
             LIMIT 1
         """.trimIndent()
 

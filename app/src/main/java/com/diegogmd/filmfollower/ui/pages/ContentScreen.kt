@@ -123,6 +123,24 @@ private fun openTrailer(context: Context, key: String) {
     }
 }
 
+private fun isNextToWatch(
+    episode: Episode,
+    seasons: List<Season>,
+    episodesBySeason: Map<Int, List<Episode>>
+): Boolean {
+    val ordered = seasons
+        .sortedBy { if (it.seasonNumber == 0) Int.MAX_VALUE else it.seasonNumber }
+        .flatMap { episodesBySeason[it.seasonNumber].orEmpty().sortedBy { ep -> ep.episodeNumber } }
+
+    val lastWatchedIndex = ordered.indexOfLast { it.isWatched }
+    val nextAfterLastWatched = ordered.drop(lastWatchedIndex + 1).firstOrNull { !it.isWatched }
+    val firstUnwatched = ordered.firstOrNull { !it.isWatched }
+
+    return nextAfterLastWatched == null ||
+            episode == nextAfterLastWatched ||
+            episode == firstUnwatched   // filling the earliest gap (e.g. ep 2) shouldn't warn
+}
+
 @Composable
 fun ContentScreenFilm(
     filmId: Int,
@@ -324,7 +342,7 @@ private fun TvShowContentUI(
         )
     }
     val trailerKey by viewModel.trailerKey.collectAsState()
-
+    var pendingEpisode by remember { mutableStateOf<Episode?>(null) }
     var selectedTab by remember { mutableIntStateOf(0) }
     val tabs = listOf(R.string.about, R.string.episodes)
 
@@ -434,13 +452,28 @@ private fun TvShowContentUI(
                 isLoadingSeasons = isLoadingSeasons,
                 episodesBySeason = episodesBySeason,
                 onEpisodeClick = { ep ->
-                    if (!watchlisted) {
-                        Toast.makeText(context, "Add the show to your watchlist first", Toast.LENGTH_SHORT).show()
-                    } else {
-                        viewModel.toggleEpisodeWatched(context, tvShow.showId, ep)
+                    when {
+                        !watchlisted -> Toast.makeText(
+                            context, "Add the show to your watchlist first", Toast.LENGTH_SHORT
+                        ).show()
+
+                        !ep.isWatched && !isNextToWatch(ep, seasons, episodesBySeason) ->
+                            pendingEpisode = ep
+
+                        else -> viewModel.toggleEpisodeWatched(context, tvShow.showId, ep)
                     }
                 },
                 modifier = Modifier.weight(1f)
+            )
+        }
+
+        pendingEpisode?.let { ep ->
+            OutOfOrderEpisodeDialog(
+                onConfirm = {
+                    viewModel.toggleEpisodeWatched(context, tvShow.showId, ep)
+                    pendingEpisode = null
+                },
+                onDismiss = { pendingEpisode = null }
             )
         }
     }
@@ -927,52 +960,48 @@ private fun SeasonDropdown(
                 }
             }
         }
-
-        // Use this as a template for the pop-up
-//        AlertDialog(
-//            modifier = Modifier.border(1.dp, Gunmetal, RoundedCornerShape(12.dp)),
-//            shape = RoundedCornerShape(12.dp),
-//            onDismissRequest = { pendingImportUri = null },
-//            containerColor = Graphite,
-//            titleContentColor = Silver,
-//            textContentColor = Silver.copy(alpha = 0.7f),
-//            title = { Text("Replace all data?") },
-//            text = { Text("Importing replaces everything in the app (films, shows, lists and ratings) with the contents of the backup. This can't be undone.")
-//            },
-//            confirmButton = {
-//                TextButton(
-//                    onClick = {
-//                        pendingImportUri = null
-//                        scope.launch {
-//                            val success = withContext(Dispatchers.IO) {
-//                                backupManager.importDatabase(uri)
-//                            }
-//                            Toast.makeText(
-//                                context,
-//                                if (success) "Backup restored" else "Import failed: not a valid backup",
-//                                Toast.LENGTH_LONG
-//                            ).show()
-//                        }
-//                    },
-//                    colors = ButtonDefaults.buttonColors(
-//                        containerColor = Silver,
-//                        contentColor = Graphite
-//                    ), modifier = Modifier.height(48.dp), shape = RoundedCornerShape(16.dp)
-//                ) { Text("Replace", color = Graphite) }
-//            },
-//            dismissButton = {
-//                TextButton(
-//                    onClick = { pendingImportUri = null },
-//                    colors = ButtonDefaults.buttonColors(
-//                        containerColor = Silver,
-//                        contentColor = Graphite
-//                    ), modifier = Modifier.height(48.dp), shape = RoundedCornerShape(16.dp)
-//                ) {
-//                    Text("Cancel", color = Graphite)
-//                }
-//            }
-//        )
     }
+}
+
+@Composable
+private fun OutOfOrderEpisodeDialog(
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        modifier = Modifier.border(1.dp, Gunmetal, RoundedCornerShape(12.dp)),
+        shape = RoundedCornerShape(12.dp),
+        onDismissRequest = onDismiss,
+        containerColor = Graphite,
+        titleContentColor = Silver,
+        textContentColor = Silver.copy(alpha = 0.7f),
+        title = { Text("Not the next episode") },
+        text = {
+            Text("There are earlier episodes you haven't marked as watched. Do you want to mark this one anyway?")
+        },
+        confirmButton = {
+            TextButton(
+                onClick = onConfirm,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Silver,
+                    contentColor = Graphite
+                ),
+                modifier = Modifier.height(48.dp),
+                shape = RoundedCornerShape(16.dp)
+            ) { Text("Mark anyway", color = Graphite) }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onDismiss,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Silver,
+                    contentColor = Graphite
+                ),
+                modifier = Modifier.height(48.dp),
+                shape = RoundedCornerShape(16.dp)
+            ) { Text("Cancel", color = Graphite) }
+        }
+    )
 }
 
 @Composable

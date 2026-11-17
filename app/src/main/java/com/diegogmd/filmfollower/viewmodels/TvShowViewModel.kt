@@ -189,7 +189,7 @@ class TvShowViewModel(private val repository: SearchRepository) : ViewModel() {
         }
     }
 
-    fun toggleEpisodeWatched(context: Context, showId: Int, episode: Episode) { // you should not exist
+    fun toggleEpisodeWatched(context: Context, showId: Int, episode: Episode) {
         val appContext = context.applicationContext
         viewModelScope.launch {
             val updated = withContext(Dispatchers.IO) {
