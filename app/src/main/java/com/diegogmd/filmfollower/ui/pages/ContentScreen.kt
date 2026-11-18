@@ -36,14 +36,13 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
@@ -97,9 +96,11 @@ import com.diegogmd.filmfollower.model.setFilmStatus
 import com.diegogmd.filmfollower.model.setTvShowStatus
 import com.diegogmd.filmfollower.model.unsetFavouriteFilm
 import com.diegogmd.filmfollower.model.unsetFavouriteTvShow
+import com.diegogmd.filmfollower.ui.components.CardActionButton
 import com.diegogmd.filmfollower.ui.components.ContentCard
 import com.diegogmd.filmfollower.ui.components.EpisodeContentCard
 import com.diegogmd.filmfollower.ui.components.MediaType
+import com.diegogmd.filmfollower.ui.components.rememberSeasonCardAction
 import com.diegogmd.filmfollower.ui.theme.FilmTypography
 import com.diegogmd.filmfollower.ui.theme.Graphite
 import com.diegogmd.filmfollower.ui.theme.Gunmetal
@@ -108,9 +109,6 @@ import com.diegogmd.filmfollower.ui.theme.placeholders
 import com.diegogmd.filmfollower.viewmodels.FilmViewModelFactory
 import com.diegogmd.filmfollower.viewmodels.TvShowViewModel
 import com.diegogmd.filmfollower.viewmodels.TvShowViewModelFactory
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.threeten.bp.LocalDate
 
 private fun openTrailer(context: Context, key: String) {
@@ -448,6 +446,7 @@ private fun TvShowContentUI(
                 })
 
             1 -> EpisodesTab(
+                showId = tvShow.showId,
                 seasons = seasons,
                 isLoadingSeasons = isLoadingSeasons,
                 episodesBySeason = episodesBySeason,
@@ -463,6 +462,7 @@ private fun TvShowContentUI(
                         else -> viewModel.toggleEpisodeWatched(context, tvShow.showId, ep)
                     }
                 },
+                onSeasonChanged = { n -> viewModel.loadEpisodes(context, tvShow.showId, n) },
                 modifier = Modifier.weight(1f)
             )
         }
@@ -843,11 +843,13 @@ private fun ContentCarousel(
 
 @Composable
 private fun EpisodesTab(
-    seasons: List<Season>,
+    showId: Int,
     isLoadingSeasons: Boolean,
     episodesBySeason: Map<Int, List<Episode>>,
     onEpisodeClick: (Episode) -> Unit,
-    modifier: Modifier = Modifier
+    onSeasonChanged: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+    seasons: List<Season>
 ) {
     var expandedSeasons by remember { mutableStateOf<Set<Int>>(emptySet()) }
 
@@ -872,6 +874,7 @@ private fun EpisodesTab(
                 val isExpanded = n in expandedSeasons
                 episodesBySeason[n]?.let {
                     SeasonDropdown(
+                        showId = showId,
                         season = season,
                         episodes = it,
                         expanded = isExpanded,
@@ -879,7 +882,8 @@ private fun EpisodesTab(
                             expandedSeasons =
                                 if (isExpanded) expandedSeasons - n else expandedSeasons + n
                         },
-                        onEpisodeClick = onEpisodeClick
+                        onEpisodeClick = onEpisodeClick,
+                        onSeasonChanged = { onSeasonChanged(n) },
                     )
                 }
             }
@@ -889,14 +893,22 @@ private fun EpisodesTab(
 
 @Composable
 private fun SeasonDropdown(
+    showId: Int,
     season: Season,
     episodes: List<Episode>,
     expanded: Boolean,
     onHeaderClick: () -> Unit,
-    onEpisodeClick: (Episode) -> Unit
+    onEpisodeClick: (Episode) -> Unit,
+    onSeasonChanged: () -> Unit
 ) {
     val total = episodes.size
     val watched = episodes.count { it.isWatched }
+    val seasonAction = rememberSeasonCardAction(
+        showId = showId,
+        seasonNumber = season.seasonNumber,
+        episodes = episodes,
+        onChanged = onSeasonChanged
+    )
 
     Card(
         modifier = Modifier
@@ -923,6 +935,12 @@ private fun SeasonDropdown(
                     fontSize = 14.sp,
                 )
             }
+            CardActionButton(
+                action = seasonAction,
+                modifier = Modifier.size(width = 56.dp, height = 40.dp),
+                containerColor = Color.Transparent,
+                iconTint = MaterialTheme.colorScheme.onSurface
+            )
             Icon(
                 imageVector = if (expanded) Icons.Default.KeyboardArrowUp
                 else Icons.Default.KeyboardArrowDown,
@@ -955,7 +973,11 @@ private fun SeasonDropdown(
                     )
 
                     else -> episodes.forEach { episode ->
-                        EpisodeContentCard(episode = episode, isShowScreen = false)
+                        EpisodeContentCard(
+                            episode = episode,
+                            isShowScreen = false,
+                            onChanged = onSeasonChanged
+                        )
                     }
                 }
             }
@@ -963,6 +985,7 @@ private fun SeasonDropdown(
     }
 }
 
+// Not working as intended, doesn't pop up/appear when you skip an episode
 @Composable
 private fun OutOfOrderEpisodeDialog(
     onConfirm: () -> Unit,

@@ -61,6 +61,8 @@ import com.diegogmd.filmfollower.model.responses.toLocalDateOrNull
 import com.diegogmd.filmfollower.model.setEpisodeUnwatched
 import com.diegogmd.filmfollower.model.setEpisodeWatched
 import com.diegogmd.filmfollower.model.setFilmStatus
+import com.diegogmd.filmfollower.model.setSeasonUnwatched
+import com.diegogmd.filmfollower.model.setSeasonWatched
 import com.diegogmd.filmfollower.model.setTvShowStatus
 import com.diegogmd.filmfollower.ui.theme.FilmTypography
 import com.diegogmd.filmfollower.ui.theme.placeholders
@@ -293,7 +295,7 @@ private fun Poster(
 }
 
 @Composable
-private fun CardActionButton(action: CardAction, modifier: Modifier) {
+fun CardActionButton(action: CardAction, modifier: Modifier) {
     Button(
         onClick = action.onClick,
         modifier = modifier,
@@ -312,7 +314,7 @@ private fun CardActionButton(action: CardAction, modifier: Modifier) {
 }
 
 @Composable
-private fun CardActionButton(
+fun CardActionButton(
     action: CardAction,
     modifier: Modifier,
     containerColor: Color = MaterialTheme.colorScheme.onPrimary,
@@ -689,7 +691,9 @@ fun rememberEpisodeCardAction(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
-    var watched by remember(episode.showId, episode.seasonNumber, episode.episodeNumber) {
+    var watched by remember(
+        episode.showId, episode.seasonNumber, episode.episodeNumber, episode.watchedDate
+    ) {
         mutableStateOf(episode.watchedDate != null)
     }
 
@@ -717,6 +721,35 @@ fun rememberEpisodeCardAction(
                 watched = newWatched
                 onChanged()
             }
+        }
+    }
+}
+
+@Composable
+fun rememberSeasonCardAction(
+    showId: Int,
+    seasonNumber: Int,
+    episodes: List<Episode>,
+    onChanged: () -> Unit = {}
+): CardAction {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+
+    val allWatched = episodes.isNotEmpty() && episodes.all { it.isWatched }
+
+    return CardAction(
+        active = allWatched,
+        activeIcon = R.drawable.ic_visibility_24px,
+        inactiveIcon = R.drawable.ic_visibility_off_24px,
+        activeDescription = "Season seen",
+        inactiveDescription = "Season not seen"
+    ) {
+        scope.launch {
+            val ok = withContext(Dispatchers.IO) {
+                if (allWatched) setSeasonUnwatched(context, showId, seasonNumber)
+                else setSeasonWatched(context, showId, seasonNumber)
+            }
+            if (ok) onChanged()
         }
     }
 }
