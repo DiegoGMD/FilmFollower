@@ -263,7 +263,7 @@ fun setEpisodeWatched(context: Context, showId: Int, seasonNumber: Int, episodeN
             arrayOf(showId.toString(), seasonNumber.toString(), episodeNumber.toString())
         )
         ok = rows > 0
-        if (ok && seasonNumber > 0) completeShowIfFinished(db, showId) // check if the show is completed
+        if (ok && seasonNumber > 0) syncShowCompletion(db, showId) // check if the show is completed
         db.endTransaction()
     } catch (e: Exception) {
         Log.e("Database", "Error setting episode watched", e)
@@ -285,6 +285,7 @@ fun setEpisodeUnwatched(context: Context, showId: Int, seasonNumber: Int, episod
             "show_id = ? AND season_number = ? AND episode_number = ?",
             arrayOf(showId.toString(), seasonNumber.toString(), episodeNumber.toString())
         ) > 0
+        if (ok && seasonNumber > 0) syncShowCompletion(db, showId)
         db.endTransaction()
     } catch (e: Exception) {
         Log.e("Database", "Error setting episode unwatched", e)
@@ -304,7 +305,7 @@ fun setSeasonWatched(context: Context, showId: Int, seasonNumber: Int): Boolean 
         val where = "show_id = ? AND season_number = ? AND watched_date IS NULL"
         db.update("Episode", values, where, arrayOf(showId.toString(), seasonNumber.toString()))
         ok = true
-        if (ok && seasonNumber > 0) completeShowIfFinished(db, showId) // check if the show is completed
+        if (ok && seasonNumber > 0) syncShowCompletion(db, showId) // check if the show is completed
         db.endTransaction()
     } catch (e: Exception) {
         Log.e("Database", "Error setting season watched", e)
@@ -327,6 +328,7 @@ fun setSeasonUnwatched(context: Context, showId: Int, seasonNumber: Int): Boolea
             arrayOf(showId.toString(), seasonNumber.toString())
         )
         ok = true
+        if (ok && seasonNumber > 0) syncShowCompletion(db, showId)
         db.endTransaction()
     } catch (e: Exception) {
         Log.e("Database", "Error setting season unwatched", e)
@@ -520,13 +522,16 @@ fun getNextEpisodesToWatch(context: Context, showIds: List<Int>): List<Episode> 
     return theEpisodes
 }
 
-private fun completeShowIfFinished(db: SQLiteDatabase, showId: Int) {
+private fun syncShowCompletion(db: SQLiteDatabase, showId: Int) {
+    val today = LocalDate.now().toString()
+
+    // Promote: everything aired is watched -> completed
     db.execSQL(
         """
-        UPDATE TvShow SET watch_status = "completed"
+        UPDATE TvShow SET watch_status = 'completed'
         WHERE show_id = ?
-          AND watch_status = "watchlist"
-          AND tmdb_status IN ("Ended", "Canceled")
+          AND watch_status = 'watchlist'
+          AND tmdb_status IN ('Ended', 'Canceled')
           AND EXISTS (
               SELECT 1 FROM Episode
               WHERE show_id = TvShow.show_id AND season_number > 0
@@ -540,6 +545,24 @@ private fun completeShowIfFinished(db: SQLiteDatabase, showId: Int) {
                 AND air_date <= ?
           )
         """.trimIndent(),
-        arrayOf(showId.toString(), LocalDate.now().toString())
+        arrayOf(showId.toString(), today)
+    )
+
+    // Demote: it was completed but now has an aired, unwatched episode
+    db.execSQL(
+        """
+        UPDATE TvShow SET watch_status = 'watchlist'
+        WHERE show_id = ?
+          AND watch_status = 'completed'
+          AND EXISTS (
+              SELECT 1 FROM Episode
+              WHERE show_id = TvShow.show_id
+                AND season_number > 0
+                AND watched_date IS NULL
+                AND air_date IS NOT NULL
+                AND air_date <= ?
+          )
+        """.trimIndent(),
+        arrayOf(showId.toString(), today)
     )
 }

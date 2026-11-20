@@ -268,11 +268,38 @@ fun isTvShowStatus(context: Context, id: Int, status: String): Boolean =
 fun setTvShowStatus(context: Context, id: Int, status: String) {
     val dbHelper = FilmFillowerDatabase(context)
     val db = dbHelper.writableDatabase
+    val today = LocalDate.now()
+    // TODO:
 
     try {
-        db.execSQL(
-            "UPDATE TvShow SET watch_status = ? WHERE show_id = ?", arrayOf(status, id.toString())
-        )
+        db.beginTransaction()
+        try {
+            db.execSQL(
+                "UPDATE TvShow SET watch_status = ? WHERE show_id = ?",
+                arrayOf(status, id.toString())
+            )
+            if (status == "completed") {
+                db.execSQL(
+                    """
+                    UPDATE Episode SET watched_date = ?
+                    WHERE show_id = ?
+                      AND season_number > 0
+                      AND watched_date IS NULL
+                      AND air_date IS NOT NULL
+                      AND air_date <= ?
+                    """.trimIndent(),
+                    arrayOf(today, id.toString(), today)
+                )
+            } else if (status == "watchlist") {
+                db.execSQL(
+                    "UPDATE Episode SET watched_date = NULL WHERE show_id = ?",
+                    arrayOf(id.toString())
+                )
+            }
+            db.setTransactionSuccessful()
+        } finally {
+            db.endTransaction()
+        }
         Log.d("Database", "Content with ID $id status is set as $status")
     } catch (e: Exception) {
         Log.e("Database", "Error changing state", e)
