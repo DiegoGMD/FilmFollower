@@ -218,3 +218,8 @@ fun String?.toLocalDateOrNull(): LocalDate? {
     if (this.isNullOrBlank()) return null
     return runCatching { LocalDate.parse(this) }.getOrNull()
 }
+
+fun String?.toLocalDateOrPlaceholder(): LocalDate {
+    if (isNullOrBlank()) return LocalDate.of(9999, 12, 31)
+    return runCatching { LocalDate.parse(this) }.getOrNull() ?: LocalDate.of(9999, 12, 31)
+}

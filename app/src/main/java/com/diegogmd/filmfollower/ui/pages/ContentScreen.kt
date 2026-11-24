@@ -392,9 +392,8 @@ private fun TvShowContentUI(
                         trailerAvailable = trailerKey != null,
                         onSeenClick = {
                             if (!seen && !watchlisted) {
-                                viewModel.addTvShowToWatchlist(context, tvShow.showId) { ok ->
+                                viewModel.addTvShowToWatchlist(context, tvShow.showId, markAsSeen = true) { ok ->
                                     if (ok) {
-                                        setTvShowStatus(context, tvShow.showId, "completed")
                                         watchlisted = true
                                         seen = true
                                         archived = false
@@ -402,7 +401,7 @@ private fun TvShowContentUI(
                                 }
                             } else {
                                 val newStatus = if (!seen) "completed" else "watchlist"
-                                setTvShowStatus(context, tvShow.showId, newStatus)
+                                viewModel.changeTvShowStatus(context, tvShow.showId, newStatus)
                                 seen = newStatus == "completed"
                                 archived = false
                             }

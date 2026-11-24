@@ -3,10 +3,13 @@ package com.diegogmd.filmfollower.model
 import android.annotation.SuppressLint
 import android.content.ContentValues
 import android.content.Context
+import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.util.Log
 import com.diegogmd.filmfollower.data.local.FilmFillowerDatabase
 import com.diegogmd.filmfollower.data.repository.SearchRepository
+import com.diegogmd.filmfollower.model.responses.toLocalDateOrNull
+import com.diegogmd.filmfollower.model.responses.toLocalDateOrPlaceholder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.threeten.bp.LocalDate
@@ -131,6 +134,28 @@ class Film(
     fun isStatus(status: String) = watchStatus == status
     val needsSync get() = tmdbLastSynced.isBefore(LocalDate.now().minusDays(7))
 }
+
+private fun Cursor.getIntOrNull(column: String): Int? {
+    val i = getColumnIndexOrThrow(column)
+    return if (isNull(i)) null else getInt(i)
+}
+
+private fun Cursor.toFilm() = Film(
+    filmId = getInt(getColumnIndexOrThrow("film_id")),
+    title = getString(getColumnIndexOrThrow("title")),
+    originalTitle = getString(getColumnIndexOrThrow("original_title")),
+    overview = getString(getColumnIndexOrThrow("overview")),
+    releaseDate = getString(getColumnIndexOrThrow("release_date")).toLocalDateOrPlaceholder(),
+    runtime = getInt(getColumnIndexOrThrow("runtime")),
+    posterPath = getString(getColumnIndexOrThrow("poster_path")),
+    tmdbStatus = getString(getColumnIndexOrThrow("tmdb_status")),
+    tmdbLastSynced = getString(getColumnIndexOrThrow("tmdb_last_synced")).toLocalDateOrPlaceholder(),
+    rating = getDouble(getColumnIndexOrThrow("rating")),
+    watchStatus = getString(getColumnIndexOrThrow("watch_status")),
+    watchedDate = getString(getColumnIndexOrThrow("watched_date")).toLocalDateOrNull(),
+    timesWatched = getInt(getColumnIndexOrThrow("times_watched")),
+    addedAt = getString(getColumnIndexOrThrow("added_at")).toLocalDateOrPlaceholder()
+)
 
 fun getFilm(context: Context, filmId: Int): Film? {
     val dbHelper = FilmFillowerDatabase(context)

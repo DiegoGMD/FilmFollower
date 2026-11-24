@@ -199,33 +199,6 @@ fun getEpisode(context: Context, showId: Int, seasonNumber: Int, episodeNumber: 
     return theEpisode
 }
 
-fun getEpisode(context: Context, tmdbEpisodeId: Int): Episode? {
-    val db = FilmFillowerDatabase(context).readableDatabase
-    var theEpisode: Episode? = null
-
-    if (tmdbEpisodeId == 0) {
-        Log.e("Database", "Error getting episode info: tmdb_episode_id is 0")
-        return null
-    }
-
-    val query = """
-        SELECT * FROM Episode
-        WHERE tmdb_episode_id = ?
-    """.trimIndent()
-    val selectionArgs = arrayOf(tmdbEpisodeId.toString())
-
-    try {
-        db.rawQuery(query, selectionArgs).use { cursor ->
-            if (cursor.moveToFirst()) theEpisode = cursor.toEpisode()
-        }
-    } catch (e: Exception) {
-        Log.e("Database", "Error getting episode", e)
-    } finally {
-        db.close()
-    }
-    return theEpisode
-}
-
 fun getEpisodesOfSeason(context: Context, showId: Int, seasonNumber: Int): List<Episode> {
     val db = FilmFillowerDatabase(context).readableDatabase
     val episodes = mutableListOf<Episode>()
@@ -522,7 +495,7 @@ fun getNextEpisodesToWatch(context: Context, showIds: List<Int>): List<Episode> 
     return theEpisodes
 }
 
-private fun syncShowCompletion(db: SQLiteDatabase, showId: Int) {
+fun syncShowCompletion(db: SQLiteDatabase, showId: Int) {
     val today = LocalDate.now().toString()
 
     // Promote: everything aired is watched -> completed

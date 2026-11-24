@@ -19,6 +19,7 @@ import com.diegogmd.filmfollower.model.getTvShowGenreNames
 import com.diegogmd.filmfollower.model.insertSeasons
 import com.diegogmd.filmfollower.model.setEpisodeUnwatched
 import com.diegogmd.filmfollower.model.setEpisodeWatched
+import com.diegogmd.filmfollower.model.setTvShowStatus
 import com.diegogmd.filmfollower.model.syncSeasonEpisodes
 import com.diegogmd.filmfollower.model.syncSeasons
 import com.diegogmd.filmfollower.model.syncTvShow
@@ -159,7 +160,12 @@ class TvShowViewModel(private val repository: SearchRepository) : ViewModel() {
     private suspend fun getLocalGenres(context: Context, id: Int): List<String> =
         withContext(Dispatchers.IO) { getTvShowGenreNames(context, id) }
 
-    fun addTvShowToWatchlist(context: Context, id: Int, onResult: (Boolean) -> Unit = {}) {
+    fun addTvShowToWatchlist(
+        context: Context,
+        id: Int,
+        markAsSeen: Boolean = false,
+        onResult: (Boolean) -> Unit = {}
+    ) {
         val appContext = context.applicationContext
         viewModelScope.launch {
             val ok = try {
@@ -176,10 +182,15 @@ class TvShowViewModel(private val repository: SearchRepository) : ViewModel() {
 
             if (ok) try {
                 val seasons = repository.getSeasons(id)
-                withContext(Dispatchers.IO) { insertSeasons(context, seasons) }
+                withContext(Dispatchers.IO) { insertSeasons(appContext, seasons) }
 
                 seasons.forEach { season ->
-                    syncSeasonEpisodes(context, id, season.seasonNumber, repository)
+                    syncSeasonEpisodes(appContext, id, season.seasonNumber, repository)
+                }
+
+                if (markAsSeen) {
+                    withContext(Dispatchers.IO) { setTvShowStatus(appContext, id, "completed") }
+                    refreshEpisodes(appContext, id)
                 }
             } catch (e: CancellationException) {
                 throw e
@@ -187,6 +198,23 @@ class TvShowViewModel(private val repository: SearchRepository) : ViewModel() {
                 Log.e("TvShowViewModel", "Error saving seasons and episodes", e)
             }
         }
+    }
+
+    fun changeTvShowStatus(context: Context, showId: Int, status: String) {
+        val appContext = context.applicationContext
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) { setTvShowStatus(appContext, showId, status) }
+            refreshEpisodes(appContext, showId)
+        }
+    }
+
+    private suspend fun refreshEpisodes(context: Context, showId: Int) {
+        val all = withContext(Dispatchers.IO) {
+            getAllSeasons(context, showId).associate {
+                it.seasonNumber to getEpisodesOfSeason(context, showId, it.seasonNumber)
+            }
+        }
+        _episodesBySeason.value = all
     }
 
     fun toggleEpisodeWatched(context: Context, showId: Int, episode: Episode) {
