@@ -253,7 +253,7 @@ private val MovieTimeColorScheme = darkColorScheme(
 
 private val MegaDarkColorScheme = darkColorScheme(
     // Accent: caramel fills with coffee text (buttons, check marks, selected states)
-    primary = Gunmetal,
+    primary = Silver, //Gunmetal,
     onPrimary = Black,
     primaryContainer = Black,
     onPrimaryContainer = Gunmetal,

@@ -1,6 +1,9 @@
 package com.diegogmd.filmfollower.ui.pages
 
+import android.app.Activity
+import android.app.StatusBarManager
 import android.net.Uri
+import android.os.Build
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -55,6 +58,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -64,9 +68,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -78,6 +84,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.view.WindowCompat
 import com.diegogmd.filmfollower.R
 import com.diegogmd.filmfollower.SecureStorage
 import com.diegogmd.filmfollower.data.local.DatabaseBackupManager
@@ -171,18 +178,45 @@ fun SettingsScreen(
             }
         }
 
+    val view = LocalView.current
+    if (!view.isInEditMode) {
+        DisposableEffect(Unit) {
+            val window = (view.context as Activity).window
+            val controller = WindowCompat.getInsetsController(window, view)
+
+            // remember what the theme/other screens had
+            val prevStatus = window.statusBarColor
+            val prevNav = window.navigationBarColor
+            val prevLightStatus = controller.isAppearanceLightStatusBars
+            val prevLightNav = controller.isAppearanceLightNavigationBars
+
+            window.statusBarColor = CarbonBlack.toArgb()
+            window.navigationBarColor = CarbonBlack.toArgb()
+            controller.isAppearanceLightStatusBars = false // light icons on dark bg
+            controller.isAppearanceLightNavigationBars = false
+            if (Build.VERSION.SDK_INT >= 29) window.isNavigationBarContrastEnforced = false
+
+            onDispose {
+                // restore when leaving SettingsScreen
+                window.statusBarColor = prevStatus
+                window.navigationBarColor = prevNav
+                controller.isAppearanceLightStatusBars = prevLightStatus
+                controller.isAppearanceLightNavigationBars = prevLightNav
+            }
+        }
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
             .background(CarbonBlack)
-            .statusBarsPadding()
-            .navigationBarsPadding()
+            .then(modifier)
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 16.dp)
     ) {
         Box(
             modifier = Modifier
-                .padding(bottom = 20.dp)
+                .padding(vertical = 20.dp)
                 .clickable(onClick = onBackClick),
             contentAlignment = Alignment.Center
         ) {
@@ -196,7 +230,7 @@ fun SettingsScreen(
 
         Text(
             text = "Settings",
-            style = FilmTypography.titleMedium.copy(fontSize = 44.sp, lineHeight = 52.sp),
+            style = FilmTypography.titleMedium.copy(fontSize = 22.sp),
             color = Silver,
             modifier = Modifier.padding(bottom = 12.dp)
         )
@@ -443,6 +477,8 @@ fun SettingsScreen(
                 }
             )
         }
+
+        Spacer(Modifier.height(5.dp))
     }
 }
 
