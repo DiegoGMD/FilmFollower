@@ -20,9 +20,43 @@
     <string name="empty_films">No hi ha pel·lícules a la llista</string>
     <string name="empty_tvshows">No hi ha sèries a la llista</string>
     <string name="username">Nom d\'usuari</string>
-    <string name="read_access_token">Token d\'accés de lectura a l\'API</string>
+    <string name="read_access_token">Token d\'accés de lectura API</string>
     <string name="token_info_1">Pots obtindre el token registrant-te a </string>
     <string name="token_info_2">\nTrobareu el token dins l\àrea d\'API a Configuració</string>
     <string name="about">About</string>
     <string name="episodes">Episodis</string>
+
+    <!-- SettingsScreen-->
+    <string name="settings">Ajustos</string>
+    <string name="account">Compte</string>
+    <string name="username_support_text">Mostrat al teu perfil</string>
+    <string name="username_error_text">El nom d\'usuari no pot estar buit</string>
+    <string name="data_source">Origen de dades</string>
+    <string name="api_text">Token d\'accés de lectura API</string>
+    <string name="api_support_text">Per a carregar la información sobre pel·lícules i séries</string>
+    <string name="api_error_text">El token no pot estar buit</string>
+    <string name="hide">Ocultar</string>
+    <string name="show">Mostrar</string>
+    <string name="language_text">Idioma</string>
+    <string name="appearance">Aparença</string>
+    <string name="import_export_data">Importar/Exportar Dades</string>
+    <string name="backup">Cópia de Seguretat</string>
+    <string name="backup_message_saved">Cópia de seguretat guardada</string>
+    <string name="backup_message_failed">Cópia de seguretat fallida</string>
+    <string name="backup_support_text">Guarda o recupera les teves dades de un archiu</string>
+    <string name="import_text">Importar</string>
+    <string name="export_text">Exportar</string>
+    <string name="credits">Crédits</string>
+    <string name="developer">Desenvolupador</string>
+    <string name="tmdb_credit_text">Dades de pel·lícules i séries</string>
+    <string name="disclaimer">Este producte utilitza l\'api de TMDB pero no esta respaldat o certificat per ells.</string>
+    <string name="alert_dialog_title">Reemplaçar todes les dades?</string>
+    <string name="alert_dialog_text">Importar reemplaça tot a l\'aplicación (pel·lícules, séries, llistes y estadístiques) per els continguts a la cópia de seguretat. No es pot desfer.</string>
+    <string name="alert_dialog_message_restored">Cópia de seguretat restaurada</string>
+    <string name="alert_dialog_message_failed">Importacó fallida: cópia de seguretat no vàlida</string>
+    <string name="alert_dialog_button_replace">Reemplaçar</string>
+    <string name="alert_dialog_button_cancel">Cancelar</string>
+    <string name="theme_previews">Previsualització de temes</string>
+    <string name="theme_previews_support_text">Pulsa la imatge para canviar</string>
+    <string name="done">Fet</string>
 </resources>

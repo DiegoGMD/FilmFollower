@@ -1,7 +1,6 @@
 package com.diegogmd.filmfollower.ui.pages
 
 import android.app.Activity
-import android.app.StatusBarManager
 import android.net.Uri
 import android.os.Build
 import android.widget.Toast
@@ -29,7 +28,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -160,23 +158,23 @@ fun SettingsScreen(
         pendingImportUri = uri // null if the user cancelled
     }
 
-    val exportLauncher =
-        rememberLauncherForActivityResult(
-            ActivityResultContracts.CreateDocument("application/octet-stream")
-        ) { uri: Uri? ->
-            if (uri != null) {
-                scope.launch {
-                    val success = withContext(Dispatchers.IO) {
-                        backupManager.exportDatabase(uri)
-                    }
-                    Toast.makeText(
-                        context,
-                        if (success) "Backup saved" else "Backup failed",
-                        Toast.LENGTH_SHORT
-                    ).show()
+    val exportLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/octet-stream")
+    ) { uri: Uri? ->
+        if (uri != null) {
+            scope.launch {
+                val success = withContext(Dispatchers.IO) {
+                    backupManager.exportDatabase(uri)
                 }
+                Toast.makeText(
+                    context,
+                    if (success) R.string.backup_message_saved else
+                        R.string.backup_message_failed,
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }
+    }
 
     val view = LocalView.current
     if (!view.isInEditMode) {
@@ -229,24 +227,24 @@ fun SettingsScreen(
         }
 
         Text(
-            text = "Settings",
+            text = stringResource(R.string.settings),
             style = FilmTypography.titleMedium.copy(fontSize = 22.sp),
             color = Silver,
             modifier = Modifier.padding(bottom = 12.dp)
         )
 
         // ---------- Account ----------
-        SettingsSection(label = "Account") {
+        SettingsSection(label = stringResource(R.string.account)) {
             SettingsFieldRow(
-                title = "Username",
-                supporting = "Shown on your profile",
+                title = stringResource(R.string.username),
+                supporting = stringResource(R.string.username_support_text),
                 value = username,
                 onValueChange = {
                     username = it
                     usernameError = it.isBlank()
                 },
                 isError = usernameError,
-                errorText = "Username can't be empty",
+                errorText = stringResource(R.string.username_error_text),
                 imeAction = ImeAction.Next,
                 saveLabel = stringResource(id = R.string.save),
                 onSave = {
@@ -260,24 +258,64 @@ fun SettingsScreen(
         Spacer(Modifier.height(16.dp))
 
         // ---------- Data source ----------
-        SettingsSection(label = "Data source") {
+        SettingsSection(label = stringResource(R.string.data_source)) {
             SettingsFieldRow(
-                title = "API read access token",
-                supporting = "Used to load film data",
+                title = stringResource(R.string.api_text),
+                supporting = stringResource(R.string.api_support_text),
                 value = apiToken,
                 onValueChange = {
                     apiToken = it
                     apiTokenError = it.isBlank()
                 },
                 isError = apiTokenError,
-                errorText = "Token can't be empty",
+                errorText = stringResource(R.string.api_support_text),
                 imeAction = ImeAction.Done,
                 keyboardType = KeyboardType.Password,
                 visualTransformation = if (showToken) VisualTransformation.None
                 else PasswordVisualTransformation(),
                 trailing = {
                     TextButton(onClick = { showToken = !showToken }) {
-                        Text(if (showToken) "Hide" else "Show", color = Silver)
+                        Text(
+                            if (showToken) stringResource(R.string.hide) else stringResource(R.string.show),
+                            color = Silver
+                        )
+                    }
+                },
+                saveLabel = stringResource(id = R.string.save),
+                onSave = {
+                    val valid = apiToken.isNotBlank()
+                    apiTokenError = !valid
+                    if (valid) {
+                        SecureStorage.changeApiReadAccessToken(context, apiToken.trim())
+                    }
+                }
+            )
+        }
+
+        Spacer(Modifier.height(16.dp))
+
+        // ---------- Language ----------
+        SettingsSection(label = stringResource(R.string.language)) {
+            SettingsFieldRow(
+                title = stringResource(R.string.api_text),
+                supporting = stringResource(R.string.api_support_text),
+                value = apiToken,
+                onValueChange = {
+                    apiToken = it
+                    apiTokenError = it.isBlank()
+                },
+                isError = apiTokenError,
+                errorText = stringResource(R.string.api_support_text),
+                imeAction = ImeAction.Done,
+                keyboardType = KeyboardType.Password,
+                visualTransformation = if (showToken) VisualTransformation.None
+                else PasswordVisualTransformation(),
+                trailing = {
+                    TextButton(onClick = { showToken = !showToken }) {
+                        Text(
+                            if (showToken) stringResource(R.string.hide) else stringResource(R.string.show),
+                            color = Silver
+                        )
                     }
                 },
                 saveLabel = stringResource(id = R.string.save),
@@ -294,7 +332,7 @@ fun SettingsScreen(
         Spacer(Modifier.height(16.dp))
 
         // ---------- Appearance ----------
-        SettingsSection(label = "Appearance") {
+        SettingsSection(label = stringResource(R.string.appearance)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.Top,
@@ -328,10 +366,10 @@ fun SettingsScreen(
 
         Spacer(Modifier.height(16.dp))
 
-        SettingsSection(label = "Import/Export Data") {
-            Text("Backup", fontSize = 20.sp, color = Silver)
+        SettingsSection(label = stringResource(R.string.import_export_data)) {
+            Text(stringResource(R.string.backup), fontSize = 20.sp, color = Silver)
             Text(
-                text = "Save your data to a file or restore it from one",
+                text = stringResource(R.string.backup_support_text),
                 fontSize = 14.sp,
                 color = Silver.copy(alpha = 0.7f)
             )
@@ -355,7 +393,7 @@ fun SettingsScreen(
                     ),
                     shape = RoundedCornerShape(16.dp)
                 ) {
-                    Text("Import", fontSize = 16.sp)
+                    Text(stringResource(R.string.import_text), fontSize = 16.sp)
                 }
 
                 Button(
@@ -371,7 +409,7 @@ fun SettingsScreen(
                     ),
                     shape = RoundedCornerShape(16.dp)
                 ) {
-                    Text("Export", fontSize = 16.sp)
+                    Text(stringResource(R.string.export_text), fontSize = 16.sp)
                 }
             }
         }
@@ -379,7 +417,7 @@ fun SettingsScreen(
         Spacer(Modifier.height(16.dp))
 
         // ---------- Credits ----------
-        SettingsSection(label = "Credits") {
+        SettingsSection(label = stringResource(R.string.credits)) {
             // Developer
             Image(
                 painter = painterResource(R.drawable.diegogmd_logo),
@@ -391,7 +429,7 @@ fun SettingsScreen(
             )
             Spacer(Modifier.height(8.dp))
             Text("DiegoGMD", fontSize = 20.sp, color = Silver)
-            Text("Developer", fontSize = 14.sp, color = Silver.copy(alpha = 0.7f))
+            Text(stringResource(R.string.developer), fontSize = 14.sp, color = Silver.copy(alpha = 0.7f))
 
             Spacer(Modifier.height(16.dp))
             HorizontalDivider(color = Gunmetal, thickness = 1.dp)
@@ -409,12 +447,12 @@ fun SettingsScreen(
             )
             Spacer(Modifier.height(8.dp))
             Text("The Movie Database", fontSize = 20.sp, color = Silver)
-            Text("Films and shows data", fontSize = 14.sp, color = Silver.copy(alpha = 0.7f))
+            Text(stringResource(R.string.tmdb_credit_text), fontSize = 14.sp, color = Silver.copy(alpha = 0.7f))
 
             Spacer(Modifier.height(12.dp))
 
             Text(
-                text = "This product uses the TMDB API but is not endorsed or certified by TMDB.",
+                text = stringResource(R.string.disclaimer),
                 fontSize = 12.sp,
                 lineHeight = 16.sp,
                 color = Silver.copy(alpha = 0.7f)
@@ -440,8 +478,8 @@ fun SettingsScreen(
                 containerColor = Graphite,
                 titleContentColor = Silver,
                 textContentColor = Silver.copy(alpha = 0.7f),
-                title = { Text("Replace all data?") },
-                text = { Text("Importing replaces everything in the app (films, shows, lists and ratings) with the contents of the backup. This can't be undone.")
+                title = { Text(stringResource(R.string.alert_dialog_title)) }, // TODO:
+                text = { Text(stringResource(R.string.alert_dialog_text))
                 },
                 confirmButton = {
                     TextButton(
@@ -453,7 +491,7 @@ fun SettingsScreen(
                                 }
                                 Toast.makeText(
                                     context,
-                                    if (success) "Backup restored" else "Import failed: not a valid backup",
+                                    if (success) R.string.alert_dialog_message_restored else R.string.alert_dialog_message_failed,
                                     Toast.LENGTH_LONG
                                 ).show()
                             }
@@ -462,7 +500,7 @@ fun SettingsScreen(
                             containerColor = Silver,
                             contentColor = Graphite
                         ), modifier = Modifier.height(48.dp), shape = RoundedCornerShape(16.dp)
-                    ) { Text("Replace", color = Graphite) }
+                    ) { Text(stringResource(R.string.alert_dialog_button_replace), color = Graphite) }
                 },
                 dismissButton = {
                     TextButton(
@@ -472,7 +510,7 @@ fun SettingsScreen(
                             contentColor = Graphite
                         ), modifier = Modifier.height(48.dp), shape = RoundedCornerShape(16.dp)
                     ) {
-                        Text("Cancel", color = Graphite)
+                        Text(stringResource(R.string.alert_dialog_button_cancel), color = Graphite)
                     }
                 }
             )
@@ -651,13 +689,13 @@ private fun ThemePreviewSheet(
             .navigationBarsPadding()
             .padding(bottom = 16.dp)) {
             Text(
-                text = "Theme previews",
+                text = stringResource(R.string.theme_previews),
                 fontSize = 24.sp,
                 color = Silver,
                 modifier = Modifier.padding(horizontal = 24.dp)
             )
             Text(
-                text = "Tap a preview to switch",
+                text = stringResource(R.string.theme_previews_support_text),
                 fontSize = 14.sp,
                 color = Silver.copy(alpha = 0.7f),
                 modifier = Modifier.padding(horizontal = 24.dp)
@@ -680,7 +718,7 @@ private fun ThemePreviewSheet(
                 ),
                 shape = RoundedCornerShape(24.dp)
             ) {
-                Text("Done", fontSize = 16.sp)
+                Text(stringResource(R.string.done), fontSize = 16.sp)
             }
         }
     }
